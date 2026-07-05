@@ -1,0 +1,55 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mpf-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: mpf
+      POSTGRES_PASSWORD: mpf
+      POSTGRES_DB: myperkfinder
+    ports:
+      - "5433:5432"
+    volumes:
+      - mpf_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mpf -d myperkfinder"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: mpf-redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    volumes:
+      - mpf_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.9
+    container_name: mpf-meilisearch
+    restart: unless-stopped
+    environment:
+      MEILI_MASTER_KEY: mpf_dev_master_key
+      MEILI_ENV: development
+    ports:
+      - "7700:7700"
+    volumes:
+      - mpf_meili:/meili_data
+    healthcheck:
+      # Meilisearch ships curl in its image; probe its own /health endpoint.
+      test: ["CMD-SHELL", "curl -sf http://localhost:7700/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  mpf_pg:
+  mpf_redis:
+  mpf_meili:

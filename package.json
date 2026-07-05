@@ -1,0 +1,37 @@
+{
+  "name": "my-perk-finder",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Scalable deal discovery platform — Turborepo monorepo.",
+  "packageManager": "pnpm@11.9.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "turbo run dev --filter=@mpf/web",
+    "dev:all": "turbo run dev",
+    "build": "turbo run build --filter=@mpf/web",
+    "build:web": "pnpm db:generate && pnpm --filter @mpf/web build",
+    "start:web": "pnpm --filter @mpf/web start",
+    "build:worker": "pnpm db:generate && pnpm --filter @mpf/worker build",
+    "worker:import-awin": "pnpm --filter @mpf/worker import:awin",
+    "worker:expire-offers": "pnpm --filter @mpf/worker expire:offers",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
+    "db:generate": "pnpm --filter @mpf/db generate",
+    "db:migrate": "pnpm --filter @mpf/db migrate",
+    "db:migrate:deploy": "pnpm --filter @mpf/db migrate:deploy",
+    "db:seed": "pnpm --filter @mpf/db seed",
+    "db:studio": "pnpm --filter @mpf/db studio",
+    "infra:up": "docker compose up -d",
+    "infra:down": "docker compose down"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3",
+    "turbo": "^2.5.0",
+    "typescript": "^5.6.3"
+  }
+}

@@ -1,0 +1,9 @@
+# Nixpacks config for Railway — pnpm Turborepo monorepo
+[phases.setup]
+nixPkgs = ["nodejs_20", "pnpm"]
+
+[phases.install]
+cmds = ["pnpm install --frozen-lockfile"]
+
+[variables]
+NIXPACKS_NODE_PACKAGE_MANAGER = "pnpm"

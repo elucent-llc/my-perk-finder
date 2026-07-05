@@ -1,0 +1,1915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MyPerkFinder — Product Wireframes</title>
+<style>
+/* =========================================================================
+   MyPerkFinder — Wireframe & Design Preview
+   Self-contained (no external assets/APIs). Mock data only.
+   Design system: indigo/blue primary, green savings, amber/red expiry,
+   slate neutrals, soft borders, rounded cards, subtle shadows.
+   ========================================================================= */
+
+:root{
+  /* Brand */
+  --indigo-50:#eef2ff; --indigo-100:#e0e7ff; --indigo-200:#c7d2fe;
+  --indigo-400:#818cf8; --indigo-500:#6366f1; --indigo-600:#4f46e5; --indigo-700:#4338ca;
+  --blue-50:#eff6ff; --blue-600:#2563eb;
+  /* Savings */
+  --green-50:#ecfdf5; --green-100:#d1fae5; --green-600:#16a34a; --green-700:#15803d;
+  /* Warnings */
+  --amber-50:#fffbeb; --amber-100:#fef3c7; --amber-600:#d97706; --amber-700:#b45309;
+  --red-50:#fef2f2; --red-100:#fee2e2; --red-500:#ef4444; --red-600:#dc2626; --red-700:#b91c1c;
+  /* Neutrals (slate) */
+  --slate-50:#f8fafc; --slate-100:#f1f5f9; --slate-200:#e2e8f0; --slate-300:#cbd5e1;
+  --slate-400:#94a3b8; --slate-500:#64748b; --slate-600:#475569; --slate-700:#334155;
+  --slate-800:#1e293b; --slate-900:#0f172a;
+  --white:#ffffff;
+
+  --radius-sm:8px; --radius:14px; --radius-lg:20px; --radius-pill:999px;
+  --shadow-sm:0 1px 2px rgba(15,23,42,.06),0 1px 3px rgba(15,23,42,.04);
+  --shadow:0 4px 14px rgba(15,23,42,.08);
+  --shadow-lg:0 12px 32px rgba(15,23,42,.12);
+  --ring:0 0 0 3px var(--indigo-200);
+  --sidebar-w:264px;
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:var(--font);
+  background:var(--slate-100);
+  color:var(--slate-800);
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4,h5{margin:0;line-height:1.2;color:var(--slate-900);font-weight:700;}
+p{margin:0;}
+a{color:var(--indigo-600);text-decoration:none;}
+button{font-family:inherit;cursor:pointer;}
+img{max-width:100%;display:block;}
+:focus-visible{outline:none;box-shadow:var(--ring);border-radius:var(--radius-sm);}
+
+/* ---------- App layout ---------- */
+.app{display:flex;min-height:100vh;}
+.sidebar{
+  width:var(--sidebar-w);flex:0 0 var(--sidebar-w);
+  background:var(--slate-900);color:var(--slate-300);
+  position:fixed;top:0;bottom:0;left:0;overflow-y:auto;padding:18px 14px 40px;
+  z-index:50;
+}
+.sidebar .brand{display:flex;align-items:center;gap:10px;padding:6px 8px 16px;}
+.sidebar .brand .logo{
+  width:34px;height:34px;border-radius:10px;flex:0 0 34px;
+  background:linear-gradient(135deg,var(--indigo-500),var(--blue-600));
+  display:grid;place-items:center;color:#fff;font-weight:800;font-size:16px;
+}
+.sidebar .brand b{color:#fff;font-size:16px;letter-spacing:.2px;}
+.sidebar .brand span{display:block;font-size:11px;color:var(--slate-500);}
+.nav-group{margin-top:14px;}
+.nav-group .label{
+  font-size:11px;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--slate-500);padding:6px 10px;font-weight:700;
+}
+.nav-link{
+  display:flex;align-items:center;gap:9px;width:100%;text-align:left;
+  border:none;background:transparent;color:var(--slate-300);
+  padding:8px 10px;border-radius:9px;font-size:13.5px;margin:1px 0;
+}
+.nav-link:hover{background:rgba(255,255,255,.06);color:#fff;}
+.nav-link.active{background:var(--indigo-600);color:#fff;font-weight:600;}
+.nav-link .ico{width:16px;text-align:center;opacity:.9;}
+.nav-link .tag{margin-left:auto;font-size:10px;background:rgba(255,255,255,.12);padding:1px 7px;border-radius:var(--radius-pill);}
+
+.content{margin-left:var(--sidebar-w);flex:1;min-width:0;}
+.topbar{
+  position:sticky;top:0;z-index:40;background:rgba(248,250,252,.85);
+  backdrop-filter:blur(8px);border-bottom:1px solid var(--slate-200);
+  padding:14px 26px;display:flex;align-items:center;gap:14px;
+}
+.topbar .menu-btn{display:none;}
+.topbar .crumb{font-size:13px;color:var(--slate-500);}
+.topbar .crumb b{color:var(--slate-800);}
+.topbar .url{
+  margin-left:auto;font-size:12px;color:var(--slate-500);
+  background:var(--white);border:1px solid var(--slate-200);
+  padding:5px 12px;border-radius:var(--radius-pill);font-family:ui-monospace,Menlo,monospace;
+}
+.screen-wrap{padding:26px;max-width:1240px;margin:0 auto;}
+.screen{display:none;}
+.screen.active{display:block;animation:fade .25s ease;}
+@keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+.screen-head{margin-bottom:20px;}
+.screen-head h2{font-size:24px;}
+.screen-head p{color:var(--slate-500);font-size:14px;margin-top:4px;}
+.section-title{font-size:13px;font-weight:700;color:var(--slate-500);text-transform:uppercase;letter-spacing:.05em;margin:26px 0 12px;}
+
+/* ---------- Device frames ---------- */
+.frames{display:grid;grid-template-columns:1fr;gap:26px;}
+.frame{
+  background:var(--white);border:1px solid var(--slate-200);
+  border-radius:var(--radius-lg);box-shadow:var(--shadow);overflow:hidden;
+}
+.frame-label{
+  display:flex;align-items:center;gap:8px;
+  padding:9px 16px;font-size:12px;font-weight:700;color:var(--slate-500);
+  background:var(--slate-50);border-bottom:1px solid var(--slate-200);
+  text-transform:uppercase;letter-spacing:.04em;
+}
+.frame-label .dot{width:9px;height:9px;border-radius:50%;background:var(--slate-300);}
+.frame-label .dot.g{background:var(--green-600);}
+.frame-body{padding:0;}
+.device-desktop .frame-body{padding:0;}
+.mobile-frame{max-width:390px;margin:0 auto;}
+.mobile-frame .frame-body{padding:0;}
+
+.split{display:grid;grid-template-columns:1fr 390px;gap:24px;align-items:start;}
+@media(max-width:1100px){.split{grid-template-columns:1fr;}.mobile-frame{max-width:390px;}}
+
+/* ---------- Storefront (mock site) ---------- */
+.site{font-size:14px;color:var(--slate-700);}
+.site-header{
+  display:flex;align-items:center;gap:18px;padding:14px 20px;
+  border-bottom:1px solid var(--slate-200);background:var(--white);
+}
+.site-logo{display:flex;align-items:center;gap:9px;font-weight:800;color:var(--slate-900);font-size:16px;}
+.site-logo .mk{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--indigo-500),var(--blue-600));display:grid;place-items:center;color:#fff;font-size:15px;}
+.site-nav{display:flex;gap:16px;font-size:13.5px;color:var(--slate-600);font-weight:500;}
+.site-nav a:hover{color:var(--indigo-600);}
+.site-header .spacer{flex:1;}
+.mini-search{display:flex;align-items:center;gap:8px;background:var(--slate-100);border:1px solid var(--slate-200);border-radius:var(--radius-pill);padding:7px 14px;color:var(--slate-400);font-size:13px;min-width:200px;}
+.hstack{display:flex;align-items:center;gap:10px;}
+.vstack{display:flex;flex-direction:column;}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid transparent;border-radius:var(--radius-sm);padding:9px 16px;font-size:13.5px;font-weight:600;background:var(--slate-100);color:var(--slate-700);}
+.btn:hover{filter:brightness(.98);}
+.btn-primary{background:var(--indigo-600);color:#fff;box-shadow:0 4px 12px rgba(79,70,229,.28);}
+.btn-primary:hover{background:var(--indigo-700);}
+.btn-outline{background:var(--white);border-color:var(--slate-300);color:var(--slate-700);}
+.btn-ghost{background:transparent;color:var(--slate-600);}
+.btn-success{background:var(--green-600);color:#fff;}
+.btn-danger{background:var(--red-600);color:#fff;}
+.btn-lg{padding:13px 22px;font-size:15px;}
+.btn-sm{padding:6px 11px;font-size:12px;}
+.btn-block{width:100%;}
+.btn-warn{background:var(--amber-600);color:#fff;}
+
+/* badges */
+.badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:var(--radius-pill);background:var(--slate-100);color:var(--slate-600);}
+.badge.discount{background:var(--green-600);color:#fff;}
+.badge.save{background:var(--green-50);color:var(--green-700);border:1px solid var(--green-100);}
+.badge.expiry{background:var(--amber-50);color:var(--amber-700);border:1px solid var(--amber-100);}
+.badge.urgent{background:var(--red-50);color:var(--red-700);border:1px solid var(--red-100);}
+.badge.verified{background:var(--blue-50);color:var(--blue-600);}
+.badge.coupon{background:var(--indigo-50);color:var(--indigo-700);border:1px dashed var(--indigo-200);}
+.badge.neutral{background:var(--slate-100);color:var(--slate-600);}
+.badge.draft{background:var(--slate-100);color:var(--slate-600);}
+.badge.active{background:var(--green-50);color:var(--green-700);}
+.badge.review{background:var(--amber-50);color:var(--amber-700);}
+.badge.expired{background:var(--red-50);color:var(--red-700);}
+.badge.rejected{background:var(--slate-200);color:var(--slate-700);}
+.badge.archived{background:var(--slate-100);color:var(--slate-500);}
+.badge.status-running{background:var(--blue-50);color:var(--blue-600);}
+.badge.status-completed{background:var(--green-50);color:var(--green-700);}
+.badge.status-failed{background:var(--red-50);color:var(--red-700);}
+.badge.status-pending{background:var(--slate-100);color:var(--slate-600);}
+.badge.status-partial{background:var(--amber-50);color:var(--amber-700);}
+
+/* chips */
+.chips{display:flex;flex-wrap:wrap;gap:8px;}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:7px 14px;border-radius:var(--radius-pill);background:var(--white);border:1px solid var(--slate-200);color:var(--slate-600);}
+.chip:hover{border-color:var(--indigo-300);color:var(--indigo-600);}
+.chip.active{background:var(--indigo-600);color:#fff;border-color:var(--indigo-600);}
+.chip .x{opacity:.6;}
+
+/* image placeholder */
+.imgph{background:linear-gradient(135deg,var(--slate-100),var(--slate-200));display:grid;place-items:center;color:var(--slate-400);font-size:12px;font-weight:600;border-radius:var(--radius-sm);}
+.imgph.round{border-radius:50%;}
+
+/* deal card */
+.deal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px;}
+.deal-grid.two{grid-template-columns:repeat(auto-fill,minmax(240px,1fr));}
+.deal-card{background:var(--white);border:1px solid var(--slate-200);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;position:relative;transition:.15s;}
+.deal-card:hover{box-shadow:var(--shadow);transform:translateY(-2px);}
+.deal-card .thumb{position:relative;height:130px;}
+.deal-card .thumb .imgph{height:100%;border-radius:0;}
+.deal-card .thumb .flag{position:absolute;top:8px;left:8px;}
+.deal-card .thumb .fav{position:absolute;top:8px;right:8px;background:rgba(255,255,255,.92);border-radius:50%;width:28px;height:28px;display:grid;place-items:center;border:1px solid var(--slate-200);font-size:13px;}
+.deal-card .body{padding:12px;display:flex;flex-direction:column;gap:7px;flex:1;}
+.deal-card .store{font-size:11px;color:var(--slate-500);font-weight:600;display:flex;align-items:center;gap:5px;}
+.deal-card .title{font-size:13.5px;font-weight:600;color:var(--slate-800);line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:36px;}
+.deal-card .prices{display:flex;align-items:baseline;gap:8px;margin-top:auto;}
+.deal-card .sale{font-size:18px;font-weight:800;color:var(--slate-900);}
+.deal-card .reg{font-size:12px;color:var(--slate-400);text-decoration:line-through;}
+.deal-card .meta{display:flex;align-items:center;justify-content:space-between;gap:6px;font-size:11px;color:var(--slate-500);}
+.deal-card .foot{padding:0 12px 12px;}
+
+/* cards / panels */
+.card{background:var(--white);border:1px solid var(--slate-200);border-radius:var(--radius);box-shadow:var(--shadow-sm);}
+.card-pad{padding:18px;}
+.panel{background:var(--white);border:1px solid var(--slate-200);border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow:hidden;}
+.panel-head{padding:14px 18px;border-bottom:1px solid var(--slate-200);display:flex;align-items:center;gap:10px;}
+.panel-head h3{font-size:15px;}
+.panel-head .spacer{flex:1;}
+.panel-body{padding:18px;}
+
+/* stat cards */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;}
+.stat{background:var(--white);border:1px solid var(--slate-200);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow-sm);}
+.stat .k{font-size:12px;color:var(--slate-500);font-weight:600;display:flex;align-items:center;gap:7px;}
+.stat .v{font-size:26px;font-weight:800;color:var(--slate-900);margin-top:6px;}
+.stat .d{font-size:12px;font-weight:700;margin-top:2px;}
+.stat .d.up{color:var(--green-600);}
+.stat .d.down{color:var(--red-600);}
+.stat .ic{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:var(--indigo-50);color:var(--indigo-600);float:right;font-size:15px;}
+
+/* tables */
+.table-wrap{overflow-x:auto;}
+table.tbl{width:100%;border-collapse:collapse;font-size:13px;}
+table.tbl th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--slate-500);font-weight:700;padding:11px 14px;border-bottom:1px solid var(--slate-200);background:var(--slate-50);white-space:nowrap;}
+table.tbl td{padding:11px 14px;border-bottom:1px solid var(--slate-100);color:var(--slate-700);vertical-align:middle;}
+table.tbl tr:hover td{background:var(--slate-50);}
+table.tbl .num{font-variant-numeric:tabular-nums;font-weight:600;}
+.checkbox{width:15px;height:15px;border:1.5px solid var(--slate-300);border-radius:4px;display:inline-block;vertical-align:middle;}
+.row-actions{display:flex;gap:6px;}
+
+/* filters sidebar */
+.filter-side{width:250px;flex:0 0 250px;}
+.filter-block{border-bottom:1px solid var(--slate-100);padding:14px 0;}
+.filter-block:last-child{border-bottom:none;}
+.filter-block h4{font-size:13px;margin-bottom:10px;}
+.filter-opt{display:flex;align-items:center;gap:9px;padding:4px 0;font-size:13px;color:var(--slate-600);}
+.range{height:5px;background:var(--slate-200);border-radius:var(--radius-pill);position:relative;margin:14px 4px;}
+.range::before{content:"";position:absolute;left:15%;right:35%;top:0;bottom:0;background:var(--indigo-500);border-radius:inherit;}
+.range .knob{position:absolute;top:50%;width:15px;height:15px;background:#fff;border:2px solid var(--indigo-600);border-radius:50%;transform:translate(-50%,-50%);box-shadow:var(--shadow-sm);}
+
+/* forms */
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12.5px;font-weight:600;color:var(--slate-600);margin-bottom:5px;}
+.input{width:100%;border:1px solid var(--slate-300);border-radius:var(--radius-sm);padding:9px 12px;font-size:13.5px;color:var(--slate-700);background:var(--white);font-family:inherit;}
+.input::placeholder{color:var(--slate-400);}
+textarea.input{resize:vertical;min-height:70px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+@media(max-width:640px){.grid2,.grid3{grid-template-columns:1fr;}}
+
+/* toggle */
+.toggle{width:40px;height:22px;border-radius:var(--radius-pill);background:var(--slate-300);position:relative;flex:0 0 40px;}
+.toggle.on{background:var(--indigo-600);}
+.toggle::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s;}
+.toggle.on::after{left:20px;}
+.toggle-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--slate-100);}
+.toggle-row .spacer{flex:1;}
+.toggle-row .t-title{font-size:14px;font-weight:600;color:var(--slate-800);}
+.toggle-row .t-sub{font-size:12px;color:var(--slate-500);}
+
+/* disclosure strip */
+.disclosure{display:flex;align-items:flex-start;gap:10px;background:var(--slate-50);border:1px solid var(--slate-200);border-radius:var(--radius-sm);padding:11px 14px;font-size:12px;color:var(--slate-500);line-height:1.5;}
+.disclosure .i{color:var(--indigo-500);font-size:14px;flex:0 0 auto;}
+
+/* empty state */
+.empty{text-align:center;padding:46px 20px;color:var(--slate-500);}
+.empty .ic{width:64px;height:64px;border-radius:50%;background:var(--slate-100);display:grid;place-items:center;margin:0 auto 14px;font-size:26px;color:var(--slate-400);}
+.empty h3{font-size:17px;margin-bottom:6px;}
+.empty p{font-size:13.5px;max-width:340px;margin:0 auto 16px;}
+
+/* chart placeholders */
+.chart{height:200px;border-radius:var(--radius-sm);background:linear-gradient(180deg,var(--indigo-50),transparent);position:relative;padding:14px;display:flex;align-items:flex-end;gap:8px;border:1px dashed var(--slate-200);}
+.chart .bar{flex:1;background:linear-gradient(180deg,var(--indigo-500),var(--indigo-400));border-radius:6px 6px 0 0;opacity:.9;}
+.spark{display:flex;align-items:flex-end;gap:3px;height:40px;}
+.spark i{flex:1;background:var(--indigo-400);border-radius:2px;display:block;}
+.donut{width:120px;height:120px;border-radius:50%;background:conic-gradient(var(--indigo-600) 0 45%,var(--green-600) 45% 70%,var(--amber-500,#f59e0b) 70% 88%,var(--slate-300) 88% 100%);display:grid;place-items:center;}
+.donut::after{content:"";width:70px;height:70px;border-radius:50%;background:#fff;}
+
+/* hero */
+.hero{background:linear-gradient(135deg,var(--indigo-600),var(--blue-600));color:#fff;padding:40px 28px;text-align:center;}
+.hero h1{color:#fff;font-size:30px;max-width:640px;margin:0 auto;}
+.hero p{color:rgba(255,255,255,.85);margin:12px auto 0;max-width:520px;font-size:15px;}
+.hero .search{max-width:560px;margin:22px auto 0;background:#fff;border-radius:var(--radius-pill);padding:7px 8px 7px 18px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow-lg);}
+.hero .search input{border:none;flex:1;font-size:15px;color:var(--slate-700);outline:none;background:transparent;}
+.hero .cta{display:flex;gap:12px;justify-content:center;margin-top:18px;flex-wrap:wrap;}
+
+/* store card */
+.store-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;}
+.store-card{background:var(--white);border:1px solid var(--slate-200);border-radius:var(--radius);padding:16px;text-align:center;box-shadow:var(--shadow-sm);}
+.store-card .lg{width:56px;height:56px;margin:0 auto 10px;}
+.store-card .nm{font-weight:700;font-size:14px;color:var(--slate-800);}
+.store-card .ct{font-size:11.5px;color:var(--slate-500);margin-top:3px;}
+
+/* coupon card */
+.coupon-card{background:var(--white);border:1px solid var(--slate-200);border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow:hidden;position:relative;}
+.coupon-card .cc-body{padding:16px;}
+.coupon-card .cc-code{border:1.5px dashed var(--indigo-300);border-radius:var(--radius-sm);padding:9px;text-align:center;font-family:ui-monospace,Menlo,monospace;font-weight:700;color:var(--indigo-700);background:var(--indigo-50);letter-spacing:1px;position:relative;overflow:hidden;}
+.coupon-card .cc-code.hidden::after{content:"Reveal Code →";position:absolute;inset:0;background:var(--indigo-600);color:#fff;display:grid;place-items:center;font-family:var(--font);letter-spacing:0;cursor:pointer;}
+.notch{position:absolute;width:16px;height:16px;border-radius:50%;background:var(--slate-100);top:50%;transform:translateY(-50%);}
+
+/* misc utility */
+.muted{color:var(--slate-500);}
+.small{font-size:12px;}
+.xsmall{font-size:11px;}
+.b{font-weight:700;}
+.mt8{margin-top:8px;}.mt12{margin-top:12px;}.mt16{margin-top:16px;}.mt24{margin-top:24px;}
+.mb8{margin-bottom:8px;}.mb12{margin-bottom:12px;}.mb16{margin-bottom:16px;}
+.center{text-align:center;}
+.divider{height:1px;background:var(--slate-200);margin:16px 0;}
+.pill-tabs{display:flex;gap:6px;background:var(--slate-100);padding:4px;border-radius:var(--radius-pill);width:fit-content;}
+.pill-tabs .pt{padding:7px 16px;border-radius:var(--radius-pill);font-size:13px;font-weight:600;color:var(--slate-600);border:none;background:transparent;}
+.pill-tabs .pt.active{background:#fff;color:var(--indigo-600);box-shadow:var(--shadow-sm);}
+.list-clean{list-style:none;padding:0;margin:0;}
+.kv{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--slate-100);font-size:13px;}
+.kv span:first-child{color:var(--slate-500);}
+.kv span:last-child{font-weight:600;color:var(--slate-800);}
+
+/* mobile bottom nav (app-like) */
+.appbar{display:flex;justify-content:space-around;padding:9px 6px;border-top:1px solid var(--slate-200);background:#fff;position:sticky;bottom:0;}
+.appbar a{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;color:var(--slate-500);font-weight:600;}
+.appbar a.active{color:var(--indigo-600);}
+.appbar .ic{font-size:17px;}
+.sticky-cta{position:sticky;bottom:0;background:#fff;border-top:1px solid var(--slate-200);padding:12px 14px;display:flex;gap:10px;align-items:center;box-shadow:0 -6px 18px rgba(15,23,42,.06);}
+
+/* two-col admin detail */
+.detail-split{display:grid;grid-template-columns:1fr 380px;gap:20px;align-items:start;}
+@media(max-width:960px){.detail-split{grid-template-columns:1fr;}}
+
+/* code block */
+.code{background:var(--slate-900);color:#e2e8f0;border-radius:var(--radius-sm);padding:14px;font-family:ui-monospace,Menlo,monospace;font-size:12px;line-height:1.6;overflow-x:auto;white-space:pre;}
+.code .k{color:#93c5fd;}.code .s{color:#86efac;}.code .n{color:#fca5a5;}
+
+/* notes cards */
+.notes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
+.note{background:var(--white);border:1px solid var(--slate-200);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow-sm);}
+.note .ni{width:38px;height:38px;border-radius:10px;display:grid;place-items:center;font-size:18px;margin-bottom:10px;}
+.note h3{font-size:15px;margin-bottom:6px;}
+.note p{font-size:13px;color:var(--slate-600);}
+
+/* responsive sidebar */
+@media(max-width:900px){
+  .sidebar{transform:translateX(-100%);transition:.25s;}
+  .sidebar.open{transform:none;box-shadow:var(--shadow-lg);}
+  .content{margin-left:0;}
+  .topbar .menu-btn{display:inline-flex;}
+  .topbar .url{display:none;}
+}
+.scrim{display:none;}
+@media(max-width:900px){.scrim.show{display:block;position:fixed;inset:0;background:rgba(15,23,42,.4);z-index:45;}}
+
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--slate-600);}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:middle;}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ============ SIDEBAR NAV ============ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="logo">M</div>
+      <div><b>MyPerkFinder</b><span>Product Wireframes</span></div>
+    </div>
+
+    <div class="nav-group">
+      <div class="label">Overview</div>
+      <button class="nav-link" data-screen="notes"><span class="ico">✦</span>Design Notes</button>
+      <button class="nav-link" data-screen="components"><span class="ico">◧</span>Component Library</button>
+    </div>
+
+    <div class="nav-group">
+      <div class="label">Public Shopper</div>
+      <button class="nav-link" data-screen="home"><span class="ico">⌂</span>Homepage</button>
+      <button class="nav-link" data-screen="deals"><span class="ico">≣</span>Deals Listing</button>
+      <button class="nav-link" data-screen="category"><span class="ico">◫</span>Category Page</button>
+      <button class="nav-link" data-screen="search"><span class="ico">⌕</span>Search Results</button>
+      <button class="nav-link" data-screen="stores"><span class="ico">▤</span>Store Listing</button>
+      <button class="nav-link" data-screen="store"><span class="ico">▥</span>Store Detail</button>
+      <button class="nav-link" data-screen="deal"><span class="ico">★</span>Deal Detail</button>
+      <button class="nav-link" data-screen="coupons"><span class="ico">✂</span>Coupons</button>
+      <button class="nav-link" data-screen="blog"><span class="ico">✎</span>Blog / Guides</button>
+    </div>
+
+    <div class="nav-group">
+      <div class="label">PWA &amp; Retention</div>
+      <button class="nav-link" data-screen="install"><span class="ico">⇩</span>Install Banner</button>
+      <button class="nav-link" data-screen="saved"><span class="ico">♡</span>Saved Deals</button>
+      <button class="nav-link" data-screen="alerts"><span class="ico">🔔</span>Alerts</button>
+      <button class="nav-link" data-screen="preferences"><span class="ico">⚙</span>Preferences</button>
+    </div>
+
+    <div class="nav-group">
+      <div class="label">Admin Dashboard</div>
+      <button class="nav-link" data-screen="admin"><span class="ico">▦</span>Overview</button>
+      <button class="nav-link" data-screen="review"><span class="ico">✔</span>Review Queue</button>
+      <button class="nav-link" data-screen="offers"><span class="ico">≣</span>All Offers</button>
+      <button class="nav-link" data-screen="editoffer"><span class="ico">✎</span>Create / Edit Offer</button>
+      <button class="nav-link" data-screen="merchants"><span class="ico">▥</span>Merchants</button>
+      <button class="nav-link" data-screen="categories"><span class="ico">⌗</span>Categories</button>
+      <button class="nav-link" data-screen="admincoupons"><span class="ico">✂</span>Coupons</button>
+    </div>
+
+    <div class="nav-group">
+      <div class="label">Affiliate &amp; Imports</div>
+      <button class="nav-link" data-screen="imports"><span class="ico">⟳</span>Import Dashboard</button>
+      <button class="nav-link" data-screen="raw"><span class="ico">{}</span>Raw Records</button>
+      <button class="nav-link" data-screen="sources"><span class="ico">⇄</span>Sources</button>
+      <button class="nav-link" data-screen="mapping"><span class="ico">⤳</span>Mapping</button>
+      <button class="nav-link" data-screen="llm"><span class="ico">✧</span>LLM Review</button>
+      <button class="nav-link" data-screen="duplicates"><span class="ico">⧉</span>Duplicates</button>
+    </div>
+
+    <div class="nav-group">
+      <div class="label">Analytics</div>
+      <button class="nav-link" data-screen="analytics"><span class="ico">📈</span>Analytics Overview</button>
+      <button class="nav-link" data-screen="dealperf"><span class="ico">◔</span>Deal Performance</button>
+      <button class="nav-link" data-screen="subscribers"><span class="ico">✉</span>Subscribers</button>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <!-- ============ CONTENT ============ -->
+  <main class="content">
+    <div class="topbar">
+      <button class="btn btn-outline btn-sm menu-btn" id="menuBtn">☰ Menu</button>
+      <div class="crumb" id="crumb">MyPerkFinder / <b>Design Notes</b></div>
+      <div class="url" id="urlBar">wireframe://overview</div>
+    </div>
+    <div class="screen-wrap" id="screenWrap">
+<!-- ============================================================ DESIGN NOTES -->
+<section class="screen" id="screen-notes">
+  <div class="screen-head">
+    <h2>MyPerkFinder — Product Wireframes</h2>
+    <p>A world-class, scalable deal-discovery platform. This preview covers 30 wireframes across the public shopper experience, PWA retention, admin operations, affiliate imports, and analytics. All content is mock data — no real APIs.</p>
+  </div>
+
+  <div class="card card-pad mb16" style="background:linear-gradient(135deg,var(--indigo-50),#fff);border-color:var(--indigo-100);">
+    <div class="hstack" style="gap:14px;align-items:flex-start;">
+      <div style="font-size:26px;">🧭</div>
+      <div>
+        <h3 style="font-size:16px;margin-bottom:6px;">How to use this preview</h3>
+        <p class="small muted">Use the left sidebar to jump between screens. Key shopper screens (Homepage, Deals, Deal Detail, Saved, Alerts) show both <b>desktop</b> and <b>app-like mobile</b> layouts. Interactive bits — coupon reveal, tabs, and toggles — are clickable. The URL pill (top-right) shows the intended route for each screen.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="notes-grid">
+    <div class="note">
+      <div class="ni" style="background:var(--indigo-50);color:var(--indigo-600);">🛍️</div>
+      <h3>Public Shopper Experience</h3>
+      <p>Fast, mobile-first browsing of deals, coupons, stores &amp; categories. Strong deal cards with savings, discount badges, verified status and expiry urgency. The Deal Detail page is the conversion hub with a prominent “Go to Deal” CTA and affiliate disclosure placed right beside it.</p>
+    </div>
+    <div class="note">
+      <div class="ni" style="background:var(--green-50);color:var(--green-700);">📲</div>
+      <h3>PWA &amp; Retention</h3>
+      <p>Install banners, saved deals, and a granular alerts center (price-drop, coupon-expiry, daily digest). Push-notification permission states are wireframed as placeholders so future price-drop alerts slot in cleanly without redesign.</p>
+    </div>
+    <div class="note">
+      <div class="ni" style="background:var(--amber-50);color:var(--amber-700);">🗂️</div>
+      <h3>Admin Review Experience</h3>
+      <p>A production-grade review queue with confidence scores, validation flags, side-by-side raw→normalized comparison, and bulk moderation. Statuses (draft, active, needs_review, expired, rejected, archived) drive the whole offer lifecycle.</p>
+    </div>
+    <div class="note">
+      <div class="ni" style="background:var(--blue-50);color:var(--blue-600);">🔌</div>
+      <h3>Affiliate Import Operations</h3>
+      <p>Source connections (CJ, Rakuten, Impact, Awin, Walmart, eBay, feeds, merchant emails), import job timelines, raw record inspection, merchant/category/brand mapping, LLM extraction review, and duplicate merge — the operational backbone that keeps offers accurate at scale.</p>
+    </div>
+    <div class="note">
+      <div class="ni" style="background:var(--indigo-50);color:var(--indigo-600);">📈</div>
+      <h3>Analytics &amp; Scalability</h3>
+      <p>Clicks over time, top deals/stores/categories, search terms, traffic sources, subscriber &amp; email analytics, and per-deal performance. The component library and consistent tokens keep the design system scalable as new surfaces are added.</p>
+    </div>
+    <div class="note">
+      <div class="ni" style="background:var(--slate-100);color:var(--slate-600);">♿</div>
+      <h3>Accessibility &amp; Trust</h3>
+      <p>Semantic headings, keyboard-visible focus rings, strong contrast, clear labels and alt-text placeholders. Clear, repeated affiliate disclosures and “verified today” signals build shopper trust throughout.</p>
+    </div>
+  </div>
+
+  <div class="section-title">Deal data model &amp; system states (shown across wireframes)</div>
+  <div class="grid2">
+    <div class="panel">
+      <div class="panel-head"><h3>Deal fields</h3></div>
+      <div class="panel-body">
+        <div class="chips">
+          <span class="chip">title</span><span class="chip">slug</span><span class="chip">merchantName</span>
+          <span class="chip">category</span><span class="chip">brand</span><span class="chip">regularPrice</span>
+          <span class="chip">salePrice</span><span class="chip">discountPercent</span><span class="chip">couponCode</span>
+          <span class="chip">currency</span><span class="chip">imageUrl</span><span class="chip">affiliateUrl</span>
+          <span class="chip">productUrl</span><span class="chip">expiryDate</span><span class="chip">lastVerifiedAt</span>
+          <span class="chip">sourceName</span><span class="chip">status</span><span class="chip">confidenceScore</span>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head"><h3>Statuses &amp; validation flags</h3></div>
+      <div class="panel-body vstack" style="gap:14px;">
+        <div>
+          <div class="small b mb8">Offer status</div>
+          <div class="chips"><span class="badge draft">draft</span><span class="badge active">active</span><span class="badge review">needs_review</span><span class="badge expired">expired</span><span class="badge rejected">rejected</span><span class="badge archived">archived</span></div>
+        </div>
+        <div>
+          <div class="small b mb8">Import status</div>
+          <div class="chips"><span class="badge status-pending">pending</span><span class="badge status-running">running</span><span class="badge status-completed">completed</span><span class="badge status-failed">failed</span><span class="badge status-partial">partial_success</span></div>
+        </div>
+        <div>
+          <div class="small b mb8">Validation flags</div>
+          <div class="chips"><span class="badge urgent">Missing affiliate URL</span><span class="badge urgent">Expired date</span><span class="badge expiry">Discount too high</span><span class="badge urgent">Sale &gt; regular</span><span class="badge expiry">Missing merchant</span><span class="badge expiry">Missing category</span><span class="badge expiry">Low confidence</span><span class="badge neutral">Possible duplicate</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- ============================================================ COMPONENT LIBRARY -->
+<section class="screen" id="screen-components">
+  <div class="screen-head">
+    <h2>Component Library</h2>
+    <p>The reusable building blocks that keep MyPerkFinder consistent and scalable across public, PWA and admin surfaces.</p>
+  </div>
+
+  <div class="section-title">Buttons</div>
+  <div class="card card-pad"><div class="chips" style="gap:12px;">
+    <button class="btn btn-primary">Primary</button>
+    <button class="btn btn-outline">Outline</button>
+    <button class="btn">Secondary</button>
+    <button class="btn btn-ghost">Ghost</button>
+    <button class="btn btn-success">Success</button>
+    <button class="btn btn-warn">Warning</button>
+    <button class="btn btn-danger">Danger</button>
+    <button class="btn btn-primary btn-lg">Large CTA</button>
+    <button class="btn btn-outline btn-sm">Small</button>
+  </div></div>
+
+  <div class="section-title">Badges &amp; status</div>
+  <div class="card card-pad"><div class="chips" style="gap:10px;">
+    <span class="badge discount">-32%</span><span class="badge save">Save $60</span>
+    <span class="badge verified">✓ Verified today</span><span class="badge expiry">⏳ Ends in 2 days</span>
+    <span class="badge urgent">🔥 Ends today</span><span class="badge coupon">Coupon</span>
+    <span class="badge active">active</span><span class="badge review">needs_review</span>
+    <span class="badge expired">expired</span><span class="badge draft">draft</span>
+    <span class="badge rejected">rejected</span><span class="badge archived">archived</span>
+  </div></div>
+
+  <div class="section-title">Filter chips &amp; search bars</div>
+  <div class="card card-pad vstack" style="gap:14px;">
+    <div class="chips">
+      <span class="chip active">Electronics <span class="x">✕</span></span>
+      <span class="chip">Under $100</span><span class="chip">Coupon available</span>
+      <span class="chip">Ends soon</span><span class="chip">Verified today</span>
+    </div>
+    <div class="mini-search" style="max-width:420px;">⌕ Search laptops, phones, coupons, stores…</div>
+  </div>
+
+  <div class="section-title">Deal card · Coupon card · Store card · Stat card</div>
+  <div class="deal-grid two">
+    <div class="deal-card">
+      <div class="thumb"><div class="imgph">Product image<br>alt: “AirPods Pro”</div><span class="flag badge discount">-24%</span><span class="fav">♡</span></div>
+      <div class="body">
+        <div class="store">▪ Best Buy <span class="badge verified" style="padding:1px 6px;">✓</span></div>
+        <div class="title">Apple AirPods Pro (2nd Gen) USB-C</div>
+        <div class="prices"><span class="sale">$189</span><span class="reg">$249</span><span class="badge save">Save $60</span></div>
+        <div class="meta"><span class="badge expiry">⏳ 2 days</span><span>96% confidence</span></div>
+      </div>
+    </div>
+    <div class="coupon-card">
+      <div class="cc-body vstack" style="gap:10px;">
+        <div class="store" style="font-size:11px;color:var(--slate-500);font-weight:600;">▪ Nike</div>
+        <div class="b">Extra 25% off sale styles</div>
+        <div class="cc-code hidden" data-reveal="NIKE25">NIKE25</div>
+        <div class="hstack" style="justify-content:space-between;"><span class="badge expiry">Ends Jul 9</span><button class="btn btn-primary btn-sm">Shop Now</button></div>
+      </div>
+    </div>
+    <div class="store-card">
+      <div class="imgph round lg">BB</div>
+      <div class="nm">Best Buy</div>
+      <div class="ct">128 deals · 24 coupons</div>
+      <div class="mt8"><span class="badge verified">✓ Verified</span></div>
+    </div>
+    <div class="stat">
+      <div class="ic">🛒</div>
+      <div class="k">Active offers</div>
+      <div class="v">12,480</div>
+      <div class="d up">▲ 4.2% vs last week</div>
+    </div>
+  </div>
+
+  <div class="section-title">Admin table</div>
+  <div class="panel"><div class="table-wrap"><table class="tbl">
+    <thead><tr><th><span class="checkbox"></span></th><th>Offer</th><th>Merchant</th><th>Status</th><th>Confidence</th><th>Actions</th></tr></thead>
+    <tbody>
+      <tr><td><span class="checkbox"></span></td><td>AirPods Pro (2nd Gen)</td><td>Best Buy</td><td><span class="badge active">active</span></td><td class="num">96%</td><td><div class="row-actions"><button class="btn btn-sm btn-outline">Edit</button></div></td></tr>
+      <tr><td><span class="checkbox"></span></td><td>Sony WH-1000XM5</td><td>Amazon</td><td><span class="badge review">needs_review</span></td><td class="num">61%</td><td><div class="row-actions"><button class="btn btn-sm btn-outline">Edit</button></div></td></tr>
+    </tbody>
+  </table></div></div>
+
+  <div class="section-title">Alert banners</div>
+  <div class="vstack" style="gap:12px;">
+    <div class="disclosure" style="background:var(--green-50);border-color:var(--green-100);color:var(--green-700);"><span class="i">✓</span><div><b>Price dropped!</b> Your saved “Sony WH-1000XM5” is now $328 (was $399).</div></div>
+    <div class="disclosure" style="background:var(--amber-50);border-color:var(--amber-100);color:var(--amber-700);"><span class="i">⏳</span><div><b>Coupon expiring soon.</b> “NIKE25” expires in 2 days.</div></div>
+    <div class="disclosure" style="background:var(--red-50);border-color:var(--red-100);color:var(--red-700);"><span class="i">⚠</span><div><b>Validation warning.</b> Sale price is higher than regular price on 3 imported offers.</div></div>
+  </div>
+
+  <div class="section-title">Affiliate disclosure · Empty state · Install banner</div>
+  <div class="grid2">
+    <div class="vstack" style="gap:14px;">
+      <div class="disclosure"><span class="i">ⓘ</span><div><b>Affiliate disclosure.</b> MyPerkFinder may earn a commission when you buy through links on our site. This never affects the price you pay. Prices &amp; availability are accurate as of the last verified time.</div></div>
+      <div class="card" style="background:linear-gradient(135deg,var(--indigo-600),var(--blue-600));color:#fff;padding:16px;border:none;">
+        <div class="hstack" style="gap:12px;">
+          <div style="font-size:24px;">📲</div>
+          <div style="flex:1;"><b style="color:#fff;">Install MyPerkFinder</b><div class="small" style="color:rgba(255,255,255,.85);">Faster deal access &amp; future price-drop alerts.</div></div>
+          <button class="btn btn-sm" style="background:#fff;color:var(--indigo-700);">Install</button>
+        </div>
+      </div>
+    </div>
+    <div class="card"><div class="empty">
+      <div class="ic">🔍</div>
+      <h3>No deals match your filters</h3>
+      <p>Try removing a filter or browse today’s best deals instead.</p>
+      <button class="btn btn-primary">Clear filters</button>
+    </div></div>
+  </div>
+</section>
+<!-- ============================================================ HOMEPAGE -->
+<section class="screen" id="screen-home">
+  <div class="screen-head">
+    <h2>Homepage</h2>
+    <p>The shopper front door — hero search, trending categories, today’s best deals, expiring-soon urgency, popular stores, trust section and newsletter.</p>
+  </div>
+  <div class="split">
+    <!-- DESKTOP -->
+    <div class="frame device-desktop">
+      <div class="frame-label"><span class="dot g"></span> Desktop · 1280px</div>
+      <div class="frame-body">
+        <div class="site">
+          <!-- header -->
+          <header class="site-header">
+            <div class="site-logo"><span class="mk">M</span> MyPerkFinder</div>
+            <nav class="site-nav"><a>Deals</a><a>Stores</a><a>Coupons</a><a>Categories</a><a>Alerts</a><a>Blog</a></nav>
+            <div class="spacer"></div>
+            <div class="mini-search">⌕ Search…</div>
+            <button class="btn btn-ghost btn-sm">Sign in</button>
+            <button class="btn btn-primary btn-sm">⇩ Install App</button>
+          </header>
+          <!-- hero -->
+          <div class="hero">
+            <h1>Find better deals, rewards, and hidden perks.</h1>
+            <p>Discover product deals, coupons, cashback-style offers, and store promotions in one place.</p>
+            <div class="search">
+              <span style="color:var(--slate-400);">⌕</span>
+              <input placeholder="Search laptops, phones, coupons, stores…" aria-label="Search deals" />
+              <button class="btn btn-primary">Search</button>
+            </div>
+            <div class="cta">
+              <button class="btn btn-lg" style="background:#fff;color:var(--indigo-700);">Browse Deals</button>
+              <button class="btn btn-lg btn-ghost" style="color:#fff;border:1px solid rgba(255,255,255,.5);">View Coupons</button>
+            </div>
+          </div>
+          <div style="padding:22px;">
+            <!-- trending chips -->
+            <div class="hstack mb12" style="justify-content:space-between;"><h3 style="font-size:16px;">Trending categories</h3></div>
+            <div class="chips mb24">
+              <span class="chip active">🔥 Electronics</span><span class="chip">💻 Laptops</span><span class="chip">📱 Phones</span>
+              <span class="chip">🎧 Audio</span><span class="chip">🏠 Home</span><span class="chip">👟 Fashion</span><span class="chip">🎮 Gaming</span><span class="chip">💄 Beauty</span>
+            </div>
+            <!-- today's best -->
+            <div class="hstack mb12" style="justify-content:space-between;"><h3 style="font-size:16px;">Today’s best deals</h3><a class="small b">View all →</a></div>
+            <div class="deal-grid mb24">
+              <!--DEALCARD:AirPods Pro (2nd Gen) USB-C|Best Buy|189|249|24|2 days|96|1-->
+              <!--DEALCARD:Sony WH-1000XM5 Headphones|Amazon|328|399|18|5 days|88|0-->
+              <!--DEALCARD:LG 27" 4K UHD Monitor|Walmart|246|399|38|Today|82|1-->
+              <!--DEALCARD:Ninja Air Fryer Max XL|Target|119|169|30|3 days|91|0-->
+            </div>
+            <!-- expiring soon -->
+            <div class="hstack mb12" style="justify-content:space-between;"><h3 style="font-size:16px;">⏳ Expiring soon</h3><a class="small b">View all →</a></div>
+            <div class="deal-grid mb24">
+              <!--DEALCARD:Dell XPS 13 Laptop|Dell|899|1199|25|Today|79|0-->
+              <!--DEALCARD:Instant Pot Duo 6Qt|Amazon|59|119|50|Ends 6h|84|1-->
+              <!--DEALCARD:Samsung 65" QLED TV|Best Buy|799|1099|27|Tomorrow|90|0-->
+              <!--DEALCARD:Bose SoundLink Flex|Target|99|149|33|1 day|86|1-->
+            </div>
+            <!-- popular stores -->
+            <div class="hstack mb12" style="justify-content:space-between;"><h3 style="font-size:16px;">Popular stores</h3></div>
+            <div class="store-grid mb24">
+              <div class="store-card"><div class="imgph round lg">BB</div><div class="nm">Best Buy</div><div class="ct">128 deals · 24 coupons</div></div>
+              <div class="store-card"><div class="imgph round lg">AZ</div><div class="nm">Amazon</div><div class="ct">642 deals · 51 coupons</div></div>
+              <div class="store-card"><div class="imgph round lg">WM</div><div class="nm">Walmart</div><div class="ct">311 deals · 33 coupons</div></div>
+              <div class="store-card"><div class="imgph round lg">TG</div><div class="nm">Target</div><div class="ct">204 deals · 19 coupons</div></div>
+              <div class="store-card"><div class="imgph round lg">NK</div><div class="nm">Nike</div><div class="ct">88 deals · 12 coupons</div></div>
+            </div>
+            <!-- trust -->
+            <div class="card card-pad mb24" style="background:var(--slate-50);">
+              <h3 class="center mb16" style="font-size:18px;">Why MyPerkFinder?</h3>
+              <div class="grid3">
+                <div class="center"><div style="font-size:26px;">✓</div><div class="b mt8">Verified daily</div><div class="small muted">Deals are re-checked and time-stamped with a “last verified” date.</div></div>
+                <div class="center"><div style="font-size:26px;">🔔</div><div class="b mt8">Smart alerts</div><div class="small muted">Save deals and get price-drop &amp; coupon-expiry notifications.</div></div>
+                <div class="center"><div style="font-size:26px;">🔍</div><div class="b mt8">Everything in one place</div><div class="small muted">Deals, coupons, cashback-style offers &amp; store promos together.</div></div>
+              </div>
+            </div>
+            <!-- newsletter -->
+            <div class="card card-pad mb16" style="background:linear-gradient(135deg,var(--indigo-600),var(--blue-600));color:#fff;border:none;">
+              <div class="hstack" style="gap:16px;flex-wrap:wrap;">
+                <div style="flex:1;min-width:220px;"><h3 style="color:#fff;font-size:17px;">Get the best deals in your inbox</h3><p class="small" style="color:rgba(255,255,255,.85);">A daily digest of top deals &amp; expiring coupons. Unsubscribe anytime.</p></div>
+                <div class="hstack" style="gap:8px;"><input class="input" placeholder="you@email.com" style="min-width:220px;" /><button class="btn" style="background:#fff;color:var(--indigo-700);">Subscribe</button></div>
+              </div>
+            </div>
+            <!-- affiliate strip -->
+            <div class="disclosure mb16"><span class="i">ⓘ</span><div>MyPerkFinder may earn a commission from qualifying purchases made through links on this site. This supports our free service and never changes the price you pay.</div></div>
+            <!-- footer -->
+            <div class="divider"></div>
+            <div class="grid3 small muted">
+              <div><div class="site-logo mb8"><span class="mk">M</span> MyPerkFinder</div><p class="small">Deals, coupons &amp; perks in one place.</p></div>
+              <div><div class="b mb8" style="color:var(--slate-700);">Shop</div>Deals · Coupons · Stores · Categories</div>
+              <div><div class="b mb8" style="color:var(--slate-700);">Company</div>About · Blog · Privacy · Affiliate disclosure</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MOBILE -->
+    <div class="frame mobile-frame">
+      <div class="frame-label"><span class="dot g"></span> Mobile · 390px · app-like</div>
+      <div class="frame-body">
+        <div class="site">
+          <header class="site-header" style="padding:12px 14px;">
+            <div class="site-logo" style="font-size:15px;"><span class="mk" style="width:26px;height:26px;">M</span> MyPerkFinder</div>
+            <div class="spacer"></div>
+            <button class="btn btn-ghost btn-sm">☰</button>
+          </header>
+          <div class="hero" style="padding:26px 16px;">
+            <h1 style="font-size:22px;">Find better deals &amp; hidden perks.</h1>
+            <div class="search" style="margin-top:16px;padding:6px 6px 6px 14px;"><span style="color:var(--slate-400);">⌕</span><input placeholder="Search deals, coupons…" /><button class="btn btn-primary btn-sm">Go</button></div>
+            <div class="cta" style="margin-top:14px;"><button class="btn btn-sm" style="background:#fff;color:var(--indigo-700);">Browse Deals</button><button class="btn btn-sm btn-ghost" style="color:#fff;border:1px solid rgba(255,255,255,.5);">Coupons</button></div>
+          </div>
+          <div style="padding:16px;">
+            <div class="chips mb16"><span class="chip active">🔥 Electronics</span><span class="chip">💻 Laptops</span><span class="chip">📱 Phones</span><span class="chip">🎧 Audio</span></div>
+            <h3 class="mb12" style="font-size:15px;">Today’s best deals</h3>
+            <div class="deal-grid" style="grid-template-columns:1fr 1fr;">
+              <!--DEALCARD:AirPods Pro USB-C|Best Buy|189|249|24|2 days|96|1-->
+              <!--DEALCARD:Sony WH-1000XM5|Amazon|328|399|18|5 days|88|0-->
+            </div>
+            <h3 class="mb12 mt16" style="font-size:15px;">⏳ Expiring soon</h3>
+            <div class="deal-grid" style="grid-template-columns:1fr 1fr;">
+              <!--DEALCARD:Instant Pot Duo 6Qt|Amazon|59|119|50|Ends 6h|84|1-->
+              <!--DEALCARD:Dell XPS 13|Dell|899|1199|25|Today|79|0-->
+            </div>
+            <div class="disclosure mt16"><span class="i">ⓘ</span><div>We may earn a commission from purchases made via our links.</div></div>
+          </div>
+          <nav class="appbar">
+            <a class="active"><span class="ic">⌂</span>Home</a>
+            <a><span class="ic">≣</span>Deals</a>
+            <a><span class="ic">✂</span>Coupons</a>
+            <a><span class="ic">♡</span>Saved</a>
+            <a><span class="ic">🔔</span>Alerts</a>
+          </nav>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- ============================================================ DEALS LISTING -->
+<section class="screen" id="screen-deals">
+  <div class="screen-head"><h2>Deals Listing</h2><p>Filterable, sortable deal grid with a desktop sidebar and a mobile filter drawer. Includes pagination and empty-state patterns.</p></div>
+  <div class="split">
+    <!-- DESKTOP -->
+    <div class="frame device-desktop">
+      <div class="frame-label"><span class="dot g"></span> Desktop · filter sidebar</div>
+      <div class="frame-body"><div class="site">
+        <header class="site-header"><div class="site-logo"><span class="mk">M</span> MyPerkFinder</div><nav class="site-nav"><a>Deals</a><a>Stores</a><a>Coupons</a><a>Categories</a></nav><div class="spacer"></div><div class="mini-search">⌕ Search…</div><button class="btn btn-primary btn-sm">⇩ Install</button></header>
+        <div style="padding:20px;">
+          <div class="hstack mb16" style="justify-content:space-between;flex-wrap:wrap;gap:10px;">
+            <div><h2 style="font-size:22px;">Today’s Deals</h2><div class="small muted">1,248 active offers · updated 6 min ago</div></div>
+            <div class="mini-search" style="min-width:280px;">⌕ Search within deals…</div>
+          </div>
+          <div class="hstack mb16" style="justify-content:space-between;flex-wrap:wrap;gap:10px;">
+            <div class="chips"><span class="chip active">All</span><span class="chip">Coupon available</span><span class="chip">Verified today</span><span class="chip">Ends soon</span></div>
+            <div class="hstack small"><span class="muted">Sort:</span>
+              <select class="input" style="width:auto;padding:7px 10px;"><option>Newest</option><option>Highest discount</option><option>Ending soon</option><option>Lowest price</option><option>Most popular</option></select>
+            </div>
+          </div>
+          <div style="display:flex;gap:22px;align-items:flex-start;">
+            <!-- filter sidebar -->
+            <aside class="filter-side card card-pad" style="align-self:flex-start;">
+              <div class="hstack" style="justify-content:space-between;"><h3 style="font-size:15px;">Filters</h3><a class="small">Clear</a></div>
+              <div class="filter-block"><h4>Store</h4>
+                <label class="filter-opt"><span class="checkbox"></span> Best Buy <span class="muted xsmall">(128)</span></label>
+                <label class="filter-opt"><span class="checkbox"></span> Amazon <span class="muted xsmall">(642)</span></label>
+                <label class="filter-opt"><span class="checkbox"></span> Walmart <span class="muted xsmall">(311)</span></label>
+                <label class="filter-opt"><span class="checkbox"></span> Target <span class="muted xsmall">(204)</span></label>
+              </div>
+              <div class="filter-block"><h4>Category</h4>
+                <label class="filter-opt"><span class="checkbox"></span> Electronics</label>
+                <label class="filter-opt"><span class="checkbox"></span> Home &amp; Kitchen</label>
+                <label class="filter-opt"><span class="checkbox"></span> Fashion</label>
+                <label class="filter-opt"><span class="checkbox"></span> Gaming</label>
+              </div>
+              <div class="filter-block"><h4>Brand</h4>
+                <label class="filter-opt"><span class="checkbox"></span> Apple</label>
+                <label class="filter-opt"><span class="checkbox"></span> Sony</label>
+                <label class="filter-opt"><span class="checkbox"></span> Samsung</label>
+              </div>
+              <div class="filter-block"><h4>Price range</h4><div class="range"><span class="knob" style="left:15%;"></span><span class="knob" style="left:65%;"></span></div><div class="hstack small muted" style="justify-content:space-between;"><span>$0</span><span>$1,500+</span></div></div>
+              <div class="filter-block"><h4>Discount %</h4><div class="chips"><span class="chip">10%+</span><span class="chip active">25%+</span><span class="chip">50%+</span></div></div>
+              <div class="filter-block">
+                <label class="toggle-row" style="padding:8px 0;border:none;"><span class="t-title" style="font-size:13px;">Coupon available</span><span class="spacer"></span><span class="toggle on"></span></label>
+                <label class="toggle-row" style="padding:8px 0;border:none;"><span class="t-title" style="font-size:13px;">Expires soon</span><span class="spacer"></span><span class="toggle"></span></label>
+                <label class="toggle-row" style="padding:8px 0;border:none;"><span class="t-title" style="font-size:13px;">Verified today</span><span class="spacer"></span><span class="toggle on"></span></label>
+              </div>
+            </aside>
+            <!-- grid -->
+            <div style="flex:1;min-width:0;">
+              <div class="deal-grid">
+                <!--DEALCARD:AirPods Pro (2nd Gen) USB-C|Best Buy|189|249|24|2 days|96|1-->
+                <!--DEALCARD:Sony WH-1000XM5 Headphones|Amazon|328|399|18|5 days|88|0-->
+                <!--DEALCARD:LG 27" 4K UHD Monitor|Walmart|246|399|38|Today|82|1-->
+                <!--DEALCARD:Ninja Air Fryer Max XL|Target|119|169|30|3 days|91|0-->
+                <!--DEALCARD:Dell XPS 13 Laptop|Dell|899|1199|25|Today|79|0-->
+                <!--DEALCARD:Instant Pot Duo 6Qt|Amazon|59|119|50|Ends 6h|84|1-->
+                <!--DEALCARD:Samsung 65" QLED TV|Best Buy|799|1099|27|Tomorrow|90|0-->
+                <!--DEALCARD:Bose SoundLink Flex|Target|99|149|33|1 day|86|1-->
+                <!--DEALCARD:iPad Air (M2) 128GB|Amazon|549|599|8|4 days|93|0-->
+              </div>
+              <div class="center mt24"><button class="btn btn-outline">Load more deals</button><div class="small muted mt8">Showing 9 of 1,248 · infinite scroll loads more automatically</div></div>
+              <div class="hstack center mt16" style="justify-content:center;gap:6px;">
+                <button class="btn btn-sm btn-outline">‹</button>
+                <button class="btn btn-sm btn-primary">1</button><button class="btn btn-sm btn-outline">2</button><button class="btn btn-sm btn-outline">3</button>
+                <span class="muted">…</span><button class="btn btn-sm btn-outline">42</button><button class="btn btn-sm btn-outline">›</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+
+    <!-- MOBILE -->
+    <div class="frame mobile-frame">
+      <div class="frame-label"><span class="dot g"></span> Mobile · filter drawer &amp; chips</div>
+      <div class="frame-body"><div class="site">
+        <header class="site-header" style="padding:12px 14px;"><div class="site-logo" style="font-size:15px;"><span class="mk" style="width:26px;height:26px;">M</span> Deals</div><div class="spacer"></div><button class="btn btn-ghost btn-sm">⌕</button></header>
+        <div style="padding:12px 14px;">
+          <div class="hstack mb12" style="gap:8px;overflow-x:auto;">
+            <button class="btn btn-sm btn-primary" style="flex:0 0 auto;">⚗ Filters (3)</button>
+            <span class="chip active" style="flex:0 0 auto;">25%+ ✕</span><span class="chip" style="flex:0 0 auto;">Coupon</span><span class="chip" style="flex:0 0 auto;">Verified</span>
+          </div>
+          <div class="hstack mb12 small"><span class="muted">1,248 deals</span><span class="spacer" style="flex:1;"></span><select class="input" style="width:auto;padding:6px 8px;font-size:12px;"><option>Ending soon</option><option>Highest discount</option></select></div>
+          <div class="deal-grid" style="grid-template-columns:1fr 1fr;">
+            <!--DEALCARD:AirPods Pro USB-C|Best Buy|189|249|24|2 days|96|1-->
+            <!--DEALCARD:Sony WH-1000XM5|Amazon|328|399|18|5 days|88|0-->
+            <!--DEALCARD:LG 27" 4K Monitor|Walmart|246|399|38|Today|82|1-->
+            <!--DEALCARD:Ninja Air Fryer|Target|119|169|30|3 days|91|0-->
+          </div>
+        </div>
+        <!-- filter drawer preview -->
+        <div style="border-top:1px solid var(--slate-200);padding:14px;background:var(--slate-50);">
+          <div class="small b mb8">▤ Filter drawer (slides up on mobile)</div>
+          <div class="chips"><span class="chip">Store</span><span class="chip">Category</span><span class="chip">Brand</span><span class="chip">Price</span><span class="chip">Discount</span><span class="chip">Coupon</span></div>
+          <button class="btn btn-primary btn-block mt12">Show 1,248 results</button>
+        </div>
+        <nav class="appbar"><a><span class="ic">⌂</span>Home</a><a class="active"><span class="ic">≣</span>Deals</a><a><span class="ic">✂</span>Coupons</a><a><span class="ic">♡</span>Saved</a><a><span class="ic">🔔</span>Alerts</a></nav>
+      </div></div>
+    </div>
+  </div>
+</section>
+<!-- ============================================================ CATEGORY -->
+<section class="screen" id="screen-category">
+  <div class="screen-head"><h2>Category Page</h2><p>Category hero, subcategory chips, category-specific filters, deal grid and SEO content block for organic discovery.</p></div>
+  <div class="frame device-desktop">
+    <div class="frame-label"><span class="dot g"></span> Desktop · /deals/electronics</div>
+    <div class="frame-body"><div class="site">
+      <header class="site-header"><div class="site-logo"><span class="mk">M</span> MyPerkFinder</div><nav class="site-nav"><a>Deals</a><a>Stores</a><a>Coupons</a><a>Categories</a></nav><div class="spacer"></div><div class="mini-search">⌕ Search…</div></header>
+      <div class="hero" style="text-align:left;padding:30px 26px;background:linear-gradient(135deg,var(--indigo-700),var(--indigo-500));">
+        <div class="small" style="color:rgba(255,255,255,.75);">Deals / Electronics</div>
+        <h1 style="margin:6px 0 0;font-size:26px;">Electronics Deals</h1>
+        <p style="margin-top:8px;">312 verified electronics deals — laptops, phones, audio, TVs &amp; more. Updated hourly with the biggest savings.</p>
+      </div>
+      <div style="padding:20px;">
+        <div class="chips mb16"><span class="chip active">All Electronics</span><span class="chip">Laptops</span><span class="chip">Phones</span><span class="chip">Audio</span><span class="chip">TVs</span><span class="chip">Monitors</span><span class="chip">Wearables</span><span class="chip">Cameras</span></div>
+        <div class="hstack mb16" style="justify-content:space-between;">
+          <div class="chips"><span class="chip">Brand ▾</span><span class="chip">Price ▾</span><span class="chip active">25%+ off</span><span class="chip">Coupon</span></div>
+          <select class="input" style="width:auto;padding:7px 10px;"><option>Highest discount</option><option>Newest</option></select>
+        </div>
+        <div class="deal-grid mb24">
+          <!--DEALCARD:AirPods Pro (2nd Gen) USB-C|Best Buy|189|249|24|2 days|96|1-->
+          <!--DEALCARD:Sony WH-1000XM5 Headphones|Amazon|328|399|18|5 days|88|0-->
+          <!--DEALCARD:LG 27" 4K UHD Monitor|Walmart|246|399|38|Today|82|1-->
+          <!--DEALCARD:Samsung 65" QLED TV|Best Buy|799|1099|27|Tomorrow|90|0-->
+          <!--DEALCARD:Dell XPS 13 Laptop|Dell|899|1199|25|Today|79|0-->
+          <!--DEALCARD:iPad Air (M2) 128GB|Amazon|549|599|8|4 days|93|0-->
+          <!--DEALCARD:GoPro HERO12 Black|Best Buy|349|399|13|6 days|85|1-->
+          <!--DEALCARD:Kindle Paperwhite|Amazon|119|149|20|3 days|89|0-->
+        </div>
+        <div class="card card-pad" style="background:var(--slate-50);">
+          <h3 style="font-size:16px;" class="mb8">Electronics deals &amp; buying guide</h3>
+          <p class="small muted mb8">Looking for the best electronics deals? MyPerkFinder tracks price drops across major retailers so you can save on laptops, headphones, TVs and more. Every offer shows a verified date and discount percentage so you know it’s current.</p>
+          <p class="small muted">Popular right now: <a>laptop deals</a>, <a>noise-cancelling headphones</a>, <a>4K TV deals</a>, <a>tablet coupons</a>. Bookmark this page and set an alert to be notified when prices drop further.</p>
+        </div>
+      </div>
+    </div></div>
+  </div>
+</section>
+
+<!-- ============================================================ SEARCH RESULTS -->
+<section class="screen" id="screen-search">
+  <div class="screen-head"><h2>Search Results</h2><p>Query summary, result tabs (Deals · Stores · Coupons · Guides), filters, and a helpful no-results state.</p></div>
+  <div class="split">
+    <div class="frame device-desktop">
+      <div class="frame-label"><span class="dot g"></span> Desktop · /search?q=laptop</div>
+      <div class="frame-body"><div class="site">
+        <header class="site-header"><div class="site-logo"><span class="mk">M</span> MyPerkFinder</div><div class="spacer"></div><div class="mini-search" style="min-width:320px;">⌕ laptop</div></header>
+        <div style="padding:20px;">
+          <div class="mb16"><h2 style="font-size:20px;">Results for “laptop”</h2><div class="small muted">86 deals · 5 stores · 12 coupons · 4 guides</div></div>
+          <div class="pill-tabs tab-group mb16"><button class="pt active" data-tab>Deals <span class="badge neutral" style="padding:0 6px;">86</span></button><button class="pt" data-tab>Stores <span class="badge neutral" style="padding:0 6px;">5</span></button><button class="pt" data-tab>Coupons <span class="badge neutral" style="padding:0 6px;">12</span></button><button class="pt" data-tab>Guides <span class="badge neutral" style="padding:0 6px;">4</span></button></div>
+          <div class="hstack mb16"><div class="chips"><span class="chip">Brand ▾</span><span class="chip">Price ▾</span><span class="chip">Discount ▾</span><span class="chip active">In stock</span></div></div>
+          <div class="deal-grid">
+            <!--DEALCARD:Dell XPS 13 Laptop|Dell|899|1199|25|Today|79|0-->
+            <!--DEALCARD:MacBook Air 13" M3|Best Buy|949|1099|14|4 days|92|1-->
+            <!--DEALCARD:HP Pavilion 15 Laptop|Walmart|449|649|31|2 days|81|0-->
+            <!--DEALCARD:Lenovo IdeaPad Slim 5|Amazon|529|799|34|3 days|84|1-->
+          </div>
+        </div>
+      </div></div>
+    </div>
+    <div class="frame mobile-frame">
+      <div class="frame-label"><span class="dot"></span> No-results state</div>
+      <div class="frame-body"><div class="site">
+        <header class="site-header" style="padding:12px 14px;"><div class="mini-search" style="min-width:0;flex:1;">⌕ lapton pro maxx</div></header>
+        <div style="padding:8px 14px;"><div class="small muted mb12">Results for “lapton pro maxx”</div>
+          <div class="empty">
+            <div class="ic">🔍</div>
+            <h3>No exact matches</h3>
+            <p>We couldn’t find deals for that search. Try one of these instead:</p>
+            <div class="chips center" style="justify-content:center;"><span class="chip">laptop</span><span class="chip">laptop pro</span><span class="chip">gaming laptop</span></div>
+            <div class="mt16"><div class="small b mb8">Popular right now</div>
+              <div class="deal-grid" style="grid-template-columns:1fr;"><!--DEALCARD:MacBook Air 13" M3|Best Buy|949|1099|14|4 days|92|1--></div>
+            </div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ STORE LISTING -->
+<section class="screen" id="screen-stores">
+  <div class="screen-head"><h2>Store Listing</h2><p>Browse all merchants with store search, featured stores, and per-store active deal/coupon counts.</p></div>
+  <div class="frame device-desktop">
+    <div class="frame-label"><span class="dot g"></span> Desktop · /stores</div>
+    <div class="frame-body"><div class="site">
+      <header class="site-header"><div class="site-logo"><span class="mk">M</span> MyPerkFinder</div><nav class="site-nav"><a>Deals</a><a>Stores</a><a>Coupons</a></nav><div class="spacer"></div></header>
+      <div style="padding:20px;">
+        <div class="hstack mb16" style="justify-content:space-between;flex-wrap:wrap;gap:10px;"><h2 style="font-size:22px;">All Stores</h2><div class="mini-search" style="min-width:280px;">⌕ Search stores…</div></div>
+        <div class="chips mb16"><span class="chip active">All</span><span class="chip">Electronics</span><span class="chip">Fashion</span><span class="chip">Home</span><span class="chip">Marketplace</span><span class="chip">Department</span></div>
+        <div class="section-title" style="margin-top:0;">Featured stores</div>
+        <div class="store-grid mb24">
+          <div class="store-card" style="border:1.5px solid var(--indigo-200);"><div class="imgph round lg">BB</div><div class="nm">Best Buy</div><div class="ct">128 deals · 24 coupons</div><span class="badge verified mt8">✓ Verified</span></div>
+          <div class="store-card" style="border:1.5px solid var(--indigo-200);"><div class="imgph round lg">AZ</div><div class="nm">Amazon</div><div class="ct">642 deals · 51 coupons</div><span class="badge verified mt8">✓ Verified</span></div>
+          <div class="store-card" style="border:1.5px solid var(--indigo-200);"><div class="imgph round lg">WM</div><div class="nm">Walmart</div><div class="ct">311 deals · 33 coupons</div><span class="badge verified mt8">✓ Verified</span></div>
+          <div class="store-card" style="border:1.5px solid var(--indigo-200);"><div class="imgph round lg">TG</div><div class="nm">Target</div><div class="ct">204 deals · 19 coupons</div><span class="badge verified mt8">✓ Verified</span></div>
+        </div>
+        <div class="section-title" style="margin-top:0;">All stores (A–Z)</div>
+        <div class="store-grid">
+          <div class="store-card"><div class="imgph round lg">NK</div><div class="nm">Nike</div><div class="ct">88 deals · 12 coupons</div></div>
+          <div class="store-card"><div class="imgph round lg">DL</div><div class="nm">Dell</div><div class="ct">54 deals · 9 coupons</div></div>
+          <div class="store-card"><div class="imgph round lg">EB</div><div class="nm">eBay</div><div class="ct">1,204 deals · 8 coupons</div></div>
+          <div class="store-card"><div class="imgph round lg">HD</div><div class="nm">Home Depot</div><div class="ct">176 deals · 14 coupons</div></div>
+          <div class="store-card"><div class="imgph round lg">CB</div><div class="nm">Chewy</div><div class="ct">63 deals · 7 coupons</div></div>
+          <div class="store-card"><div class="imgph round lg">SP</div><div class="nm">Sephora</div><div class="ct">41 deals · 6 coupons</div></div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+</section>
+
+<!-- ============================================================ STORE DETAIL -->
+<section class="screen" id="screen-store">
+  <div class="screen-head"><h2>Store Detail</h2><p>Store profile with verified status, last-updated date, and tabs for active deals, coupons and a store guide.</p></div>
+  <div class="frame device-desktop">
+    <div class="frame-label"><span class="dot g"></span> Desktop · /stores/best-buy</div>
+    <div class="frame-body"><div class="site">
+      <header class="site-header"><div class="site-logo"><span class="mk">M</span> MyPerkFinder</div><nav class="site-nav"><a>Deals</a><a>Stores</a><a>Coupons</a></nav><div class="spacer"></div></header>
+      <div style="padding:20px;">
+        <div class="card card-pad mb16">
+          <div class="hstack" style="gap:16px;flex-wrap:wrap;">
+            <div class="imgph round" style="width:72px;height:72px;">BB</div>
+            <div style="flex:1;min-width:200px;">
+              <div class="hstack" style="gap:10px;"><h2 style="font-size:22px;">Best Buy</h2><span class="badge verified">✓ Verified partner</span></div>
+              <p class="small muted mt8">Electronics, appliances &amp; tech deals. Free shipping on orders $35+. Price-match guarantee on eligible items.</p>
+              <div class="small muted mt8">Last updated: <b>Jul 2, 2026 · 4:12 PM</b> · Source: <b>CJ Affiliate</b></div>
+            </div>
+            <div class="vstack center" style="gap:2px;"><div class="b" style="font-size:22px;color:var(--indigo-600);">128</div><div class="xsmall muted">active deals</div></div>
+            <div class="vstack center" style="gap:2px;"><div class="b" style="font-size:22px;color:var(--green-600);">24</div><div class="xsmall muted">active coupons</div></div>
+          </div>
+        </div>
+        <div class="pill-tabs tab-group mb16"><button class="pt active" data-tab>Active Deals</button><button class="pt" data-tab>Coupons</button><button class="pt" data-tab>Store Guide</button></div>
+        <div class="section-title" style="margin-top:0;">Top deals at Best Buy</div>
+        <div class="deal-grid mb24">
+          <!--DEALCARD:AirPods Pro (2nd Gen) USB-C|Best Buy|189|249|24|2 days|96|1-->
+          <!--DEALCARD:Samsung 65" QLED TV|Best Buy|799|1099|27|Tomorrow|90|0-->
+          <!--DEALCARD:MacBook Air 13" M3|Best Buy|949|1099|14|4 days|92|1-->
+          <!--DEALCARD:GoPro HERO12 Black|Best Buy|349|399|13|6 days|85|1-->
+        </div>
+        <div class="section-title" style="margin-top:0;">Best Buy coupons</div>
+        <div class="grid2 mb16">
+          <div class="coupon-card"><div class="cc-body vstack" style="gap:8px;"><div class="b">$50 off orders $500+</div><div class="cc-code hidden" data-reveal="BB50OFF">BB50OFF</div><div class="hstack" style="justify-content:space-between;"><span class="badge expiry">Ends Jul 12</span><button class="btn btn-primary btn-sm">Shop</button></div></div></div>
+          <div class="coupon-card"><div class="cc-body vstack" style="gap:8px;"><div class="b">Free shipping, no minimum</div><div class="badge active">No code needed</div><div class="hstack" style="justify-content:space-between;"><span class="badge expiry">Ends Jul 20</span><button class="btn btn-primary btn-sm">Shop</button></div></div></div>
+        </div>
+        <div class="disclosure"><span class="i">ⓘ</span><div>MyPerkFinder may earn a commission on purchases made through Best Buy links. Prices &amp; availability accurate as of the last verified time.</div></div>
+      </div>
+    </div></div>
+  </div>
+</section>
+<!-- ============================================================ DEAL DETAIL -->
+<section class="screen" id="screen-deal">
+  <div class="screen-head"><h2>Deal Detail <span class="badge neutral">Primary conversion page</span></h2><p>The most important conversion screen: prominent “Go to Deal” CTA, coupon code, verification &amp; expiry signals, price history, and affiliate disclosure right beside the CTA. Mobile shows a sticky bottom CTA.</p></div>
+  <div class="split">
+    <!-- DESKTOP -->
+    <div class="frame device-desktop">
+      <div class="frame-label"><span class="dot g"></span> Desktop · /deal/apple-airpods-pro-best-buy-189</div>
+      <div class="frame-body"><div class="site">
+        <header class="site-header"><div class="site-logo"><span class="mk">M</span> MyPerkFinder</div><div class="spacer"></div><div class="mini-search">⌕ Search…</div></header>
+        <div style="padding:20px;">
+          <div class="small muted mb12">Deals / Electronics / Audio / <b>AirPods Pro (2nd Gen)</b></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+            <!-- image -->
+            <div><div class="imgph" style="height:340px;">Product image<br><span class="xsmall">alt: “Apple AirPods Pro 2nd Gen USB-C, white”</span></div>
+              <div class="hstack mt12" style="gap:8px;"><div class="imgph" style="width:60px;height:60px;">1</div><div class="imgph" style="width:60px;height:60px;">2</div><div class="imgph" style="width:60px;height:60px;">3</div></div>
+            </div>
+            <!-- buy box -->
+            <div>
+              <div class="hstack mb8" style="gap:8px;"><span class="badge verified">✓ Verified today</span><span class="badge save">96% confidence</span></div>
+              <h1 style="font-size:24px;">Apple AirPods Pro (2nd Generation) USB-C</h1>
+              <div class="small muted mt8">Sold by <b>Best Buy</b> · Brand: <b>Apple</b> · SKU deal</div>
+              <div class="hstack mt16" style="gap:12px;align-items:baseline;">
+                <span style="font-size:34px;font-weight:800;color:var(--slate-900);">$189</span>
+                <span class="reg" style="font-size:18px;color:var(--slate-400);text-decoration:line-through;">$249</span>
+                <span class="badge discount" style="font-size:14px;padding:5px 11px;">-24%</span>
+              </div>
+              <div class="badge save mt8">You save $60.00</div>
+              <div class="card card-pad mt16" style="background:var(--indigo-50);border-color:var(--indigo-100);">
+                <div class="small b mb8">Coupon code (applies at checkout)</div>
+                <div class="hstack" style="gap:10px;"><div class="cc-code hidden" data-reveal="PERK10" style="flex:1;">PERK10</div><button class="btn btn-outline btn-sm">Copy</button></div>
+              </div>
+              <div class="kv mt16"><span>Expires</span><span><span class="badge urgent">⏳ In 2 days · Jul 4</span></span></div>
+              <div class="kv"><span>Last verified</span><span>Jul 2, 2026 · 4:12 PM</span></div>
+              <div class="kv"><span>Currency</span><span>USD</span></div>
+              <a class="btn btn-primary btn-lg btn-block mt16">Go to Deal at Best Buy ↗</a>
+              <div class="hstack mt12" style="gap:10px;"><button class="btn btn-outline" style="flex:1;">♡ Save</button><button class="btn btn-outline" style="flex:1;">🔔 Set Alert</button><button class="btn btn-outline" style="flex:1;">↗ Share</button></div>
+              <div class="disclosure mt12"><span class="i">ⓘ</span><div>MyPerkFinder may earn a commission if you buy through this link — at no extra cost to you. Price &amp; availability verified Jul 2, 4:12 PM.</div></div>
+              <div class="center mt12"><a class="small muted">⚑ Report expired / incorrect deal</a></div>
+            </div>
+          </div>
+          <!-- details -->
+          <div class="grid2 mt24">
+            <div class="panel"><div class="panel-head"><h3>Deal details</h3></div><div class="panel-body small muted"><p>Apple AirPods Pro (2nd Gen) with the USB-C charging case. Active Noise Cancellation, Adaptive Audio, and up to 6 hours of listening. This is a limited-time price drop at Best Buy.</p><ul style="margin:10px 0 0 18px;"><li>Active Noise Cancellation</li><li>USB-C MagSafe charging case</li><li>1-year Apple limited warranty</li></ul></div></div>
+            <div class="panel"><div class="panel-head"><h3>Important terms</h3></div><div class="panel-body small muted"><ul style="margin:0 0 0 18px;"><li>Price valid while supplies last.</li><li>Coupon <b>PERK10</b> applies to eligible items only.</li><li>Excludes open-box &amp; refurbished units.</li><li>Final price shown at checkout on retailer site.</li></ul></div></div>
+          </div>
+          <!-- price history -->
+          <div class="panel mt16"><div class="panel-head"><h3>Price history</h3><span class="spacer"></span><span class="small muted">Last 90 days · lowest $189</span></div><div class="panel-body">
+            <div class="chart"><div class="bar" style="height:88%;"></div><div class="bar" style="height:80%;"></div><div class="bar" style="height:84%;"></div><div class="bar" style="height:70%;"></div><div class="bar" style="height:76%;"></div><div class="bar" style="height:62%;"></div><div class="bar" style="height:66%;"></div><div class="bar" style="height:54%;"></div><div class="bar" style="height:48%;background:linear-gradient(180deg,var(--green-600),#4ade80);"></div></div>
+            <div class="small muted mt8">Placeholder chart — bars represent tracked price over time; green marks the current best price.</div>
+          </div></div>
+          <!-- similar -->
+          <div class="section-title">Similar deals</div>
+          <div class="deal-grid">
+            <!--DEALCARD:Sony WH-1000XM5 Headphones|Amazon|328|399|18|5 days|88|0-->
+            <!--DEALCARD:Bose SoundLink Flex|Target|99|149|33|1 day|86|1-->
+            <!--DEALCARD:Beats Studio Pro|Best Buy|179|349|49|3 days|83|1-->
+            <!--DEALCARD:JBL Tune 770NC|Walmart|89|129|31|4 days|80|0-->
+          </div>
+        </div>
+      </div></div>
+    </div>
+
+    <!-- MOBILE with sticky CTA -->
+    <div class="frame mobile-frame">
+      <div class="frame-label"><span class="dot g"></span> Mobile · sticky bottom CTA</div>
+      <div class="frame-body"><div class="site" style="display:flex;flex-direction:column;">
+        <header class="site-header" style="padding:10px 14px;"><button class="btn btn-ghost btn-sm">‹</button><div class="spacer"></div><button class="btn btn-ghost btn-sm">♡</button><button class="btn btn-ghost btn-sm">↗</button></header>
+        <div style="padding:14px;flex:1;">
+          <div class="imgph" style="height:200px;">Product image</div>
+          <div class="hstack mt12" style="gap:6px;"><span class="badge verified">✓ Verified</span><span class="badge discount">-24%</span></div>
+          <h1 style="font-size:19px;margin-top:8px;">Apple AirPods Pro (2nd Gen) USB-C</h1>
+          <div class="small muted mt8">Best Buy · Apple</div>
+          <div class="hstack mt8" style="gap:10px;align-items:baseline;"><span style="font-size:28px;font-weight:800;">$189</span><span class="reg">$249</span><span class="badge save">Save $60</span></div>
+          <div class="card card-pad mt12" style="background:var(--indigo-50);border-color:var(--indigo-100);"><div class="xsmall b mb8">Coupon</div><div class="cc-code hidden" data-reveal="PERK10">PERK10</div></div>
+          <div class="kv mt12"><span>Expires</span><span class="badge urgent">⏳ 2 days</span></div>
+          <div class="kv"><span>Verified</span><span>Today 4:12 PM</span></div>
+          <div class="disclosure mt12"><span class="i">ⓘ</span><div>We may earn a commission from this link at no cost to you.</div></div>
+          <div class="center mt12"><a class="small muted">⚑ Report expired deal</a></div>
+        </div>
+        <div class="sticky-cta"><div><div class="b">$189</div><div class="xsmall muted"><s>$249</s> · -24%</div></div><a class="btn btn-primary" style="flex:1;">Go to Deal ↗</a><button class="btn btn-outline">🔔</button></div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ COUPONS -->
+<section class="screen" id="screen-coupons">
+  <div class="screen-head"><h2>Coupons</h2><p>Searchable coupon library with categories and a reveal-code interaction. Click any code to reveal it.</p></div>
+  <div class="frame device-desktop">
+    <div class="frame-label"><span class="dot g"></span> Desktop · /coupons</div>
+    <div class="frame-body"><div class="site">
+      <header class="site-header"><div class="site-logo"><span class="mk">M</span> MyPerkFinder</div><nav class="site-nav"><a>Deals</a><a>Stores</a><a>Coupons</a></nav><div class="spacer"></div></header>
+      <div style="padding:20px;">
+        <div class="hstack mb16" style="justify-content:space-between;flex-wrap:wrap;gap:10px;"><h2 style="font-size:22px;">Coupons &amp; promo codes</h2><div class="mini-search" style="min-width:280px;">⌕ Search stores &amp; coupons…</div></div>
+        <div class="chips mb16"><span class="chip active">All</span><span class="chip">Electronics</span><span class="chip">Fashion</span><span class="chip">Home</span><span class="chip">Food</span><span class="chip">Travel</span><span class="chip">Beauty</span></div>
+        <div class="deal-grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr));">
+          <div class="coupon-card"><span class="notch" style="left:-8px;"></span><span class="notch" style="right:-8px;"></span><div class="cc-body vstack" style="gap:10px;"><div class="hstack" style="gap:8px;"><div class="imgph round" style="width:34px;height:34px;">NK</div><div><div class="small b">Nike</div><div class="xsmall muted">Fashion</div></div><span class="spacer" style="flex:1;"></span><span class="badge discount">25%</span></div><div class="b">Extra 25% off sale styles</div><div class="cc-code hidden" data-reveal="NIKE25">NIKE25</div><div class="hstack" style="justify-content:space-between;"><span class="badge expiry">Ends Jul 9</span><button class="btn btn-primary btn-sm">Shop Now</button></div></div></div>
+          <div class="coupon-card"><span class="notch" style="left:-8px;"></span><span class="notch" style="right:-8px;"></span><div class="cc-body vstack" style="gap:10px;"><div class="hstack" style="gap:8px;"><div class="imgph round" style="width:34px;height:34px;">BB</div><div><div class="small b">Best Buy</div><div class="xsmall muted">Electronics</div></div><span class="spacer" style="flex:1;"></span><span class="badge save">$50</span></div><div class="b">$50 off orders $500+</div><div class="cc-code hidden" data-reveal="BB50OFF">BB50OFF</div><div class="hstack" style="justify-content:space-between;"><span class="badge expiry">Ends Jul 12</span><button class="btn btn-primary btn-sm">Shop Now</button></div></div></div>
+          <div class="coupon-card"><span class="notch" style="left:-8px;"></span><span class="notch" style="right:-8px;"></span><div class="cc-body vstack" style="gap:10px;"><div class="hstack" style="gap:8px;"><div class="imgph round" style="width:34px;height:34px;">TG</div><div><div class="small b">Target</div><div class="xsmall muted">Home</div></div><span class="spacer" style="flex:1;"></span><span class="badge discount">15%</span></div><div class="b">15% off home &amp; kitchen</div><div class="cc-code hidden" data-reveal="HOME15">HOME15</div><div class="hstack" style="justify-content:space-between;"><span class="badge urgent">Ends today</span><button class="btn btn-primary btn-sm">Shop Now</button></div></div></div>
+          <div class="coupon-card"><span class="notch" style="left:-8px;"></span><span class="notch" style="right:-8px;"></span><div class="cc-body vstack" style="gap:10px;"><div class="hstack" style="gap:8px;"><div class="imgph round" style="width:34px;height:34px;">AZ</div><div><div class="small b">Amazon</div><div class="xsmall muted">Marketplace</div></div><span class="spacer" style="flex:1;"></span><span class="badge active">Deal</span></div><div class="b">Free shipping — no minimum</div><div class="badge active">No code needed · auto-applied</div><div class="hstack" style="justify-content:space-between;"><span class="badge expiry">Ends Jul 20</span><button class="btn btn-primary btn-sm">Shop Now</button></div></div></div>
+          <div class="coupon-card"><span class="notch" style="left:-8px;"></span><span class="notch" style="right:-8px;"></span><div class="cc-body vstack" style="gap:10px;"><div class="hstack" style="gap:8px;"><div class="imgph round" style="width:34px;height:34px;">SP</div><div><div class="small b">Sephora</div><div class="xsmall muted">Beauty</div></div><span class="spacer" style="flex:1;"></span><span class="badge discount">20%</span></div><div class="b">20% off first order</div><div class="cc-code hidden" data-reveal="GLOW20">GLOW20</div><div class="hstack" style="justify-content:space-between;"><span class="badge expiry">Ends Jul 15</span><button class="btn btn-primary btn-sm">Shop Now</button></div></div></div>
+          <div class="coupon-card"><span class="notch" style="left:-8px;"></span><span class="notch" style="right:-8px;"></span><div class="cc-body vstack" style="gap:10px;"><div class="hstack" style="gap:8px;"><div class="imgph round" style="width:34px;height:34px;">HD</div><div><div class="small b">Home Depot</div><div class="xsmall muted">Home</div></div><span class="spacer" style="flex:1;"></span><span class="badge save">$25</span></div><div class="b">$25 off $200 tools</div><div class="cc-code hidden" data-reveal="TOOLS25">TOOLS25</div><div class="hstack" style="justify-content:space-between;"><span class="badge expiry">Ends Jul 18</span><button class="btn btn-primary btn-sm">Shop Now</button></div></div></div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+</section>
+
+<!-- ============================================================ BLOG / GUIDES -->
+<section class="screen" id="screen-blog">
+  <div class="screen-head"><h2>Blog &amp; Guides</h2><p>SEO-driven content hub: shopping tips, coupon-stacking guides and store deal roundups. Future credit-card education is a placeholder only.</p></div>
+  <div class="frame device-desktop">
+    <div class="frame-label"><span class="dot g"></span> Desktop · /blog</div>
+    <div class="frame-body"><div class="site">
+      <header class="site-header"><div class="site-logo"><span class="mk">M</span> MyPerkFinder</div><nav class="site-nav"><a>Deals</a><a>Stores</a><a>Coupons</a><a>Blog</a></nav><div class="spacer"></div></header>
+      <div style="padding:20px;">
+        <h2 style="font-size:22px;" class="mb8">Guides &amp; deal tips</h2>
+        <p class="small muted mb16">Learn how to save more — coupon stacking, price-tracking, and the best times to buy.</p>
+        <div class="chips mb16"><span class="chip active">All</span><span class="chip">Shopping tips</span><span class="chip">Coupon stacking</span><span class="chip">Store guides</span><span class="chip">Seasonal</span></div>
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;">
+          <div class="card" style="overflow:hidden;"><div class="imgph" style="height:200px;">Featured guide image</div><div class="card-pad"><span class="badge neutral">Featured · Coupon stacking</span><h3 class="mt8" style="font-size:20px;">The complete guide to stacking coupons &amp; cashback</h3><p class="small muted mt8">Combine store coupons, promo codes and cashback-style offers the right way to maximize every order. Step-by-step with real examples.</p><div class="small muted mt12">8 min read · Updated Jul 1, 2026</div></div></div>
+          <div class="vstack" style="gap:14px;">
+            <div class="card card-pad"><span class="badge neutral">Shopping tips</span><h4 class="mt8">Best days &amp; times to find deals</h4><div class="xsmall muted mt8">5 min read</div></div>
+            <div class="card card-pad"><span class="badge neutral">Store guide</span><h4 class="mt8">How Best Buy price-matching works</h4><div class="xsmall muted mt8">4 min read</div></div>
+            <div class="card card-pad"><span class="badge neutral">Seasonal</span><h4 class="mt8">Prime Day vs Black Friday: what to buy when</h4><div class="xsmall muted mt8">6 min read</div></div>
+          </div>
+        </div>
+        <div class="section-title">Latest articles</div>
+        <div class="deal-grid" style="grid-template-columns:repeat(auto-fill,minmax(230px,1fr));">
+          <div class="card" style="overflow:hidden;"><div class="imgph" style="height:120px;">Article</div><div class="card-pad"><span class="badge neutral">Tips</span><h4 class="mt8" style="font-size:15px;">10 ways to never overpay online</h4><div class="xsmall muted mt8">5 min read</div></div></div>
+          <div class="card" style="overflow:hidden;"><div class="imgph" style="height:120px;">Article</div><div class="card-pad"><span class="badge neutral">Store guide</span><h4 class="mt8" style="font-size:15px;">Amazon deal-hunting cheat sheet</h4><div class="xsmall muted mt8">7 min read</div></div></div>
+          <div class="card" style="overflow:hidden;"><div class="imgph" style="height:120px;">Article</div><div class="card-pad"><span class="badge neutral">Coupon stacking</span><h4 class="mt8" style="font-size:15px;">Layering promo codes safely</h4><div class="xsmall muted mt8">6 min read</div></div></div>
+          <div class="card" style="overflow:hidden;border:1.5px dashed var(--slate-300);opacity:.85;"><div class="imgph" style="height:120px;">Coming soon</div><div class="card-pad"><span class="badge neutral">Future · Credit &amp; rewards</span><h4 class="mt8" style="font-size:15px;">Rewards &amp; credit education (placeholder)</h4><div class="xsmall muted mt8">Education only — no card product pages yet</div></div></div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+</section>
+<!-- ============================================================ INSTALL BANNER -->
+<section class="screen" id="screen-install">
+  <div class="screen-head"><h2>Install App Banner</h2><p>PWA install prompts for desktop and mobile with a clear value proposition and a low-friction “Maybe Later”.</p></div>
+  <div class="split">
+    <div class="frame device-desktop">
+      <div class="frame-label"><span class="dot g"></span> Desktop install banner (docked bottom-right)</div>
+      <div class="frame-body"><div class="site" style="position:relative;min-height:360px;background:var(--slate-50);">
+        <header class="site-header"><div class="site-logo"><span class="mk">M</span> MyPerkFinder</div><nav class="site-nav"><a>Deals</a><a>Stores</a><a>Coupons</a></nav><div class="spacer"></div><button class="btn btn-primary btn-sm">⇩ Install App</button></header>
+        <div style="padding:20px;opacity:.5;"><div class="deal-grid"><!--DEALCARD:AirPods Pro USB-C|Best Buy|189|249|24|2 days|96|1--><!--DEALCARD:Sony WH-1000XM5|Amazon|328|399|18|5 days|88|0--><!--DEALCARD:LG 27" 4K Monitor|Walmart|246|399|38|Today|82|1--></div></div>
+        <!-- banner -->
+        <div class="card" style="position:absolute;right:22px;bottom:22px;width:360px;padding:18px;box-shadow:var(--shadow-lg);">
+          <div class="hstack" style="gap:12px;align-items:flex-start;"><div style="font-size:30px;">📲</div><div style="flex:1;"><h3 style="font-size:16px;">Install MyPerkFinder</h3><p class="small muted mt8">Install MyPerkFinder for faster deal access and future price-drop alerts.</p></div><button class="btn btn-ghost btn-sm">✕</button></div>
+          <div class="hstack mt16" style="gap:10px;"><button class="btn btn-primary" style="flex:1;">Install App</button><button class="btn btn-outline">Maybe Later</button></div>
+        </div>
+      </div></div>
+    </div>
+    <div class="frame mobile-frame">
+      <div class="frame-label"><span class="dot g"></span> Mobile install sheet (slides up)</div>
+      <div class="frame-body"><div class="site" style="position:relative;min-height:420px;background:var(--slate-50);">
+        <header class="site-header" style="padding:12px 14px;"><div class="site-logo" style="font-size:15px;"><span class="mk" style="width:26px;height:26px;">M</span> MyPerkFinder</div></header>
+        <div style="padding:14px;opacity:.4;"><div class="deal-grid" style="grid-template-columns:1fr 1fr;"><!--DEALCARD:AirPods Pro|Best Buy|189|249|24|2 days|96|1--><!--DEALCARD:Sony XM5|Amazon|328|399|18|5 days|88|0--></div></div>
+        <!-- bottom sheet -->
+        <div style="position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:20px 20px 0 0;padding:20px;box-shadow:0 -10px 30px rgba(15,23,42,.15);">
+          <div style="width:40px;height:4px;border-radius:99px;background:var(--slate-200);margin:0 auto 14px;"></div>
+          <div class="center"><div style="font-size:34px;">📲</div><h3 class="mt8" style="font-size:18px;">Add MyPerkFinder to your home screen</h3><p class="small muted mt8">Faster deal access and future price-drop alerts — right from your phone.</p></div>
+          <div class="vstack mt16" style="gap:10px;"><button class="btn btn-primary btn-lg btn-block">Install App</button><button class="btn btn-ghost btn-block">Maybe Later</button></div>
+          <div class="hstack center mt12" style="justify-content:center;gap:16px;"><span class="small muted">✓ Works offline</span><span class="small muted">✓ Instant alerts</span><span class="small muted">✓ No app store</span></div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ SAVED DEALS -->
+<section class="screen" id="screen-saved">
+  <div class="screen-head"><h2>Saved Deals</h2><p>A personal watchlist with alert status, price-change indicators and coupon-expiry warnings. Includes the empty state.</p></div>
+  <div class="split">
+    <div class="frame device-desktop">
+      <div class="frame-label"><span class="dot g"></span> Desktop · /saved</div>
+      <div class="frame-body"><div class="site">
+        <header class="site-header"><div class="site-logo"><span class="mk">M</span> MyPerkFinder</div><nav class="site-nav"><a>Deals</a><a>Saved</a><a>Alerts</a></nav><div class="spacer"></div></header>
+        <div style="padding:20px;">
+          <div class="hstack mb16" style="justify-content:space-between;"><div><h2 style="font-size:22px;">Saved deals</h2><div class="small muted">6 saved · 2 price drops · 1 coupon expiring</div></div><button class="btn btn-outline btn-sm">Manage alerts</button></div>
+          <div class="vstack" style="gap:12px;">
+            <div class="card card-pad"><div class="hstack" style="gap:14px;"><div class="imgph" style="width:80px;height:80px;flex:0 0 80px;">Img</div><div style="flex:1;"><div class="small muted">Best Buy · Audio</div><div class="b">Apple AirPods Pro (2nd Gen) USB-C</div><div class="hstack mt8" style="gap:8px;"><span class="badge save" style="background:var(--green-600);color:#fff;">▼ Price dropped $10</span><span class="badge verified">🔔 Alert on</span></div></div><div class="vstack" style="align-items:flex-end;gap:6px;"><div class="hstack" style="gap:8px;align-items:baseline;"><span class="b" style="font-size:20px;">$189</span><span class="reg">$249</span></div><a class="btn btn-primary btn-sm">Go to Deal ↗</a></div></div></div>
+            <div class="card card-pad"><div class="hstack" style="gap:14px;"><div class="imgph" style="width:80px;height:80px;flex:0 0 80px;">Img</div><div style="flex:1;"><div class="small muted">Nike · Fashion</div><div class="b">Nike Pegasus 41 Running Shoes</div><div class="hstack mt8" style="gap:8px;"><span class="badge urgent">✂ Coupon NIKE25 expires in 2 days</span><span class="badge verified">🔔 Alert on</span></div></div><div class="vstack" style="align-items:flex-end;gap:6px;"><div class="hstack" style="gap:8px;align-items:baseline;"><span class="b" style="font-size:20px;">$97</span><span class="reg">$130</span></div><a class="btn btn-primary btn-sm">Go to Deal ↗</a></div></div></div>
+            <div class="card card-pad" style="opacity:.7;"><div class="hstack" style="gap:14px;"><div class="imgph" style="width:80px;height:80px;flex:0 0 80px;">Img</div><div style="flex:1;"><div class="small muted">Dell · Electronics</div><div class="b">Dell XPS 13 Laptop</div><div class="hstack mt8" style="gap:8px;"><span class="badge expired">Deal expired</span><span class="badge neutral">🔕 Alert off</span></div></div><div class="vstack" style="align-items:flex-end;gap:6px;"><button class="btn btn-outline btn-sm">Find similar</button></div></div></div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+    <div class="frame mobile-frame">
+      <div class="frame-label"><span class="dot"></span> Mobile · empty state</div>
+      <div class="frame-body"><div class="site" style="display:flex;flex-direction:column;min-height:420px;">
+        <header class="site-header" style="padding:12px 14px;"><div class="site-logo" style="font-size:15px;"><span class="mk" style="width:26px;height:26px;">M</span> Saved</div></header>
+        <div style="flex:1;display:grid;place-items:center;padding:20px;"><div class="empty"><div class="ic">♡</div><h3>No saved deals yet</h3><p>Tap the heart on any deal to save it here and get price-drop &amp; coupon-expiry alerts.</p><button class="btn btn-primary">Browse Deals</button></div></div>
+        <nav class="appbar"><a><span class="ic">⌂</span>Home</a><a><span class="ic">≣</span>Deals</a><a><span class="ic">✂</span>Coupons</a><a class="active"><span class="ic">♡</span>Saved</a><a><span class="ic">🔔</span>Alerts</a></nav>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ ALERTS -->
+<section class="screen" id="screen-alerts">
+  <div class="screen-head"><h2>Alerts</h2><p>Granular alert center: favorite stores &amp; categories, price-drop and coupon-expiry alerts, daily digest, notification permission and email/push channels.</p></div>
+  <div class="split">
+    <div class="frame device-desktop">
+      <div class="frame-label"><span class="dot g"></span> Desktop · /alerts</div>
+      <div class="frame-body"><div class="site">
+        <header class="site-header"><div class="site-logo"><span class="mk">M</span> MyPerkFinder</div><nav class="site-nav"><a>Deals</a><a>Saved</a><a>Alerts</a></nav><div class="spacer"></div></header>
+        <div style="padding:20px;">
+          <h2 style="font-size:22px;" class="mb16">Alert settings</h2>
+          <!-- permission state -->
+          <div class="disclosure mb16" style="background:var(--amber-50);border-color:var(--amber-100);color:var(--amber-700);"><span class="i">🔔</span><div style="flex:1;"><b>Push notifications are off.</b> Enable browser notifications to get instant price-drop alerts.</div><button class="btn btn-warn btn-sm">Enable push</button></div>
+          <div class="grid2">
+            <div class="panel"><div class="panel-head"><h3>Alert types</h3></div><div class="panel-body">
+              <div class="toggle-row"><div><div class="t-title">Price drop alerts</div><div class="t-sub">Notify when a saved deal drops in price</div></div><span class="spacer"></span><span class="toggle on"></span></div>
+              <div class="toggle-row"><div><div class="t-title">Coupon expiry alerts</div><div class="t-sub">Remind me before saved coupons expire</div></div><span class="spacer"></span><span class="toggle on"></span></div>
+              <div class="toggle-row"><div><div class="t-title">New deals in my categories</div><div class="t-sub">When new deals match your favorites</div></div><span class="spacer"></span><span class="toggle"></span></div>
+              <div class="toggle-row" style="border:none;"><div><div class="t-title">Daily digest</div><div class="t-sub">One email each morning with top deals</div></div><span class="spacer"></span><span class="toggle on"></span></div>
+            </div></div>
+            <div class="vstack" style="gap:16px;">
+              <div class="panel"><div class="panel-head"><h3>Favorite stores</h3></div><div class="panel-body"><div class="chips"><span class="chip active">Best Buy ✕</span><span class="chip active">Amazon ✕</span><span class="chip active">Nike ✕</span><span class="chip">+ Add store</span></div></div></div>
+              <div class="panel"><div class="panel-head"><h3>Favorite categories</h3></div><div class="panel-body"><div class="chips"><span class="chip active">Electronics ✕</span><span class="chip active">Audio ✕</span><span class="chip">+ Add category</span></div></div></div>
+              <div class="panel"><div class="panel-head"><h3>Channels</h3></div><div class="panel-body">
+                <div class="toggle-row"><div><div class="t-title">Email alerts</div><div class="t-sub">alex@email.com</div></div><span class="spacer"></span><span class="toggle on"></span></div>
+                <div class="toggle-row" style="border:none;"><div><div class="t-title">Push notifications <span class="badge neutral">placeholder</span></div><div class="t-sub">Future PWA price-drop push</div></div><span class="spacer"></span><span class="toggle"></span></div>
+              </div></div>
+            </div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+    <div class="frame mobile-frame">
+      <div class="frame-label"><span class="dot g"></span> Mobile · alerts</div>
+      <div class="frame-body"><div class="site" style="display:flex;flex-direction:column;">
+        <header class="site-header" style="padding:12px 14px;"><div class="site-logo" style="font-size:15px;"><span class="mk" style="width:26px;height:26px;">M</span> Alerts</div></header>
+        <div style="padding:14px;flex:1;">
+          <div class="disclosure mb12" style="background:var(--amber-50);border-color:var(--amber-100);color:var(--amber-700);"><span class="i">🔔</span><div>Enable push for instant alerts.</div></div>
+          <div class="card"><div class="panel-body">
+            <div class="toggle-row" style="padding:10px 0;"><div class="t-title">Price drop</div><span class="spacer"></span><span class="toggle on"></span></div>
+            <div class="toggle-row" style="padding:10px 0;"><div class="t-title">Coupon expiry</div><span class="spacer"></span><span class="toggle on"></span></div>
+            <div class="toggle-row" style="padding:10px 0;border:none;"><div class="t-title">Daily digest</div><span class="spacer"></span><span class="toggle on"></span></div>
+          </div></div>
+          <div class="section-title">Favorite stores</div>
+          <div class="chips"><span class="chip active">Best Buy</span><span class="chip active">Amazon</span><span class="chip">+ Add</span></div>
+        </div>
+        <nav class="appbar"><a><span class="ic">⌂</span>Home</a><a><span class="ic">≣</span>Deals</a><a><span class="ic">✂</span>Coupons</a><a><span class="ic">♡</span>Saved</a><a class="active"><span class="ic">🔔</span>Alerts</a></nav>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ PREFERENCES -->
+<section class="screen" id="screen-preferences">
+  <div class="screen-head"><h2>Profile &amp; Preferences</h2><p>Account preferences: email options, preferred categories, favorite stores, notification settings and privacy controls.</p></div>
+  <div class="frame device-desktop">
+    <div class="frame-label"><span class="dot g"></span> Desktop · /account/preferences</div>
+    <div class="frame-body"><div class="site">
+      <header class="site-header"><div class="site-logo"><span class="mk">M</span> MyPerkFinder</div><div class="spacer"></div><div class="hstack" style="gap:8px;"><div class="imgph round" style="width:30px;height:30px;">A</div><span class="small b">Alex</span></div></header>
+      <div style="padding:20px;display:grid;grid-template-columns:200px 1fr;gap:24px;">
+        <aside class="vstack" style="gap:4px;"><button class="nav-link active" style="color:var(--indigo-700);background:var(--indigo-50);">Preferences</button><button class="nav-link" style="color:var(--slate-600);">Saved deals</button><button class="nav-link" style="color:var(--slate-600);">Alerts</button><button class="nav-link" style="color:var(--slate-600);">Privacy</button><button class="nav-link" style="color:var(--slate-600);">Sign out</button></aside>
+        <div class="vstack" style="gap:16px;">
+          <div class="panel"><div class="panel-head"><h3>Email preferences</h3></div><div class="panel-body">
+            <div class="field"><label>Email address</label><input class="input" value="alex@email.com" /></div>
+            <div class="toggle-row"><div><div class="t-title">Daily deal digest</div><div class="t-sub">Top deals every morning</div></div><span class="spacer"></span><span class="toggle on"></span></div>
+            <div class="toggle-row"><div><div class="t-title">Weekly coupon roundup</div></div><span class="spacer"></span><span class="toggle on"></span></div>
+            <div class="toggle-row" style="border:none;"><div><div class="t-title">Product news &amp; tips</div></div><span class="spacer"></span><span class="toggle"></span></div>
+          </div></div>
+          <div class="panel"><div class="panel-head"><h3>Preferred categories &amp; stores</h3></div><div class="panel-body">
+            <label class="small b">Categories</label><div class="chips mt8 mb16"><span class="chip active">Electronics ✕</span><span class="chip active">Audio ✕</span><span class="chip active">Home ✕</span><span class="chip">+ Add</span></div>
+            <label class="small b">Favorite stores</label><div class="chips mt8"><span class="chip active">Best Buy ✕</span><span class="chip active">Amazon ✕</span><span class="chip">+ Add</span></div>
+          </div></div>
+          <div class="panel"><div class="panel-head"><h3>Notifications</h3></div><div class="panel-body">
+            <div class="toggle-row"><div><div class="t-title">Push notifications <span class="badge neutral">placeholder</span></div></div><span class="spacer"></span><span class="toggle"></span></div>
+            <div class="toggle-row" style="border:none;"><div><div class="t-title">Price-drop alerts</div></div><span class="spacer"></span><span class="toggle on"></span></div>
+          </div></div>
+          <div class="panel"><div class="panel-head"><h3>Privacy controls</h3></div><div class="panel-body">
+            <div class="toggle-row"><div><div class="t-title">Personalized recommendations</div><div class="t-sub">Use my activity to tailor deals</div></div><span class="spacer"></span><span class="toggle on"></span></div>
+            <div class="toggle-row"><div><div class="t-title">Analytics &amp; usage data</div></div><span class="spacer"></span><span class="toggle on"></span></div>
+            <div class="toggle-row" style="border:none;"><div><div class="t-title">Download / delete my data</div><div class="t-sub">Export or remove your account data</div></div><span class="spacer"></span><button class="btn btn-outline btn-sm">Manage</button></div>
+          </div></div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+</section>
+<!-- ============================================================ ADMIN OVERVIEW -->
+<section class="screen" id="screen-admin">
+  <div class="screen-head"><h2>Admin Overview</h2><p>Operations command center: KPI cards, import status, offers needing review, top clicked deals, validation warnings and recent admin actions.</p></div>
+  <div class="frame device-desktop">
+    <div class="frame-label"><span class="dot g"></span> Admin · /admin</div>
+    <div class="frame-body"><div class="site">
+      <header class="site-header" style="background:var(--slate-900);"><div class="site-logo" style="color:#fff;"><span class="mk">M</span> MyPerkFinder <span class="badge neutral" style="background:rgba(255,255,255,.12);color:#fff;">Admin</span></div><nav class="site-nav" style="color:var(--slate-300);"><a style="color:#fff;">Overview</a><a style="color:var(--slate-300);">Offers</a><a style="color:var(--slate-300);">Imports</a><a style="color:var(--slate-300);">Analytics</a></nav><div class="spacer"></div><button class="btn btn-primary btn-sm">⟳ Run import</button><div class="imgph round" style="width:30px;height:30px;">S</div></header>
+      <div style="padding:20px;background:var(--slate-50);">
+        <div class="hstack mb16" style="justify-content:space-between;"><h2 style="font-size:22px;">Overview</h2><div class="small muted">Jul 2, 2026 · live</div></div>
+        <div class="stat-grid mb16">
+          <div class="stat"><div class="ic">🛒</div><div class="k">Active offers</div><div class="v">12,480</div><div class="d up">▲ 4.2%</div></div>
+          <div class="stat"><div class="ic" style="background:var(--amber-50);color:var(--amber-600);">⚑</div><div class="k">Needs review</div><div class="v">218</div><div class="d down">▲ 37 today</div></div>
+          <div class="stat"><div class="ic" style="background:var(--red-50);color:var(--red-600);">⏳</div><div class="k">Expired today</div><div class="v">94</div><div class="d muted">auto-archived</div></div>
+          <div class="stat"><div class="ic" style="background:var(--blue-50);color:var(--blue-600);">⟳</div><div class="k">Imports today</div><div class="v">12</div><div class="d up">11 ok · 1 partial</div></div>
+          <div class="stat"><div class="ic" style="background:var(--green-50);color:var(--green-600);">👆</div><div class="k">Clicks today</div><div class="v">38,204</div><div class="d up">▲ 8.1%</div></div>
+          <div class="stat"><div class="ic" style="background:var(--indigo-50);color:var(--indigo-600);">✉</div><div class="k">Email subscribers</div><div class="v">54,120</div><div class="d up">▲ 260</div></div>
+        </div>
+        <div class="detail-split">
+          <div class="vstack" style="gap:16px;">
+            <div class="panel"><div class="panel-head"><h3>Offers needing review</h3><span class="spacer"></span><a class="small b">Open review queue →</a></div><div class="table-wrap"><table class="tbl"><thead><tr><th>Offer</th><th>Merchant</th><th>Confidence</th><th>Flags</th><th></th></tr></thead><tbody>
+              <tr><td>Sony WH-1000XM5</td><td>Amazon</td><td><span class="badge review">61%</span></td><td><span class="badge urgent">Discount too high</span></td><td><button class="btn btn-sm btn-outline">Review</button></td></tr>
+              <tr><td>Generic "Mega Sale TV"</td><td class="muted">—</td><td><span class="badge expired">28%</span></td><td><span class="badge expiry">Missing merchant</span></td><td><button class="btn btn-sm btn-outline">Review</button></td></tr>
+              <tr><td>Nike Pegasus 41</td><td>Nike</td><td><span class="badge review">64%</span></td><td><span class="badge neutral">Possible duplicate</span></td><td><button class="btn btn-sm btn-outline">Review</button></td></tr>
+            </tbody></table></div></div>
+            <div class="panel"><div class="panel-head"><h3>Top clicked deals</h3><span class="spacer"></span><span class="small muted">last 24h</span></div><div class="table-wrap"><table class="tbl"><thead><tr><th>Deal</th><th>Store</th><th>Clicks</th><th>CTR</th></tr></thead><tbody>
+              <tr><td>AirPods Pro (2nd Gen)</td><td>Best Buy</td><td class="num">4,120</td><td class="num">6.8%</td></tr>
+              <tr><td>Instant Pot Duo 6Qt</td><td>Amazon</td><td class="num">3,880</td><td class="num">9.1%</td></tr>
+              <tr><td>Samsung 65" QLED TV</td><td>Best Buy</td><td class="num">2,640</td><td class="num">4.2%</td></tr>
+            </tbody></table></div></div>
+          </div>
+          <div class="vstack" style="gap:16px;">
+            <div class="panel"><div class="panel-head"><h3>Import status</h3></div><div class="panel-body vstack" style="gap:10px;">
+              <div class="kv"><span>CJ Affiliate</span><span class="badge status-completed">completed</span></div>
+              <div class="kv"><span>Rakuten</span><span class="badge status-running">running</span></div>
+              <div class="kv"><span>Walmart Feed</span><span class="badge status-partial">partial</span></div>
+              <div class="kv" style="border:none;"><span>Merchant emails</span><span class="badge status-failed">failed</span></div>
+              <button class="btn btn-outline btn-block mt8">View import dashboard</button>
+            </div></div>
+            <div class="panel"><div class="panel-head"><h3>Validation warnings</h3></div><div class="panel-body vstack" style="gap:8px;">
+              <div class="disclosure" style="padding:8px 10px;"><span class="i">⚠</span><div class="xsmall">12 offers: sale price &gt; regular price</div></div>
+              <div class="disclosure" style="padding:8px 10px;"><span class="i">⚠</span><div class="xsmall">8 offers: missing affiliate URL</div></div>
+              <div class="disclosure" style="padding:8px 10px;"><span class="i">⚠</span><div class="xsmall">31 offers: low confidence score</div></div>
+            </div></div>
+            <div class="panel"><div class="panel-head"><h3>Recent admin actions</h3></div><div class="panel-body vstack small muted" style="gap:8px;">
+              <div>✓ <b>Sara</b> approved 14 offers · 3m ago</div>
+              <div>✎ <b>You</b> edited “Ninja Air Fryer” · 22m ago</div>
+              <div>⧉ <b>Sara</b> merged 2 duplicates · 1h ago</div>
+              <div>⚑ <b>System</b> auto-expired 94 offers · 2h ago</div>
+            </div></div>
+          </div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+</section>
+
+<!-- ============================================================ REVIEW QUEUE -->
+<section class="screen" id="screen-review">
+  <div class="screen-head"><h2>Offer Review Queue</h2><p>Triage imported offers with confidence scores, validation flags, a raw-source preview, and a before/after normalized comparison.</p></div>
+  <div class="frame device-desktop">
+    <div class="frame-label"><span class="dot g"></span> Admin · /admin/review</div>
+    <div class="frame-body"><div style="padding:20px;background:var(--slate-50);">
+      <div class="hstack mb16" style="justify-content:space-between;"><div><h2 style="font-size:22px;">Review queue</h2><div class="small muted">218 offers need review</div></div><div class="chips"><span class="chip active">All</span><span class="chip">Low confidence</span><span class="chip">Discount too high</span><span class="chip">Missing data</span></div></div>
+      <div class="detail-split">
+        <div class="panel"><div class="table-wrap"><table class="tbl"><thead><tr><th>Confidence</th><th>Offer</th><th>Merchant</th><th>Category</th><th>Sale</th><th>Disc</th><th>Expiry</th><th>Flags</th></tr></thead><tbody>
+          <tr style="background:var(--indigo-50);"><td><span class="badge review">61%</span></td><td>Sony WH-1000XM5</td><td>Amazon</td><td>Audio</td><td class="num">$328</td><td class="num">18%</td><td>Jul 7</td><td><span class="badge urgent">Discount too high</span></td></tr>
+          <tr><td><span class="badge expired">28%</span></td><td>Mega Sale TV 65"</td><td class="muted">—</td><td class="muted">—</td><td class="num">$799</td><td class="num">27%</td><td><span class="badge urgent">expired</span></td><td><span class="badge expiry">Missing merchant</span></td></tr>
+          <tr><td><span class="badge review">64%</span></td><td>Nike Pegasus 41</td><td>Nike</td><td>Fashion</td><td class="num">$97</td><td class="num">25%</td><td>Jul 9</td><td><span class="badge neutral">Duplicate?</span></td></tr>
+          <tr><td><span class="badge review">55%</span></td><td>Instant Pot Duo</td><td>Amazon</td><td>Home</td><td class="num">$59</td><td class="num">50%</td><td>Jul 3</td><td><span class="badge expiry">Low confidence</span></td></tr>
+          <tr><td><span class="badge expired">40%</span></td><td>Cheap Laptop Deal</td><td>eBay</td><td>Electronics</td><td class="num">$210</td><td class="num">70%</td><td>Jul 5</td><td><span class="badge urgent">Sale &gt; regular</span></td></tr>
+        </tbody></table></div></div>
+        <!-- side detail -->
+        <div class="panel"><div class="panel-head"><h3>Sony WH-1000XM5</h3><span class="spacer"></span><span class="badge review">61% confidence</span></div><div class="panel-body">
+          <div class="section-title" style="margin-top:0;">Raw source preview</div>
+          <div class="code">{
+  <span class="k">"src"</span>: <span class="s">"Amazon PA-API"</span>,
+  <span class="k">"title"</span>: <span class="s">"SONY WH1000XM5 BLK -18%!!"</span>,
+  <span class="k">"price"</span>: <span class="s">"$328.00"</span>,
+  <span class="k">"was"</span>: <span class="s">"$399"</span>,
+  <span class="k">"url"</span>: <span class="s">"amzn.to/xxx"</span>
+}</div>
+          <div class="section-title">Before → after (normalized)</div>
+          <div class="grid2" style="gap:10px;">
+            <div class="card card-pad" style="background:var(--slate-50);"><div class="xsmall b muted mb8">RAW</div><div class="small">SONY WH1000XM5 BLK -18%!!</div><div class="xsmall muted mt8">$328 / $399</div></div>
+            <div class="card card-pad" style="background:var(--green-50);"><div class="xsmall b" style="color:var(--green-700);">NORMALIZED</div><div class="small">Sony WH-1000XM5 Headphones</div><div class="xsmall muted mt8">$328 · was $399 · 18%</div></div>
+          </div>
+          <div class="disclosure mt12" style="background:var(--amber-50);border-color:var(--amber-100);color:var(--amber-700);"><span class="i">⚠</span><div class="xsmall">Discount claimed higher than computed. Verify before publishing.</div></div>
+          <div class="grid2 mt16" style="gap:8px;"><button class="btn btn-success">✓ Approve</button><button class="btn btn-outline">✎ Edit</button><button class="btn btn-danger">✕ Reject</button><button class="btn btn-warn">⏳ Mark expired</button></div>
+        </div></div>
+      </div>
+    </div></div>
+  </div>
+</section>
+
+<!-- ============================================================ ALL OFFERS -->
+<section class="screen" id="screen-offers">
+  <div class="screen-head"><h2>All Offers</h2><p>Master offer table with search, status filters, bulk actions and a quick-edit drawer.</p></div>
+  <div class="frame device-desktop">
+    <div class="frame-label"><span class="dot g"></span> Admin · /admin/offers</div>
+    <div class="frame-body"><div style="padding:20px;background:var(--slate-50);">
+      <div class="hstack mb16" style="justify-content:space-between;flex-wrap:wrap;gap:10px;"><h2 style="font-size:22px;">Offers</h2><div class="hstack" style="gap:8px;"><div class="mini-search" style="min-width:240px;">⌕ Search offers…</div><button class="btn btn-primary btn-sm">+ New offer</button></div></div>
+      <div class="hstack mb16" style="justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <div class="chips"><span class="chip active">All (12,480)</span><span class="chip">Draft</span><span class="chip">Active</span><span class="chip">Needs review (218)</span><span class="chip">Expired</span><span class="chip">Rejected</span><span class="chip">Archived</span></div>
+      </div>
+      <div class="panel">
+        <div class="panel-head" style="background:var(--indigo-50);"><span class="checkbox"></span><span class="small b">3 selected</span><span class="spacer"></span><div class="hstack" style="gap:6px;"><button class="btn btn-sm btn-outline">Approve</button><button class="btn btn-sm btn-outline">Mark expired</button><button class="btn btn-sm btn-outline">Archive</button><button class="btn btn-sm btn-danger">Reject</button></div></div>
+        <div class="table-wrap"><table class="tbl"><thead><tr><th><span class="checkbox"></span></th><th>Offer</th><th>Merchant</th><th>Category</th><th>Sale</th><th>Reg</th><th>Disc</th><th>Status</th><th>Expiry</th><th>Conf.</th><th></th></tr></thead><tbody>
+          <tr><td><span class="checkbox" style="background:var(--indigo-600);border-color:var(--indigo-600);"></span></td><td>AirPods Pro (2nd Gen)</td><td>Best Buy</td><td>Audio</td><td class="num">$189</td><td class="num">$249</td><td class="num">24%</td><td><span class="badge active">active</span></td><td>Jul 4</td><td class="num">96%</td><td><button class="btn btn-sm btn-outline">Edit</button></td></tr>
+          <tr><td><span class="checkbox"></span></td><td>Sony WH-1000XM5</td><td>Amazon</td><td>Audio</td><td class="num">$328</td><td class="num">$399</td><td class="num">18%</td><td><span class="badge review">needs_review</span></td><td>Jul 7</td><td class="num">61%</td><td><button class="btn btn-sm btn-outline">Edit</button></td></tr>
+          <tr><td><span class="checkbox"></span></td><td>Ninja Air Fryer Max XL</td><td>Target</td><td>Home</td><td class="num">$119</td><td class="num">$169</td><td class="num">30%</td><td><span class="badge active">active</span></td><td>Jul 5</td><td class="num">91%</td><td><button class="btn btn-sm btn-outline">Edit</button></td></tr>
+          <tr><td><span class="checkbox"></span></td><td>Dell XPS 13 Laptop</td><td>Dell</td><td>Electronics</td><td class="num">$899</td><td class="num">$1199</td><td class="num">25%</td><td><span class="badge expired">expired</span></td><td>Jul 2</td><td class="num">79%</td><td><button class="btn btn-sm btn-outline">Edit</button></td></tr>
+          <tr><td><span class="checkbox"></span></td><td>Cheap Laptop Deal</td><td>eBay</td><td>Electronics</td><td class="num">$210</td><td class="num">$180</td><td class="num">—</td><td><span class="badge rejected">rejected</span></td><td>—</td><td class="num">40%</td><td><button class="btn btn-sm btn-outline">Edit</button></td></tr>
+          <tr><td><span class="checkbox"></span></td><td>Summer Sandals (draft)</td><td>Nike</td><td>Fashion</td><td class="num">$45</td><td class="num">$70</td><td class="num">36%</td><td><span class="badge draft">draft</span></td><td>—</td><td class="num">—</td><td><button class="btn btn-sm btn-outline">Edit</button></td></tr>
+        </tbody></table></div>
+      </div>
+      <div class="hstack center mt16" style="justify-content:space-between;"><span class="small muted">Showing 1–6 of 12,480</span><div class="hstack" style="gap:6px;"><button class="btn btn-sm btn-outline">‹ Prev</button><button class="btn btn-sm btn-outline">Next ›</button></div></div>
+    </div></div>
+  </div>
+</section>
+
+<!-- ============================================================ CREATE / EDIT OFFER -->
+<section class="screen" id="screen-editoffer">
+  <div class="screen-head"><h2>Create / Edit Offer</h2><p>Structured offer form: basic info, merchant, category, product, pricing, coupon, URLs, expiry, SEO fields, validation status and publish controls.</p></div>
+  <div class="frame device-desktop">
+    <div class="frame-label"><span class="dot g"></span> Admin · /admin/offers/[id]</div>
+    <div class="frame-body"><div style="padding:20px;background:var(--slate-50);">
+      <div class="hstack mb16" style="justify-content:space-between;"><div><div class="small muted">Offers / Edit</div><h2 style="font-size:22px;">Apple AirPods Pro (2nd Gen)</h2></div><div class="hstack" style="gap:8px;"><span class="badge active">active</span><button class="btn btn-outline">Save draft</button><button class="btn btn-primary">Publish</button></div></div>
+      <div class="detail-split">
+        <div class="vstack" style="gap:16px;">
+          <div class="panel"><div class="panel-head"><h3>Basic info</h3></div><div class="panel-body"><div class="field"><label>Title</label><input class="input" value="Apple AirPods Pro (2nd Generation) USB-C" /></div><div class="grid2"><div class="field"><label>Slug</label><input class="input" value="apple-airpods-pro-best-buy-189" /></div><div class="field"><label>Brand</label><input class="input" value="Apple" /></div></div><div class="field"><label>Short description</label><textarea class="input">Limited-time price drop on AirPods Pro (2nd Gen) with USB-C case.</textarea></div></div></div>
+          <div class="panel"><div class="panel-head"><h3>Merchant &amp; category</h3></div><div class="panel-body"><div class="grid2"><div class="field"><label>Merchant</label><select class="input"><option>Best Buy</option><option>Amazon</option></select></div><div class="field"><label>Category</label><select class="input"><option>Electronics › Audio</option><option>Electronics › Laptops</option></select></div></div></div></div>
+          <div class="panel"><div class="panel-head"><h3>Pricing &amp; coupon</h3></div><div class="panel-body"><div class="grid3"><div class="field"><label>Regular price</label><input class="input" value="249.00" /></div><div class="field"><label>Sale price</label><input class="input" value="189.00" /></div><div class="field"><label>Currency</label><select class="input"><option>USD</option><option>EUR</option></select></div></div><div class="grid2"><div class="field"><label>Discount %</label><input class="input" value="24" /></div><div class="field"><label>Coupon code</label><input class="input" value="PERK10" /></div></div></div></div>
+          <div class="panel"><div class="panel-head"><h3>URLs &amp; expiry</h3></div><div class="panel-body"><div class="field"><label>Affiliate URL</label><input class="input" value="https://track.cj.com/click/xxxx" /></div><div class="field"><label>Product URL</label><input class="input" value="https://bestbuy.com/site/airpods-pro" /></div><div class="grid2"><div class="field"><label>Expiry date</label><input class="input" value="2026-07-04" /></div><div class="field"><label>Image URL</label><input class="input" value="https://cdn.../airpods.jpg" /></div></div></div></div>
+          <div class="panel"><div class="panel-head"><h3>SEO fields</h3></div><div class="panel-body"><div class="field"><label>Meta title</label><input class="input" value="AirPods Pro 2nd Gen Deal — $189 at Best Buy" /></div><div class="field"><label>Meta description</label><textarea class="input">Save $60 on Apple AirPods Pro (2nd Gen). Verified deal with coupon PERK10.</textarea></div></div></div>
+        </div>
+        <div class="vstack" style="gap:16px;">
+          <div class="panel"><div class="panel-head"><h3>Validation status</h3></div><div class="panel-body vstack" style="gap:8px;">
+            <div class="kv"><span>✓ Affiliate URL</span><span class="badge active">ok</span></div>
+            <div class="kv"><span>✓ Sale &lt; regular</span><span class="badge active">ok</span></div>
+            <div class="kv"><span>✓ Merchant &amp; category</span><span class="badge active">ok</span></div>
+            <div class="kv"><span>⚠ Expiry in 2 days</span><span class="badge review">warn</span></div>
+            <div class="kv" style="border:none;"><span>Confidence score</span><span class="badge active">96%</span></div>
+          </div></div>
+          <div class="panel"><div class="panel-head"><h3>Live preview</h3></div><div class="panel-body"><div class="deal-grid" style="grid-template-columns:1fr;"><!--DEALCARD:Apple AirPods Pro (2nd Gen) USB-C|Best Buy|189|249|24|2 days|96|1--></div></div></div>
+          <div class="panel"><div class="panel-head"><h3>Publish controls</h3></div><div class="panel-body vstack" style="gap:10px;"><div class="field"><label>Status</label><select class="input"><option>active</option><option>draft</option><option>needs_review</option><option>expired</option><option>archived</option></select></div><button class="btn btn-primary btn-block">Publish offer</button><button class="btn btn-outline btn-block">Save as draft</button><button class="btn btn-ghost btn-block" style="color:var(--red-600);">Delete offer</button></div></div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+</section>
+
+<!-- ============================================================ MERCHANTS -->
+<section class="screen" id="screen-merchants">
+  <div class="screen-head"><h2>Merchant Management</h2><p>Merchant directory with source/network, active deals &amp; coupons, status, commission placeholder and an edit drawer.</p></div>
+  <div class="frame device-desktop">
+    <div class="frame-label"><span class="dot g"></span> Admin · /admin/merchants</div>
+    <div class="frame-body"><div style="padding:20px;background:var(--slate-50);">
+      <div class="hstack mb16" style="justify-content:space-between;"><h2 style="font-size:22px;">Merchants</h2><div class="hstack" style="gap:8px;"><div class="mini-search" style="min-width:220px;">⌕ Search merchants…</div><button class="btn btn-primary btn-sm">+ Add merchant</button></div></div>
+      <div class="detail-split">
+        <div class="panel"><div class="table-wrap"><table class="tbl"><thead><tr><th>Logo</th><th>Merchant</th><th>Network / source</th><th>Active deals</th><th>Coupons</th><th>Commission</th><th>Status</th><th></th></tr></thead><tbody>
+          <tr style="background:var(--indigo-50);"><td><div class="imgph round" style="width:30px;height:30px;">BB</div></td><td>Best Buy</td><td>CJ Affiliate</td><td class="num">128</td><td class="num">24</td><td class="num">2.5%</td><td><span class="badge active">active</span></td><td><button class="btn btn-sm btn-outline">Edit</button></td></tr>
+          <tr><td><div class="imgph round" style="width:30px;height:30px;">AZ</div></td><td>Amazon</td><td>PA-API</td><td class="num">642</td><td class="num">51</td><td class="num">1.0–4.0%</td><td><span class="badge active">active</span></td><td><button class="btn btn-sm btn-outline">Edit</button></td></tr>
+          <tr><td><div class="imgph round" style="width:30px;height:30px;">WM</div></td><td>Walmart</td><td>Impact</td><td class="num">311</td><td class="num">33</td><td class="num">1.5%</td><td><span class="badge active">active</span></td><td><button class="btn btn-sm btn-outline">Edit</button></td></tr>
+          <tr><td><div class="imgph round" style="width:30px;height:30px;">NK</div></td><td>Nike</td><td>Awin</td><td class="num">88</td><td class="num">12</td><td class="num">6.0%</td><td><span class="badge review">paused</span></td><td><button class="btn btn-sm btn-outline">Edit</button></td></tr>
+          <tr><td><div class="imgph round" style="width:30px;height:30px;">EB</div></td><td>eBay</td><td>eBay Partner</td><td class="num">1,204</td><td class="num">8</td><td class="num">2.0%</td><td><span class="badge active">active</span></td><td><button class="btn btn-sm btn-outline">Edit</button></td></tr>
+        </tbody></table></div></div>
+        <div class="panel"><div class="panel-head"><h3>Edit merchant</h3><span class="spacer"></span><button class="btn btn-ghost btn-sm">✕</button></div><div class="panel-body">
+          <div class="center mb16"><div class="imgph round" style="width:64px;height:64px;margin:0 auto;">BB</div><button class="btn btn-outline btn-sm mt8">Change logo</button></div>
+          <div class="field"><label>Merchant name</label><input class="input" value="Best Buy" /></div>
+          <div class="field"><label>Network / source</label><select class="input"><option>CJ Affiliate</option><option>Rakuten</option><option>Impact</option><option>Awin</option></select></div>
+          <div class="grid2"><div class="field"><label>Commission %</label><input class="input" value="2.5" /></div><div class="field"><label>Status</label><select class="input"><option>active</option><option>paused</option></select></div></div>
+          <div class="field"><label>Homepage URL</label><input class="input" value="https://bestbuy.com" /></div>
+          <button class="btn btn-primary btn-block mt8">Save merchant</button>
+        </div></div>
+      </div>
+    </div></div>
+  </div>
+</section>
+
+<!-- ============================================================ CATEGORIES -->
+<section class="screen" id="screen-categories">
+  <div class="screen-head"><h2>Category Management</h2><p>Hierarchical category tree with parent/child relationships, mapping rules and per-category SEO fields.</p></div>
+  <div class="frame device-desktop">
+    <div class="frame-label"><span class="dot g"></span> Admin · /admin/categories</div>
+    <div class="frame-body"><div style="padding:20px;background:var(--slate-50);">
+      <div class="hstack mb16" style="justify-content:space-between;"><h2 style="font-size:22px;">Categories</h2><button class="btn btn-primary btn-sm">+ Add category</button></div>
+      <div class="detail-split">
+        <div class="panel"><div class="panel-head"><h3>Category tree</h3></div><div class="panel-body">
+          <div class="list-clean">
+            <div class="kv" style="background:var(--indigo-50);border-radius:8px;padding:9px 12px;"><span class="b">▾ Electronics</span><span class="muted small">312 offers</span></div>
+            <div class="kv" style="padding-left:28px;"><span>Laptops</span><span class="muted small">86</span></div>
+            <div class="kv" style="padding-left:28px;"><span>Phones</span><span class="muted small">54</span></div>
+            <div class="kv" style="padding-left:28px;"><span>Audio</span><span class="muted small">72</span></div>
+            <div class="kv" style="padding-left:28px;"><span>TVs</span><span class="muted small">41</span></div>
+            <div class="kv"><span class="b">▾ Home &amp; Kitchen</span><span class="muted small">204</span></div>
+            <div class="kv" style="padding-left:28px;"><span>Appliances</span><span class="muted small">98</span></div>
+            <div class="kv" style="padding-left:28px;border:none;"><span>Cookware</span><span class="muted small">62</span></div>
+            <div class="kv" style="border:none;"><span class="b">▸ Fashion</span><span class="muted small">176</span></div>
+          </div>
+        </div></div>
+        <div class="panel"><div class="panel-head"><h3>Edit: Audio</h3></div><div class="panel-body">
+          <div class="field"><label>Category name</label><input class="input" value="Audio" /></div>
+          <div class="field"><label>Parent category</label><select class="input"><option>Electronics</option><option>None (top level)</option></select></div>
+          <div class="section-title" style="margin-top:0;">Mapping rules <span class="muted">(auto-assign imported offers)</span></div>
+          <div class="chips mb16"><span class="chip active">headphones ✕</span><span class="chip active">earbuds ✕</span><span class="chip active">speaker ✕</span><span class="chip active">soundbar ✕</span><span class="chip">+ Add keyword</span></div>
+          <div class="field"><label>SEO title</label><input class="input" value="Audio Deals — Headphones, Earbuds &amp; Speakers" /></div>
+          <div class="field"><label>SEO description</label><textarea class="input">The best deals on headphones, earbuds, speakers and soundbars, verified daily.</textarea></div>
+          <button class="btn btn-primary btn-block">Save category</button>
+        </div></div>
+      </div>
+    </div></div>
+  </div>
+</section>
+
+<!-- ============================================================ ADMIN COUPONS -->
+<section class="screen" id="screen-admincoupons">
+  <div class="screen-head"><h2>Coupon Management</h2><p>Coupon inventory with store, code, expiry, status, reveal-count placeholder and validation issues.</p></div>
+  <div class="frame device-desktop">
+    <div class="frame-label"><span class="dot g"></span> Admin · /admin/coupons</div>
+    <div class="frame-body"><div style="padding:20px;background:var(--slate-50);">
+      <div class="hstack mb16" style="justify-content:space-between;"><h2 style="font-size:22px;">Coupons</h2><div class="hstack" style="gap:8px;"><div class="mini-search" style="min-width:220px;">⌕ Search coupons…</div><button class="btn btn-primary btn-sm">+ Add coupon</button></div></div>
+      <div class="chips mb16"><span class="chip active">All (312)</span><span class="chip">Active</span><span class="chip">Expiring soon</span><span class="chip">Expired</span><span class="chip">Issues (7)</span></div>
+      <div class="panel"><div class="table-wrap"><table class="tbl"><thead><tr><th>Store</th><th>Coupon title</th><th>Code</th><th>Expiry</th><th>Reveals</th><th>Status</th><th>Issues</th><th></th></tr></thead><tbody>
+        <tr><td>Nike</td><td>Extra 25% off sale styles</td><td><code>NIKE25</code></td><td>Jul 9</td><td class="num">4,210</td><td><span class="badge active">active</span></td><td>—</td><td><button class="btn btn-sm btn-outline">Edit</button></td></tr>
+        <tr><td>Best Buy</td><td>$50 off orders $500+</td><td><code>BB50OFF</code></td><td>Jul 12</td><td class="num">2,980</td><td><span class="badge active">active</span></td><td>—</td><td><button class="btn btn-sm btn-outline">Edit</button></td></tr>
+        <tr><td>Target</td><td>15% off home &amp; kitchen</td><td><code>HOME15</code></td><td>Today</td><td class="num">1,540</td><td><span class="badge review">expiring</span></td><td><span class="badge expiry">Expiry today</span></td><td><button class="btn btn-sm btn-outline">Edit</button></td></tr>
+        <tr><td>Old Navy</td><td>30% off (unverified)</td><td><code>SAVE30</code></td><td>Jun 28</td><td class="num">820</td><td><span class="badge expired">expired</span></td><td><span class="badge urgent">Expired date</span></td><td><button class="btn btn-sm btn-outline">Edit</button></td></tr>
+        <tr><td class="muted">—</td><td>Mystery 40% code</td><td><code>???40</code></td><td>—</td><td class="num">0</td><td><span class="badge review">needs_review</span></td><td><span class="badge expiry">Missing merchant</span></td><td><button class="btn btn-sm btn-outline">Edit</button></td></tr>
+      </tbody></table></div></div>
+    </div></div>
+  </div>
+</section>
+<!-- ============================================================ IMPORT DASHBOARD -->
+<section class="screen" id="screen-imports">
+  <div class="screen-head"><h2>Import Dashboard</h2><p>Affiliate import operations: connected sources, a job timeline, per-job outcome counts (found/created/updated/rejected/needs-review), failed jobs and retry/run controls.</p></div>
+  <div class="frame device-desktop">
+    <div class="frame-label"><span class="dot g"></span> Admin · /admin/imports</div>
+    <div class="frame-body"><div style="padding:20px;background:var(--slate-50);">
+      <div class="hstack mb16" style="justify-content:space-between;"><h2 style="font-size:22px;">Imports</h2><button class="btn btn-primary btn-sm">⟳ Run import now</button></div>
+      <div class="stat-grid mb16">
+        <div class="stat"><div class="k">Offers found</div><div class="v">18,240</div><div class="d muted">today</div></div>
+        <div class="stat"><div class="k">Created</div><div class="v" style="color:var(--green-600);">1,120</div><div class="d up">new offers</div></div>
+        <div class="stat"><div class="k">Updated</div><div class="v">4,860</div><div class="d muted">price/stock</div></div>
+        <div class="stat"><div class="k">Rejected</div><div class="v" style="color:var(--red-600);">640</div><div class="d muted">invalid</div></div>
+        <div class="stat"><div class="k">Needs review</div><div class="v" style="color:var(--amber-600);">218</div><div class="d muted">low conf.</div></div>
+      </div>
+      <div class="detail-split">
+        <div class="panel"><div class="panel-head"><h3>Import job timeline</h3><span class="spacer"></span><span class="small muted">last 24h</span></div><div class="table-wrap"><table class="tbl"><thead><tr><th>Source</th><th>Started</th><th>Duration</th><th>Found</th><th>Created</th><th>Updated</th><th>Rejected</th><th>Status</th><th></th></tr></thead><tbody>
+          <tr><td>CJ Affiliate</td><td>4:00 PM</td><td>3m 12s</td><td class="num">6,200</td><td class="num">410</td><td class="num">1,820</td><td class="num">120</td><td><span class="badge status-completed">completed</span></td><td></td></tr>
+          <tr><td>Rakuten</td><td>4:05 PM</td><td>running…</td><td class="num">2,140</td><td class="num">88</td><td class="num">640</td><td class="num">30</td><td><span class="badge status-running">running</span></td><td></td></tr>
+          <tr><td>Walmart Feed</td><td>3:30 PM</td><td>5m 40s</td><td class="num">4,900</td><td class="num">320</td><td class="num">1,100</td><td class="num">280</td><td><span class="badge status-partial">partial_success</span></td><td><button class="btn btn-sm btn-outline">Retry</button></td></tr>
+          <tr><td>Impact</td><td>2:00 PM</td><td>2m 05s</td><td class="num">3,100</td><td class="num">210</td><td class="num">900</td><td class="num">60</td><td><span class="badge status-completed">completed</span></td><td></td></tr>
+          <tr><td>Merchant emails</td><td>1:15 PM</td><td>failed</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td><span class="badge status-failed">failed</span></td><td><button class="btn btn-sm btn-warn">Retry</button></td></tr>
+        </tbody></table></div></div>
+        <div class="vstack" style="gap:16px;">
+          <div class="panel"><div class="panel-head"><h3>Connected sources</h3></div><div class="panel-body vstack" style="gap:8px;">
+            <div class="kv"><span>⇄ CJ Affiliate</span><span class="badge status-completed">healthy</span></div>
+            <div class="kv"><span>⇄ Rakuten</span><span class="badge status-running">syncing</span></div>
+            <div class="kv"><span>⇄ Impact</span><span class="badge status-completed">healthy</span></div>
+            <div class="kv"><span>⇄ Walmart</span><span class="badge status-partial">degraded</span></div>
+            <div class="kv" style="border:none;"><span>⇄ Merchant emails</span><span class="badge status-failed">error</span></div>
+            <button class="btn btn-outline btn-block mt8">Manage sources</button>
+          </div></div>
+          <div class="panel"><div class="panel-head"><h3>Failed jobs</h3></div><div class="panel-body vstack" style="gap:10px;">
+            <div class="disclosure" style="background:var(--red-50);border-color:var(--red-100);color:var(--red-700);"><span class="i">⚠</span><div class="xsmall"><b>Merchant emails</b> — IMAP auth failed at 1:15 PM.</div></div>
+            <button class="btn btn-warn btn-block">Retry failed jobs</button>
+          </div></div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+</section>
+
+<!-- ============================================================ RAW RECORDS -->
+<section class="screen" id="screen-raw">
+  <div class="screen-head"><h2>Raw Import Records</h2><p>Inspect raw source payloads and their normalized output side-by-side — the audit trail for every imported record.</p></div>
+  <div class="frame device-desktop">
+    <div class="frame-label"><span class="dot g"></span> Admin · /admin/raw-records</div>
+    <div class="frame-body"><div style="padding:20px;background:var(--slate-50);">
+      <div class="hstack mb16" style="justify-content:space-between;"><h2 style="font-size:22px;">Raw records</h2><div class="chips"><span class="chip active">All</span><span class="chip">Processed</span><span class="chip">Pending</span><span class="chip">Failed</span></div></div>
+      <div class="detail-split">
+        <div class="panel"><div class="table-wrap"><table class="tbl"><thead><tr><th>ID</th><th>Source</th><th>Imported</th><th>Processing</th><th></th></tr></thead><tbody>
+          <tr style="background:var(--indigo-50);"><td class="num">#R-88213</td><td>Amazon PA-API</td><td>4:01 PM</td><td><span class="badge status-completed">processed</span></td><td><button class="btn btn-sm btn-outline">View</button></td></tr>
+          <tr><td class="num">#R-88214</td><td>CJ Feed</td><td>4:01 PM</td><td><span class="badge status-pending">pending</span></td><td><button class="btn btn-sm btn-outline">View</button></td></tr>
+          <tr><td class="num">#R-88215</td><td>Merchant email</td><td>1:14 PM</td><td><span class="badge status-failed">failed</span></td><td><button class="btn btn-sm btn-outline">View</button></td></tr>
+          <tr><td class="num">#R-88216</td><td>Walmart Feed</td><td>3:31 PM</td><td><span class="badge status-completed">processed</span></td><td><button class="btn btn-sm btn-outline">View</button></td></tr>
+        </tbody></table></div></div>
+        <div class="panel"><div class="panel-head"><h3>#R-88213 · Amazon PA-API</h3></div><div class="panel-body">
+          <div class="section-title" style="margin-top:0;">Raw payload</div>
+          <div class="code">{
+  <span class="k">"ASIN"</span>: <span class="s">"B0CHWRXH8B"</span>,
+  <span class="k">"Title"</span>: <span class="s">"Apple AirPods Pro 2 USB-C"</span>,
+  <span class="k">"ListPrice"</span>: <span class="n">249.00</span>,
+  <span class="k">"Price"</span>: <span class="n">189.00</span>,
+  <span class="k">"Merchant"</span>: <span class="s">"BestBuy"</span>
+}</div>
+          <div class="section-title">Normalized output</div>
+          <div class="code">{
+  <span class="k">"title"</span>: <span class="s">"Apple AirPods Pro (2nd Gen) USB-C"</span>,
+  <span class="k">"merchantName"</span>: <span class="s">"Best Buy"</span>,
+  <span class="k">"regularPrice"</span>: <span class="n">249</span>, <span class="k">"salePrice"</span>: <span class="n">189</span>,
+  <span class="k">"discountPercent"</span>: <span class="n">24</span>,
+  <span class="k">"category"</span>: <span class="s">"Electronics/Audio"</span>,
+  <span class="k">"confidenceScore"</span>: <span class="n">0.96</span>, <span class="k">"status"</span>: <span class="s">"active"</span>
+}</div>
+        </div></div>
+      </div>
+    </div></div>
+  </div>
+</section>
+
+<!-- ============================================================ SOURCES -->
+<section class="screen" id="screen-sources">
+  <div class="screen-head"><h2>Source Connections</h2><p>Manage affiliate networks &amp; feeds — connection status, API key placeholders, import schedule, rate limits and enable/disable toggles.</p></div>
+  <div class="frame device-desktop">
+    <div class="frame-label"><span class="dot g"></span> Admin · /admin/sources</div>
+    <div class="frame-body"><div style="padding:20px;background:var(--slate-50);">
+      <div class="hstack mb16" style="justify-content:space-between;"><h2 style="font-size:22px;">Sources</h2><button class="btn btn-primary btn-sm">+ Connect source</button></div>
+      <div class="deal-grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr));">
+        <!--SOURCE:CJ|CJ Affiliate|Network|healthy|on|Hourly-->
+        <!--SOURCE:RK|Rakuten|Network|syncing|on|Every 2h-->
+        <!--SOURCE:IM|Impact|Network|healthy|on|Hourly-->
+        <!--SOURCE:AW|Awin|Network|healthy|on|Every 4h-->
+        <!--SOURCE:WM|Walmart|Retailer API|degraded|on|Every 6h-->
+        <!--SOURCE:EB|eBay|Partner API|healthy|on|Hourly-->
+        <!--SOURCE:FA|Feed aggregator|CSV/XML feeds|healthy|on|Daily-->
+        <!--SOURCE:ME|Merchant emails|IMAP inbox|error|off|Every 30m-->
+      </div>
+    </div></div>
+  </div>
+</section>
+
+<!-- ============================================================ MAPPING -->
+<section class="screen" id="screen-mapping">
+  <div class="screen-head"><h2>Mapping</h2><p>Resolve unknown merchants, categories and brands from imports. Review suggested mappings and approve them into canonical entities.</p></div>
+  <div class="frame device-desktop">
+    <div class="frame-label"><span class="dot g"></span> Admin · /admin/mapping</div>
+    <div class="frame-body"><div style="padding:20px;background:var(--slate-50);">
+      <div class="pill-tabs tab-group mb16"><button class="pt active" data-tab>Merchant mapping <span class="badge neutral" style="padding:0 6px;">14</span></button><button class="pt" data-tab>Category mapping <span class="badge neutral" style="padding:0 6px;">9</span></button><button class="pt" data-tab>Brand mapping <span class="badge neutral" style="padding:0 6px;">22</span></button></div>
+      <div class="detail-split">
+        <div class="panel"><div class="panel-head"><h3>Unknown merchant queue</h3></div><div class="table-wrap"><table class="tbl"><thead><tr><th>Raw value (from source)</th><th>Suggested mapping</th><th>Confidence</th><th>Action</th></tr></thead><tbody>
+          <tr><td><code>BestBuy.com</code></td><td>→ <b>Best Buy</b></td><td><span class="badge active">98%</span></td><td><button class="btn btn-sm btn-success">Approve</button></td></tr>
+          <tr><td><code>amzn</code></td><td>→ <b>Amazon</b></td><td><span class="badge active">95%</span></td><td><button class="btn btn-sm btn-success">Approve</button></td></tr>
+          <tr><td><code>WMT Stores</code></td><td>→ <b>Walmart</b></td><td><span class="badge review">72%</span></td><td><button class="btn btn-sm btn-success">Approve</button></td></tr>
+          <tr><td><code>MegaDealz LLC</code></td><td>→ <span class="muted">no match</span></td><td><span class="badge expired">21%</span></td><td><div class="row-actions"><button class="btn btn-sm btn-outline">Map…</button><button class="btn btn-sm btn-danger">Ignore</button></div></td></tr>
+        </tbody></table></div></div>
+        <div class="panel"><div class="panel-head"><h3>Map: MegaDealz LLC</h3></div><div class="panel-body">
+          <div class="field"><label>Map raw value to merchant</label><select class="input"><option>Create new merchant…</option><option>Best Buy</option><option>Amazon</option><option>Walmart</option></select></div>
+          <div class="field"><label>New merchant name</label><input class="input" placeholder="e.g. MegaDealz" /></div>
+          <div class="toggle-row" style="border:none;"><div class="t-title">Remember rule for future imports</div><span class="spacer"></span><span class="toggle on"></span></div>
+          <button class="btn btn-primary btn-block mt8">Approve mapping</button>
+        </div></div>
+      </div>
+    </div></div>
+  </div>
+</section>
+
+<!-- ============================================================ LLM REVIEW -->
+<section class="screen" id="screen-llm">
+  <div class="screen-head"><h2>LLM Extraction Review</h2><p>Compare messy raw text with the LLM-extracted structured JSON, review confidence &amp; validation, correct fields, then approve, re-run or reject.</p></div>
+  <div class="frame device-desktop">
+    <div class="frame-label"><span class="dot g"></span> Admin · /admin/llm-review</div>
+    <div class="frame-body"><div style="padding:20px;background:var(--slate-50);">
+      <div class="hstack mb16" style="justify-content:space-between;"><h2 style="font-size:22px;">LLM review</h2><div class="hstack" style="gap:8px;"><span class="badge review">Confidence 0.62</span><span class="badge expiry">1 validation issue</span></div></div>
+      <div class="grid3">
+        <div class="panel"><div class="panel-head"><h3>Raw messy text</h3></div><div class="panel-body"><div class="code" style="white-space:pre-wrap;">FLASH SALE!! sony wh1000 xm5 headphones
+NOW ONLY $328 (was 399) -- limited stock
+use code at checkout, ends fri
+via amazon assoc link</div></div></div>
+        <div class="panel"><div class="panel-head"><h3>LLM extracted JSON</h3></div><div class="panel-body"><div class="code">{
+  <span class="k">"title"</span>: <span class="s">"Sony WH-1000XM5"</span>,
+  <span class="k">"salePrice"</span>: <span class="n">328</span>,
+  <span class="k">"regularPrice"</span>: <span class="n">399</span>,
+  <span class="k">"discountPercent"</span>: <span class="n">18</span>,
+  <span class="k">"merchantName"</span>: <span class="s">"Amazon"</span>,
+  <span class="k">"couponCode"</span>: <span class="n">null</span>,
+  <span class="k">"expiryDate"</span>: <span class="s">"2026-07-04"</span>
+}</div></div></div>
+        <div class="panel"><div class="panel-head"><h3>Admin correction</h3></div><div class="panel-body">
+          <div class="field"><label>Title</label><input class="input" value="Sony WH-1000XM5 Headphones" /></div>
+          <div class="grid2"><div class="field"><label>Sale</label><input class="input" value="328" /></div><div class="field"><label>Regular</label><input class="input" value="399" /></div></div>
+          <div class="field"><label>Category</label><select class="input"><option>Electronics › Audio</option></select></div>
+          <div class="disclosure" style="background:var(--amber-50);border-color:var(--amber-100);color:var(--amber-700);"><span class="i">⚠</span><div class="xsmall">“ends fri” is ambiguous — verify expiry date.</div></div>
+          <div class="grid3 mt16" style="gap:8px;"><button class="btn btn-success">✓ Approve</button><button class="btn btn-outline">↻ Re-run</button><button class="btn btn-danger">✕ Reject</button></div>
+        </div></div>
+      </div>
+    </div></div>
+  </div>
+</section>
+
+<!-- ============================================================ DUPLICATES -->
+<section class="screen" id="screen-duplicates">
+  <div class="screen-head"><h2>Duplicate Detection</h2><p>Surface likely-duplicate offers with a side-by-side comparison, then merge, keep separate or reject the duplicate.</p></div>
+  <div class="frame device-desktop">
+    <div class="frame-label"><span class="dot g"></span> Admin · /admin/duplicates</div>
+    <div class="frame-body"><div style="padding:20px;background:var(--slate-50);">
+      <div class="hstack mb16" style="justify-content:space-between;"><h2 style="font-size:22px;">Potential duplicates</h2><div class="small muted">42 candidate pairs</div></div>
+      <div class="panel mb16"><div class="panel-head"><h3>Match #1 · 94% similarity</h3><span class="spacer"></span><span class="badge review">94% match</span></div><div class="panel-body">
+        <div class="grid2" style="gap:16px;">
+          <div class="card card-pad"><div class="small b muted mb8">Offer A · #12480</div><div class="hstack" style="gap:12px;"><div class="imgph" style="width:64px;height:64px;flex:0 0 64px;">Img</div><div><div class="b">Sony WH-1000XM5 Headphones</div><div class="small muted">Amazon · Audio</div><div class="hstack mt8" style="gap:8px;"><span class="b">$328</span><span class="reg">$399</span><span class="badge active">active</span></div><div class="xsmall muted mt8">source: CJ · verified 4:12 PM</div></div></div></div>
+          <div class="card card-pad"><div class="small b muted mb8">Offer B · #12511</div><div class="hstack" style="gap:12px;"><div class="imgph" style="width:64px;height:64px;flex:0 0 64px;">Img</div><div><div class="b">Sony WH1000XM5 Wireless</div><div class="small muted">Amazon · Audio</div><div class="hstack mt8" style="gap:8px;"><span class="b">$330</span><span class="reg">$399</span><span class="badge review">needs_review</span></div><div class="xsmall muted mt8">source: Rakuten · verified 3:40 PM</div></div></div></div>
+        </div>
+        <div class="hstack mt16" style="gap:10px;justify-content:flex-end;"><button class="btn btn-primary">⧉ Merge (keep A)</button><button class="btn btn-outline">Keep separate</button><button class="btn btn-danger">Reject B as duplicate</button></div>
+      </div></div>
+      <div class="panel"><div class="panel-head"><h3>Match #2 · 88% similarity</h3><span class="spacer"></span><span class="badge neutral">88% match</span></div><div class="panel-body">
+        <div class="grid2" style="gap:16px;">
+          <div class="card card-pad"><div class="small b muted mb8">Offer A · #11002</div><div class="b">Ninja Air Fryer Max XL</div><div class="small muted">Target · Home</div><div class="hstack mt8" style="gap:8px;"><span class="b">$119</span><span class="reg">$169</span></div></div>
+          <div class="card card-pad"><div class="small b muted mb8">Offer B · #11040</div><div class="b">Ninja AF161 Max XL Air Fryer</div><div class="small muted">Walmart · Home</div><div class="hstack mt8" style="gap:8px;"><span class="b">$117</span><span class="reg">$169</span></div></div>
+        </div>
+        <div class="hstack mt16" style="gap:10px;justify-content:flex-end;"><button class="btn btn-outline">Keep separate <span class="muted">(different stores)</span></button><button class="btn btn-primary">⧉ Merge</button></div>
+      </div></div>
+    </div></div>
+  </div>
+</section>
+<!-- ============================================================ ANALYTICS OVERVIEW -->
+<section class="screen" id="screen-analytics">
+  <div class="screen-head"><h2>Analytics Overview</h2><p>Clicks over time, top deals/stores/categories, search terms, expired-deal reports, conversion estimates and traffic-source breakdown.</p></div>
+  <div class="frame device-desktop">
+    <div class="frame-label"><span class="dot g"></span> Admin · /admin/analytics</div>
+    <div class="frame-body"><div style="padding:20px;background:var(--slate-50);">
+      <div class="hstack mb16" style="justify-content:space-between;"><h2 style="font-size:22px;">Analytics</h2><div class="pill-tabs tab-group"><button class="pt" data-tab>7d</button><button class="pt active" data-tab>30d</button><button class="pt" data-tab>90d</button></div></div>
+      <div class="stat-grid mb16">
+        <div class="stat"><div class="k">Total clicks</div><div class="v">1.24M</div><div class="d up">▲ 8.1%</div></div>
+        <div class="stat"><div class="k">Unique visitors</div><div class="v">486K</div><div class="d up">▲ 5.4%</div></div>
+        <div class="stat"><div class="k">Est. conversions</div><div class="v">18.2K</div><div class="d muted">placeholder</div></div>
+        <div class="stat"><div class="k">Est. revenue</div><div class="v">$142K</div><div class="d muted">placeholder</div></div>
+      </div>
+      <div class="panel mb16"><div class="panel-head"><h3>Clicks over time</h3><span class="spacer"></span><span class="legend"><span><i style="background:var(--indigo-500);"></i>Clicks</span><span><i style="background:var(--green-600);"></i>Conversions</span></span></div><div class="panel-body">
+        <div class="chart" style="height:220px;"><div class="bar" style="height:40%;"></div><div class="bar" style="height:52%;"></div><div class="bar" style="height:46%;"></div><div class="bar" style="height:64%;"></div><div class="bar" style="height:58%;"></div><div class="bar" style="height:72%;"></div><div class="bar" style="height:66%;"></div><div class="bar" style="height:80%;"></div><div class="bar" style="height:74%;"></div><div class="bar" style="height:88%;"></div><div class="bar" style="height:82%;"></div><div class="bar" style="height:96%;"></div></div>
+        <div class="small muted mt8">Placeholder chart — clicks trending up over the last 30 days.</div>
+      </div></div>
+      <div class="grid3 mb16">
+        <div class="panel"><div class="panel-head"><h3>Top clicked deals</h3></div><div class="panel-body vstack" style="gap:0;">
+          <div class="kv"><span>AirPods Pro (2nd Gen)</span><span>62K</span></div><div class="kv"><span>Instant Pot Duo</span><span>54K</span></div><div class="kv"><span>Samsung 65" QLED</span><span>41K</span></div><div class="kv" style="border:none;"><span>Ninja Air Fryer</span><span>38K</span></div>
+        </div></div>
+        <div class="panel"><div class="panel-head"><h3>Top stores</h3></div><div class="panel-body vstack" style="gap:0;">
+          <div class="kv"><span>Amazon</span><span>420K</span></div><div class="kv"><span>Best Buy</span><span>310K</span></div><div class="kv"><span>Walmart</span><span>190K</span></div><div class="kv" style="border:none;"><span>Target</span><span>128K</span></div>
+        </div></div>
+        <div class="panel"><div class="panel-head"><h3>Top categories</h3></div><div class="panel-body vstack" style="gap:0;">
+          <div class="kv"><span>Electronics</span><span>540K</span></div><div class="kv"><span>Home &amp; Kitchen</span><span>280K</span></div><div class="kv"><span>Fashion</span><span>190K</span></div><div class="kv" style="border:none;"><span>Gaming</span><span>110K</span></div>
+        </div></div>
+      </div>
+      <div class="grid3">
+        <div class="panel" style="grid-column:span 1;"><div class="panel-head"><h3>Top search terms</h3></div><div class="panel-body"><div class="chips"><span class="chip">laptop <span class="muted xsmall">12K</span></span><span class="chip">airpods <span class="muted xsmall">9K</span></span><span class="chip">tv deals <span class="muted xsmall">7K</span></span><span class="chip">air fryer <span class="muted xsmall">6K</span></span><span class="chip">nike coupon <span class="muted xsmall">4K</span></span></div></div></div>
+        <div class="panel"><div class="panel-head"><h3>Expired deal report</h3></div><div class="panel-body vstack" style="gap:0;"><div class="kv"><span>Auto-expired (30d)</span><span>2,140</span></div><div class="kv"><span>Reported by users</span><span>318</span></div><div class="kv" style="border:none;"><span>Still clicked after expiry</span><span class="badge expiry">42</span></div></div></div>
+        <div class="panel"><div class="panel-head"><h3>Traffic sources</h3></div><div class="panel-body"><div class="hstack" style="gap:16px;"><div class="donut"></div><div class="vstack small" style="gap:6px;"><span><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--indigo-600);margin-right:6px;"></i>Google 45%</span><span><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--green-600);margin-right:6px;"></i>Instagram 25%</span><span><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#f59e0b;margin-right:6px;"></i>Facebook 18%</span><span><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--slate-300);margin-right:6px;"></i>Email / Direct 12%</span></div></div></div></div>
+      </div>
+    </div></div>
+  </div>
+</section>
+
+<!-- ============================================================ DEAL PERFORMANCE -->
+<section class="screen" id="screen-dealperf">
+  <div class="screen-head"><h2>Deal Performance</h2><p>Per-deal metrics: clicks, saves, alert signups, CTR, revenue estimate and expiry status.</p></div>
+  <div class="frame device-desktop">
+    <div class="frame-label"><span class="dot g"></span> Admin · /admin/analytics/deals</div>
+    <div class="frame-body"><div style="padding:20px;background:var(--slate-50);">
+      <div class="hstack mb16" style="justify-content:space-between;"><h2 style="font-size:22px;">Deal performance</h2><div class="hstack" style="gap:8px;"><div class="mini-search" style="min-width:220px;">⌕ Search deals…</div><button class="btn btn-outline btn-sm">⬇ Export</button></div></div>
+      <div class="panel"><div class="table-wrap"><table class="tbl"><thead><tr><th>Deal</th><th>Store</th><th>Clicks</th><th>Saves</th><th>Alert signups</th><th>CTR</th><th>Est. revenue</th><th>Expiry</th></tr></thead><tbody>
+        <tr><td>AirPods Pro (2nd Gen)</td><td>Best Buy</td><td class="num">62,140</td><td class="num">8,210</td><td class="num">3,120</td><td class="num">6.8%</td><td class="num">$28,400</td><td><span class="badge active">Jul 4</span></td></tr>
+        <tr><td>Instant Pot Duo 6Qt</td><td>Amazon</td><td class="num">54,020</td><td class="num">6,940</td><td class="num">2,410</td><td class="num">9.1%</td><td class="num">$19,800</td><td><span class="badge urgent">Ends 6h</span></td></tr>
+        <tr><td>Samsung 65" QLED TV</td><td>Best Buy</td><td class="num">41,300</td><td class="num">5,120</td><td class="num">1,980</td><td class="num">4.2%</td><td class="num">$41,200</td><td><span class="badge review">Tomorrow</span></td></tr>
+        <tr><td>Ninja Air Fryer Max XL</td><td>Target</td><td class="num">38,110</td><td class="num">4,830</td><td class="num">1,540</td><td class="num">7.5%</td><td class="num">$12,600</td><td><span class="badge active">Jul 5</span></td></tr>
+        <tr><td>Dell XPS 13 Laptop</td><td>Dell</td><td class="num">21,900</td><td class="num">2,110</td><td class="num">890</td><td class="num">3.1%</td><td class="num">$24,900</td><td><span class="badge expired">expired</span></td></tr>
+      </tbody></table></div></div>
+      <div class="small muted mt8">Revenue &amp; CTR figures are placeholder estimates for wireframe purposes only.</div>
+    </div></div>
+  </div>
+</section>
+
+<!-- ============================================================ SUBSCRIBERS -->
+<section class="screen" id="screen-subscribers">
+  <div class="screen-head"><h2>Subscriber &amp; Email Analytics</h2><p>Subscriber directory with category preferences, email status, digest/alert segmentation and an export placeholder.</p></div>
+  <div class="frame device-desktop">
+    <div class="frame-label"><span class="dot g"></span> Admin · /admin/subscribers</div>
+    <div class="frame-body"><div style="padding:20px;background:var(--slate-50);">
+      <div class="hstack mb16" style="justify-content:space-between;"><h2 style="font-size:22px;">Subscribers</h2><button class="btn btn-outline btn-sm">⬇ Export CSV (placeholder)</button></div>
+      <div class="stat-grid mb16">
+        <div class="stat"><div class="k">Total subscribers</div><div class="v">54,120</div><div class="d up">▲ 260 today</div></div>
+        <div class="stat"><div class="k">Daily digest</div><div class="v">38,940</div><div class="d muted">72% opt-in</div></div>
+        <div class="stat"><div class="k">Alert subscribers</div><div class="v">26,510</div><div class="d up">▲ 4.0%</div></div>
+        <div class="stat"><div class="k">Avg open rate</div><div class="v">41%</div><div class="d up">▲ 1.2%</div></div>
+      </div>
+      <div class="hstack mb16"><div class="chips"><span class="chip active">All</span><span class="chip">Daily digest</span><span class="chip">Alerts only</span><span class="chip">Unconfirmed</span><span class="chip">Bounced</span></div></div>
+      <div class="panel"><div class="table-wrap"><table class="tbl"><thead><tr><th><span class="checkbox"></span></th><th>Email</th><th>Category preferences</th><th>Daily digest</th><th>Alerts</th><th>Email status</th><th>Joined</th></tr></thead><tbody>
+        <tr><td><span class="checkbox"></span></td><td>alex@email.com</td><td><span class="badge neutral">Electronics</span> <span class="badge neutral">Audio</span></td><td><span class="badge active">on</span></td><td><span class="badge active">on</span></td><td><span class="badge active">confirmed</span></td><td>Jun 2</td></tr>
+        <tr><td><span class="checkbox"></span></td><td>jordan@email.com</td><td><span class="badge neutral">Fashion</span></td><td><span class="badge neutral">off</span></td><td><span class="badge active">on</span></td><td><span class="badge active">confirmed</span></td><td>May 18</td></tr>
+        <tr><td><span class="checkbox"></span></td><td>sam@email.com</td><td><span class="badge neutral">Home</span> <span class="badge neutral">Gaming</span></td><td><span class="badge active">on</span></td><td><span class="badge neutral">off</span></td><td><span class="badge review">unconfirmed</span></td><td>Jul 1</td></tr>
+        <tr><td><span class="checkbox"></span></td><td>pat@email.com</td><td><span class="badge neutral">Electronics</span></td><td><span class="badge active">on</span></td><td><span class="badge active">on</span></td><td><span class="badge expired">bounced</span></td><td>Apr 9</td></tr>
+      </tbody></table></div></div>
+    </div></div>
+  </div>
+</section>
+      <!-- SCREENS_INJECT -->
+    </div>
+  </main>
+</div>
+
+<script>
+const SCREEN_META = {
+  notes:["Overview","Design Notes","wireframe://overview"],
+  components:["Overview","Component Library","wireframe://components"],
+  home:["Public","Homepage","myperkfinder.com/"],
+  deals:["Public","Deals Listing","/deals"],
+  category:["Public","Category Page","/deals/electronics"],
+  search:["Public","Search Results","/search?q=laptop"],
+  stores:["Public","Store Listing","/stores"],
+  store:["Public","Store Detail","/stores/best-buy"],
+  deal:["Public","Deal Detail","/deal/apple-airpods-pro-best-buy-189"],
+  coupons:["Public","Coupons","/coupons"],
+  blog:["Public","Blog / Guides","/blog"],
+  install:["PWA","Install Banner","(overlay)"],
+  saved:["PWA","Saved Deals","/saved"],
+  alerts:["PWA","Alerts","/alerts"],
+  preferences:["PWA","Preferences","/account/preferences"],
+  admin:["Admin","Overview","/admin"],
+  review:["Admin","Review Queue","/admin/review"],
+  offers:["Admin","All Offers","/admin/offers"],
+  editoffer:["Admin","Create / Edit Offer","/admin/offers/[id]"],
+  merchants:["Admin","Merchants","/admin/merchants"],
+  categories:["Admin","Categories","/admin/categories"],
+  admincoupons:["Admin","Coupons","/admin/coupons"],
+  imports:["Imports","Import Dashboard","/admin/imports"],
+  raw:["Imports","Raw Records","/admin/raw-records"],
+  sources:["Imports","Sources","/admin/sources"],
+  mapping:["Imports","Mapping","/admin/mapping"],
+  llm:["Imports","LLM Review","/admin/llm-review"],
+  duplicates:["Imports","Duplicates","/admin/duplicates"],
+  analytics:["Analytics","Analytics Overview","/admin/analytics"],
+  dealperf:["Analytics","Deal Performance","/admin/analytics/deals"],
+  subscribers:["Analytics","Subscribers","/admin/subscribers"],
+};
+
+// Expand compact <!--DEALCARD:title|store|sale|reg|discount|expiry|confidence|coupon--> placeholders.
+function renderDeal(data){
+  const p=data.split('|');
+  const [title,store,sale,reg,disc,expiry,conf,coupon]=p;
+  const urgent=/today|h$|ends|tomorrow/i.test(expiry);
+  const save=(Number(reg)-Number(sale));
+  const initials=store.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  return `<div class="deal-card">
+    <div class="thumb"><div class="imgph">Image<br><span class="xsmall">alt: “${title}”</span></div>
+      <span class="flag badge discount">-${disc}%</span><span class="fav" title="Save deal">♡</span></div>
+    <div class="body">
+      <div class="store">▪ ${store} <span class="badge verified" style="padding:1px 6px;">✓</span></div>
+      <div class="title">${title}</div>
+      ${coupon==='1'?'<div><span class="badge coupon">✂ Coupon inside</span></div>':''}
+      <div class="prices"><span class="sale">$${sale}</span><span class="reg">$${reg}</span><span class="badge save">Save $${save}</span></div>
+      <div class="meta"><span class="badge ${urgent?'urgent':'expiry'}">⏳ ${expiry}</span><span>${conf}% conf.</span></div>
+    </div>
+  </div>`;
+}
+// Expand <!--SOURCE:initials|name|type|status|toggle|schedule-->
+function renderSource(data){
+  const [ini,name,type,status,tog,sched]=data.split('|');
+  const map={healthy:'status-completed',syncing:'status-running',degraded:'status-partial',error:'status-failed'};
+  const label={healthy:'Connected',syncing:'Syncing…',degraded:'Degraded',error:'Error'};
+  return `<div class="card card-pad">
+    <div class="hstack" style="gap:12px;"><div class="imgph round" style="width:40px;height:40px;flex:0 0 40px;">${ini}</div>
+      <div style="flex:1;"><div class="b">${name}</div><div class="xsmall muted">${type}</div></div>
+      <span class="badge ${map[status]}">${label[status]}</span></div>
+    <div class="kv mt12"><span>API key</span><span style="font-family:ui-monospace,Menlo,monospace;">••••••••3f9a</span></div>
+    <div class="kv"><span>Import schedule</span><span>${sched}</span></div>
+    <div class="kv"><span>Rate limit</span><span>120 req / min</span></div>
+    <div class="toggle-row" style="border:none;padding:10px 0 0;"><div class="t-title" style="font-size:13px;">Enabled</div><span class="spacer"></span><span class="toggle ${tog==='on'?'on':''}"></span></div>
+    <button class="btn btn-outline btn-block mt8">Configure</button>
+  </div>`;
+}
+(function expand(){
+  const wrap=document.getElementById('screenWrap');
+  wrap.innerHTML=wrap.innerHTML
+    .replace(/<!--DEALCARD:([\s\S]*?)-->/g,(m,d)=>renderDeal(d.trim()))
+    .replace(/<!--SOURCE:([\s\S]*?)-->/g,(m,d)=>renderSource(d.trim()));
+})();
+
+function showScreen(id){
+  if(!SCREEN_META[id]) id="notes";
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el=document.getElementById('screen-'+id);
+  if(el) el.classList.add('active');
+  document.querySelectorAll('.nav-link').forEach(n=>n.classList.toggle('active',n.dataset.screen===id));
+  const m=SCREEN_META[id];
+  document.getElementById('crumb').innerHTML='MyPerkFinder / '+m[0]+' / <b>'+m[1]+'</b>';
+  document.getElementById('urlBar').textContent=m[2];
+  document.getElementById('screenWrap').scrollTo?.(0,0);
+  window.scrollTo(0,0);
+  closeSidebar();
+}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('scrim').classList.remove('show');}
+document.addEventListener('click',e=>{
+  const nav=e.target.closest('.nav-link');
+  if(nav){location.hash=nav.dataset.screen;}
+  const rev=e.target.closest('[data-reveal]');
+  if(rev){rev.classList.remove('hidden');rev.textContent=rev.dataset.reveal;}
+  const tab=e.target.closest('[data-tab]');
+  if(tab){
+    const group=tab.closest('.pill-tabs, .tab-group');
+    group.querySelectorAll('[data-tab]').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+  }
+  const tog=e.target.closest('.toggle');
+  if(tog){tog.classList.toggle('on');}
+});
+document.getElementById('menuBtn').addEventListener('click',()=>{document.getElementById('sidebar').classList.toggle('open');document.getElementById('scrim').classList.toggle('show');});
+document.getElementById('scrim').addEventListener('click',closeSidebar);
+window.addEventListener('hashchange',()=>showScreen(location.hash.slice(1)));
+showScreen(location.hash.slice(1)||'notes');
+</script>
+</body>
+</html>

@@ -1,0 +1,208 @@
+// MyPerkFinder — Prisma schema (Supabase Postgres in prod, local Postgres in dev).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum OfferStatus {
+  draft
+  active
+  expired
+  needs_review
+  rejected
+  archived
+}
+
+enum ImportStatus {
+  pending
+  running
+  completed
+  failed
+  partial_success
+}
+
+enum RawRecordStatus {
+  pending
+  processed
+  failed
+}
+
+enum SourceKind {
+  cj
+  rakuten
+  impact
+  awin
+  walmart
+  ebay
+  feed_aggregator
+  merchant_email
+}
+
+enum SubscriberStatus {
+  confirmed
+  unconfirmed
+  bounced
+  unsubscribed
+}
+
+model Merchant {
+  id          String      @id @default(cuid())
+  name        String
+  slug        String      @unique
+  logoUrl     String?
+  network     SourceKind?
+  homepageUrl String?
+  commissionRate Float?
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  deals   Deal[]
+  coupons Coupon[]
+
+  @@index([isActive])
+}
+
+model Category {
+  id             String     @id @default(cuid())
+  name           String
+  slug           String     @unique
+  parentId       String?
+  parent         Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children       Category[] @relation("CategoryTree")
+  seoTitle       String?
+  seoDescription String?
+  mappingKeywords String[]  @default([])
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  deals Deal[]
+
+  @@index([parentId])
+}
+
+model Deal {
+  id              String      @id @default(cuid())
+  title           String
+  slug            String      @unique
+  brand           String?
+  regularPrice    Decimal     @db.Decimal(10, 2)
+  salePrice       Decimal     @db.Decimal(10, 2)
+  discountPercent Int         @default(0)
+  couponCode      String?
+  currency        String      @default("USD")
+  imageUrl        String?
+  affiliateUrl    String?
+  productUrl      String?
+  expiryDate      DateTime?
+  lastVerifiedAt  DateTime?
+  sourceName      String?
+  // Affiliate network ID for deduplication on import upsert.
+  externalId      String?
+  source            SourceKind?
+  status          OfferStatus @default(needs_review)
+  confidenceScore Float?
+  validationFlags String[]    @default([])
+
+  merchantId String?
+  merchant   Merchant? @relation(fields: [merchantId], references: [id])
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
+
+  clicksCount Int @default(0)
+  savesCount  Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([source, externalId])
+  @@index([status])
+  @@index([merchantId])
+  @@index([categoryId])
+  @@index([expiryDate])
+  @@index([source])
+}
+
+model Coupon {
+  id          String    @id @default(cuid())
+  title       String
+  code        String?
+  expiryDate  DateTime?
+  isActive    Boolean   @default(true)
+  revealCount Int       @default(0)
+
+  merchantId String?
+  merchant   Merchant? @relation(fields: [merchantId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([merchantId])
+}
+
+model ImportJob {
+  id          String       @id @default(cuid())
+  source      SourceKind
+  status      ImportStatus @default(pending)
+  startedAt   DateTime?
+  finishedAt  DateTime?
+  offersFound Int          @default(0)
+  created     Int          @default(0)
+  updated     Int          @default(0)
+  rejected    Int          @default(0)
+  needsReview Int          @default(0)
+  error       String?
+
+  rawRecords RawRecord[]
+
+  createdAt DateTime @default(now())
+
+  @@index([source])
+  @@index([status])
+}
+
+model RawRecord {
+  id         String          @id @default(cuid())
+  source     SourceKind
+  payload    Json
+  normalized Json?
+  status     RawRecordStatus @default(pending)
+  importedAt DateTime        @default(now())
+
+  importJobId String?
+  importJob   ImportJob? @relation(fields: [importJobId], references: [id])
+
+  @@index([status])
+  @@index([importJobId])
+}
+
+model Subscriber {
+  id                  String           @id @default(cuid())
+  email               String           @unique
+  status              SubscriberStatus @default(unconfirmed)
+  dailyDigest         Boolean          @default(false)
+  alerts              Boolean          @default(false)
+  categoryPreferences String[]         @default([])
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  @@index([status])
+}
+
+model MappingRule {
+  id         String     @id @default(cuid())
+  kind       String // "merchant" | "category" | "brand"
+  rawValue   String
+  mappedTo   String
+  confidence Float      @default(1)
+  createdAt  DateTime   @default(now())
+
+  @@unique([kind, rawValue])
+}

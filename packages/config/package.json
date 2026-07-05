@@ -1,0 +1,16 @@
+{
+  "name": "@mpf/config",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./tailwind": "./tailwind.preset.cjs",
+    "./tsconfig.base.json": "./tsconfig.base.json",
+    "./tsconfig.next.json": "./tsconfig.next.json"
+  },
+  "files": [
+    "tailwind.preset.cjs",
+    "tsconfig.base.json",
+    "tsconfig.next.json"
+  ]
+}
