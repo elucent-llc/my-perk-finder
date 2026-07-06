@@ -158,9 +158,10 @@ This repo uses root-level pnpm workspace scripts (`pnpm build:web`, `pnpm start:
 | ------- | ----- |
 | **Root directory** | `/` (repo root) — **not** `apps/web` |
 | **Config file** | `apps/web/railway.json` |
-| **Builder** | Railpack (auto-detects root `start` / `build` in `package.json`; see `railpack.json`) |
-| **Build command** | `pnpm install --frozen-lockfile && pnpm build:web` |
+| **Builder** | Railpack (uses root `package.json` `build` + `start` scripts) |
+| **Build command** | `pnpm build:web` (Railpack runs `pnpm install` first) |
 | **Start command** | `pnpm start:web` |
+| **Optional env** | `RAILPACK_INSTALL_CMD=pnpm install --frozen-lockfile` |
 | **Health check** | `/api/health` |
 
 **Env vars:** `DATABASE_URL`, `DIRECT_URL`, `NEXT_PUBLIC_SITE_URL`, `ADMIN_AUTH_SECRET`, `NODE_ENV=production`
