@@ -4,7 +4,6 @@ import type { OfferStatus, ValidationFlag } from "@mpf/types";
 export interface OfferImportValidation {
   flags: ValidationFlag[];
   confidenceScore: number;
-  /** Recommended DB status after validation. */
   status: OfferStatus;
   /** Hard reject — do not upsert. */
   rejected: boolean;
@@ -12,25 +11,62 @@ export interface OfferImportValidation {
 
 const LOW_CONFIDENCE_THRESHOLD = 0.65;
 const HIGH_DISCOUNT_THRESHOLD = 85;
-const MIN_CONFIDENCE_FOR_ACTIVE = 0.8;
+
+function isValidHttpUrl(url: string): boolean {
+  try {
+    const u = new URL(url);
+    return u.protocol === "http:" || u.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Validate a normalized affiliate offer before DB upsert.
- * Checks missing affiliate URL, missing merchant, expired date,
- * invalid price, suspicious discount, and low confidence.
  */
 export function validateOfferForImport(offer: NormalizedOffer): OfferImportValidation {
   const flags: ValidationFlag[] = [];
   let confidence = offer.confidenceScore;
 
-  if (!offer.affiliateUrl || offer.affiliateUrl.trim() === "") {
+  const affiliateUrl = offer.affiliateUrl?.trim() ?? "";
+  if (!affiliateUrl || !isValidHttpUrl(affiliateUrl)) {
     flags.push("missing_affiliate_url");
-    confidence = Math.min(confidence, 0.5);
+    return {
+      flags,
+      confidenceScore: 0,
+      status: "rejected",
+      rejected: true,
+    };
   }
 
   if (!offer.merchantName || offer.merchantName.trim() === "") {
     flags.push("missing_merchant");
-    confidence = Math.min(confidence, 0.55);
+    return {
+      flags,
+      confidenceScore: 0,
+      status: "rejected",
+      rejected: true,
+    };
+  }
+
+  if (offer.expiryDate instanceof Date && Number.isNaN(offer.expiryDate.getTime())) {
+    flags.push("expired_date");
+    return {
+      flags,
+      confidenceScore: 0,
+      status: "rejected",
+      rejected: true,
+    };
+  }
+
+  if (offer.expiryDate && offer.expiryDate.getTime() < Date.now()) {
+    flags.push("expired_date");
+    return {
+      flags,
+      confidenceScore: Math.min(confidence, 0.4),
+      status: "expired",
+      rejected: false,
+    };
   }
 
   if (!offer.category || offer.category.trim() === "") {
@@ -38,21 +74,18 @@ export function validateOfferForImport(offer: NormalizedOffer): OfferImportValid
     confidence = Math.min(confidence, 0.7);
   }
 
-  if (offer.expiryDate && offer.expiryDate.getTime() < Date.now()) {
-    flags.push("expired_date");
-    confidence = Math.min(confidence, 0.4);
-  }
+  const regular = offer.regularPrice ?? 0;
+  const sale = offer.salePrice ?? 0;
+  const isCouponOnly = Boolean(offer.couponCode) && regular <= 0 && sale <= 0;
 
-  if (offer.salePrice <= 0 || offer.regularPrice <= 0) {
-    // Invalid price if both zero; allow coupon-only promos with sale=0 if affiliate URL exists
-    if (offer.salePrice <= 0 && offer.regularPrice <= 0 && !offer.couponCode) {
-      flags.push("sale_higher_than_regular"); // reuse flag bucket for invalid pricing
-    }
-  }
-
-  if (offer.regularPrice > 0 && offer.salePrice > offer.regularPrice) {
+  if (!isCouponOnly && regular > 0 && sale > regular) {
     flags.push("sale_higher_than_regular");
-    confidence = Math.min(confidence, 0.35);
+    return {
+      flags,
+      confidenceScore: Math.min(confidence, 0.35),
+      status: "rejected",
+      rejected: true,
+    };
   }
 
   if (offer.discountPercent >= HIGH_DISCOUNT_THRESHOLD) {
@@ -64,23 +97,10 @@ export function validateOfferForImport(offer: NormalizedOffer): OfferImportValid
     flags.push("low_confidence_score");
   }
 
-  const hasHardReject =
-    flags.includes("sale_higher_than_regular") &&
-    offer.regularPrice > 0 &&
-    offer.salePrice > offer.regularPrice;
-
   let status: OfferStatus = "active";
-  if (hasHardReject) {
-    status = "rejected";
-  } else if (
-    flags.includes("expired_date") ||
-    flags.includes("missing_affiliate_url") ||
-    flags.includes("missing_merchant") ||
-    confidence < LOW_CONFIDENCE_THRESHOLD ||
-    flags.includes("discount_too_high")
-  ) {
+  if (flags.includes("discount_too_high") || flags.includes("low_confidence_score") || flags.includes("missing_category")) {
     status = "needs_review";
-  } else if (confidence >= MIN_CONFIDENCE_FOR_ACTIVE && flags.length === 0) {
+  } else if (flags.length === 0 && confidence >= 0.8) {
     status = "active";
   } else if (flags.includes("missing_category")) {
     status = "needs_review";
@@ -90,6 +110,6 @@ export function validateOfferForImport(offer: NormalizedOffer): OfferImportValid
     flags,
     confidenceScore: confidence,
     status,
-    rejected: status === "rejected",
+    rejected: false,
   };
 }

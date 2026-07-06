@@ -38,8 +38,8 @@ export default async function AdminOffersPage() {
                 <Td className="font-medium text-slate-800">{d.title}</Td>
                 <Td>{d.merchantName}</Td>
                 <Td>{d.category}</Td>
-                <Td>{formatPrice(d.salePrice)}</Td>
-                <Td className="text-slate-400">{formatPrice(d.regularPrice)}</Td>
+                <Td>{formatPrice(d.salePrice ?? 0)}</Td>
+                <Td className="text-slate-400">{formatPrice(d.regularPrice ?? 0)}</Td>
                 <Td>{d.discountPercent}%</Td>
                 <Td>
                   <Badge tone={STATUS_TONE[d.status] ?? "neutral"}>{d.status}</Badge>

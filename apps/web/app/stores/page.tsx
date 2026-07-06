@@ -1,10 +1,12 @@
 import { StoreCard, Chip } from "@mpf/ui";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
-import { MOCK_STORES } from "@/lib/api";
+import { getStores } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
-export default function StoresPage() {
+export default async function StoresPage() {
+  const stores = await getStores();
+
   return (
     <>
       <SiteHeader />
@@ -17,11 +19,15 @@ export default function StoresPage() {
             </Chip>
           ))}
         </div>
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3.5">
-          {MOCK_STORES.map((s) => (
-            <StoreCard key={s.slug} store={s} href={`/stores/${s.slug}`} />
-          ))}
-        </div>
+        {stores.length === 0 ? (
+          <p className="text-sm text-slate-500">No stores yet. Run an import or seed the database.</p>
+        ) : (
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3.5">
+            {stores.map((s) => (
+              <StoreCard key={s.slug} store={s} href={`/stores/${s.slug}`} />
+            ))}
+          </div>
+        )}
       </main>
       <SiteFooter />
     </>

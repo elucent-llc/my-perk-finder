@@ -18,9 +18,9 @@ async function main() {
 
   try {
     const result = await importAwinOffers(job.id, log, {
-      accessToken: env.AWIN_ACCESS_TOKEN,
-      publisherId: env.AWIN_PUBLISHER_ID,
-      mockExternal: env.MOCK_EXTERNAL ?? false,
+      accessToken: env.AWIN_ACCESS_TOKEN ?? "mock",
+      publisherId: env.AWIN_PUBLISHER_ID ?? "mock",
+      mockExternal: env.MOCK_EXTERNAL === true,
     });
     log(`Import finished ${JSON.stringify(result)}`);
     await disconnectDb();

@@ -12,14 +12,5 @@ export default defineConfig({
   clean: true,
   sourcemap: true,
   noExternal: [/@mpf\//],
-  external: [
-    "@prisma/client",
-    ".prisma/client",
-    "@prisma/engines",
-    "bullmq",
-    "ioredis",
-    "openai",
-    "resend",
-    "meilisearch",
-  ],
+  external: ["@prisma/client", ".prisma/client", "@prisma/engines"],
 });

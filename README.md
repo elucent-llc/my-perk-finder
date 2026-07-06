@@ -91,14 +91,48 @@ Copy `.env.example` to `.env`. **Never** prefix secrets with `NEXT_PUBLIC_`.
 | `DATABASE_URL` | Yes | web, workers | PostgreSQL connection string |
 | `DIRECT_URL` | Yes | web, workers | Same as DATABASE_URL for Prisma |
 | `NEXT_PUBLIC_SITE_URL` | Yes (prod web) | web | Public URL, e.g. `https://myperkfinder.com` |
-| `AWIN_ACCESS_TOKEN` | Yes (import worker) | worker | Awin API bearer token — **server only** |
-| `AWIN_PUBLISHER_ID` | Yes (import worker) | worker | Awin publisher ID — **server only** |
-| `MOCK_EXTERNAL` | No | workers | `true` mocks Awin locally; **`false` in prod** |
+| `ADMIN_AUTH_SECRET` | Yes (prod web) | web | Admin login secret (min 16 chars). Generate: `openssl rand -base64 32` |
+| `AWIN_ACCESS_TOKEN` | Yes when `MOCK_EXTERNAL=false` | worker | Awin API bearer token — **server only** |
+| `AWIN_PUBLISHER_ID` | Yes when `MOCK_EXTERNAL=false` | worker | Awin publisher ID — **server only** |
+| `MOCK_EXTERNAL` | No | workers | `true` = mock Awin (no credentials needed); **`false` in prod** |
 | `REDIS_URL` | No | legacy worker | Only if running BullMQ locally |
 | `RESEND_API_KEY` | No | — | Email (future) |
 | `OPENAI_API_KEY` | No | — | LLM extraction (future) |
-| `ADMIN_AUTH_SECRET` | No | web | Future admin auth |
 | `PORT` | Auto | web | Set by Railway |
+
+### Admin authentication
+
+Set `ADMIN_AUTH_SECRET` on **myperkfinder-web** in Railway (minimum 16 characters):
+
+```bash
+openssl rand -base64 32
+```
+
+- Visit `/admin/login` and enter the secret (stored in an httpOnly cookie).
+- `/admin/*` and `/api/admin/*` are blocked by middleware without auth.
+- API automation can use `Authorization: Bearer <ADMIN_AUTH_SECRET>`.
+- In local development, admin routes are open if `ADMIN_AUTH_SECRET` is unset.
+
+### Awin import: mock vs real
+
+**Mock import (local / staging):**
+
+```bash
+MOCK_EXTERNAL=true
+pnpm build:worker && pnpm worker:import-awin
+```
+
+No `AWIN_ACCESS_TOKEN` or `AWIN_PUBLISHER_ID` required.
+
+**Real import (production worker):**
+
+```bash
+MOCK_EXTERNAL=false
+AWIN_ACCESS_TOKEN=your_token
+AWIN_PUBLISHER_ID=your_publisher_id
+```
+
+Configure on Railway service `myperkfinder-worker-awin-import` only — never on the web service.
 
 ---
 
@@ -124,7 +158,7 @@ Copy `.env.example` to `.env`. **Never** prefix secrets with `NEXT_PUBLIC_`.
 | **Start command** | `pnpm start:web` |
 | **Health check** | `/api/health` |
 
-**Env vars:** `DATABASE_URL`, `DIRECT_URL`, `NEXT_PUBLIC_SITE_URL`, `NODE_ENV=production`
+**Env vars:** `DATABASE_URL`, `DIRECT_URL`, `NEXT_PUBLIC_SITE_URL`, `ADMIN_AUTH_SECRET`, `NODE_ENV=production`
 
 Run migrations once (Railway shell or one-off job):
 

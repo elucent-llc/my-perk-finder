@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { DealCard, DealGrid, StoreCard, Button, Chip, AffiliateDisclosure } from "@mpf/ui";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
-import { getDeals, toCard, MOCK_STORES } from "@/lib/api";
+import { getDeals, getStores, toCard } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
@@ -9,6 +9,7 @@ const CATEGORIES = ["🔥 Electronics", "💻 Laptops", "📱 Phones", "🎧 Aud
 
 export default async function HomePage() {
   const deals = await getDeals();
+  const stores = await getStores();
   const best = deals.slice(0, 4);
   const expiring = [...deals].sort(
     (a, b) => new Date(a.expiryDate ?? 0).getTime() - new Date(b.expiryDate ?? 0).getTime()
@@ -90,7 +91,7 @@ export default async function HomePage() {
 
         <h2 className="mb-3 text-base font-bold">Popular stores</h2>
         <div className="mb-8 grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3.5">
-          {MOCK_STORES.map((s) => (
+          {stores.map((s) => (
             <StoreCard key={s.slug} store={s} href={`/stores/${s.slug}`} />
           ))}
         </div>

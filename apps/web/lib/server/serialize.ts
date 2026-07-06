@@ -1,7 +1,7 @@
 import type { Deal as PrismaDeal, Merchant } from "@mpf/db";
 
-function num(v: unknown): number {
-  if (v == null) return 0;
+function num(v: unknown): number | null {
+  if (v == null) return null;
   if (typeof v === "number") return v;
   const asDecimal = v as { toNumber?: () => number };
   return typeof asDecimal.toNumber === "function" ? asDecimal.toNumber() : Number(v);
@@ -17,6 +17,7 @@ export function serializeDeal(
     merchantName: d.merchant?.name ?? "Unknown",
     category: d.category?.name ?? "Uncategorized",
     brand: d.brand,
+    offerType: d.offerType,
     regularPrice: num(d.regularPrice),
     salePrice: num(d.salePrice),
     discountPercent: d.discountPercent,
@@ -36,4 +37,13 @@ export function serializeDeal(
   };
 }
 
+/** Public API shape — never expose raw affiliate URLs (use /api/r/:id redirect). */
+export function serializePublicDeal(
+  d: PrismaDeal & { merchant?: Merchant | null; category?: { name: string } | null }
+) {
+  const { affiliateUrl: _omit, ...rest } = serializeDeal(d);
+  return rest;
+}
+
 export type SerializedDeal = ReturnType<typeof serializeDeal>;
+export type SerializedPublicDeal = ReturnType<typeof serializePublicDeal>;

@@ -4,6 +4,18 @@ import { optionalServerEnvSchema, parseEnv } from "./shared.js";
 export const webEnvSchema = optionalServerEnvSchema.extend({
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
   NEXT_PUBLIC_SITE_URL: z.string().url("NEXT_PUBLIC_SITE_URL must be a valid URL"),
+  ADMIN_AUTH_SECRET: z
+    .string()
+    .min(16, "ADMIN_AUTH_SECRET must be at least 16 characters in production")
+    .optional(),
+}).superRefine((data, ctx) => {
+  if (process.env.NODE_ENV === "production" && !data.ADMIN_AUTH_SECRET?.trim()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "ADMIN_AUTH_SECRET is required in production",
+      path: ["ADMIN_AUTH_SECRET"],
+    });
+  }
 });
 
 export type WebEnv = z.infer<typeof webEnvSchema>;

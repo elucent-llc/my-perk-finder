@@ -51,6 +51,13 @@ enum SubscriberStatus {
   unsubscribed
 }
 
+enum OfferType {
+  product
+  coupon
+  promotion
+  sale
+}
+
 model Merchant {
   id          String      @id @default(cuid())
   name        String
@@ -92,8 +99,9 @@ model Deal {
   title           String
   slug            String      @unique
   brand           String?
-  regularPrice    Decimal     @db.Decimal(10, 2)
-  salePrice       Decimal     @db.Decimal(10, 2)
+  offerType       OfferType   @default(product)
+  regularPrice    Decimal?    @db.Decimal(10, 2)
+  salePrice       Decimal?    @db.Decimal(10, 2)
   discountPercent Int         @default(0)
   couponCode      String?
   currency        String      @default("USD")
@@ -117,6 +125,7 @@ model Deal {
 
   clicksCount Int @default(0)
   savesCount  Int @default(0)
+  clicks      Click[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -127,6 +136,20 @@ model Deal {
   @@index([categoryId])
   @@index([expiryDate])
   @@index([source])
+  @@index([offerType])
+}
+
+model Click {
+  id        String   @id @default(cuid())
+  dealId    String
+  deal      Deal     @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  referrer  String?
+  userAgent String?
+  ipHash    String?
+  createdAt DateTime @default(now())
+
+  @@index([dealId])
+  @@index([createdAt])
 }
 
 model Coupon {

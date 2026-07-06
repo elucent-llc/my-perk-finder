@@ -32,7 +32,7 @@ export default async function AdminReviewPage() {
                 </Td>
                 <Td className="font-medium text-slate-800">{d.title}</Td>
                 <Td>{d.merchantName}</Td>
-                <Td>{formatPrice(d.salePrice)}</Td>
+                <Td>{formatPrice(d.salePrice ?? 0)}</Td>
                 <Td>
                   <div className="flex flex-wrap gap-1">
                     {(d.validationFlags ?? []).map((f) => (

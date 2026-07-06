@@ -1,10 +1,11 @@
 import type { DealCardData } from "@mpf/ui";
 import { DealFilterQuery } from "@mpf/types";
-import { listDeals, getDealBySlug } from "@/lib/server/deals";
-import type { SerializedDeal } from "@/lib/server/serialize";
+import { listDeals, getDealBySlug, listStores, type StoreCardData } from "@/lib/server/deals";
+import type { SerializedPublicDeal } from "@/lib/server/serialize";
 import { offerRedirectPath } from "@/lib/site";
 
-export type DealDTO = SerializedDeal;
+export type DealDTO = SerializedPublicDeal;
+export type { StoreCardData };
 
 /** Internal click-tracking redirect (same Next.js service). */
 export function offerRedirectUrl(offerId: string): string {
@@ -32,6 +33,10 @@ export async function getCouponDeals(): Promise<DealDTO[]> {
   return deals.filter((d) => d.couponCode);
 }
 
+export async function getStores(): Promise<StoreCardData[]> {
+  return listStores();
+}
+
 export function expiryLabel(iso?: string | null): { label: string | null; urgent: boolean } {
   if (!iso) return { label: null, urgent: false };
   const diff = new Date(iso).getTime() - Date.now();
@@ -44,12 +49,14 @@ export function expiryLabel(iso?: string | null): { label: string | null; urgent
 
 export function toCard(d: DealDTO): DealCardData {
   const e = expiryLabel(d.expiryDate);
+  const salePrice = d.salePrice ?? 0;
+  const regularPrice = d.regularPrice ?? 0;
   return {
     title: d.title,
     slug: d.slug,
     merchantName: d.merchantName,
-    salePrice: d.salePrice,
-    regularPrice: d.regularPrice,
+    salePrice,
+    regularPrice,
     discountPercent: d.discountPercent,
     couponCode: d.couponCode,
     currency: d.currency,
@@ -60,13 +67,3 @@ export function toCard(d: DealDTO): DealCardData {
     verified: Boolean(d.lastVerifiedAt),
   };
 }
-
-/** Static store directory until store API is consolidated. */
-export const MOCK_STORES = [
-  { name: "Best Buy", slug: "best-buy", initials: "BB", dealsCount: 0, couponsCount: 0, verified: true },
-  { name: "Amazon", slug: "amazon", initials: "AZ", dealsCount: 0, couponsCount: 0, verified: true },
-  { name: "Walmart", slug: "walmart", initials: "WM", dealsCount: 0, couponsCount: 0, verified: true },
-  { name: "Target", slug: "target", initials: "TG", dealsCount: 0, couponsCount: 0, verified: true },
-  { name: "Nike", slug: "nike", initials: "NK", dealsCount: 0, couponsCount: 0, verified: false },
-  { name: "Dell", slug: "dell", initials: "DL", dealsCount: 0, couponsCount: 0, verified: false },
-];

@@ -1,9 +1,13 @@
+import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@mpf/db";
+import { requireAdminAuth } from "@/lib/admin-auth";
 import { OfferStatus, UpdateDealSchema } from "@mpf/types";
 import { serializeDeal } from "@/lib/server/serialize";
 
-export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
+export async function PATCH(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const denied = requireAdminAuth(request);
+  if (denied) return denied;
   const { id } = await context.params;
   const body = UpdateDealSchema.extend({ status: OfferStatus.optional() }).safeParse(
     await request.json()

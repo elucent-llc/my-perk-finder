@@ -17,59 +17,71 @@ Use this before and after each production deploy.
 
 - [ ] Railway PostgreSQL plugin attached; `DATABASE_URL` injected into web + worker services
 - [ ] `DIRECT_URL` set to same value as `DATABASE_URL` (Prisma)
-- [ ] Migrations applied: `pnpm db:migrate:deploy` (one-time or release command)
+- [ ] Migrations applied: `pnpm db:migrate:deploy` (includes `Click` table + nullable prices)
 - [ ] No seed/mock data published as live offers in production
 
-## Secrets & security
+## Admin authentication
 
-- [ ] `AWIN_ACCESS_TOKEN` and `AWIN_PUBLISHER_ID` set on **worker only** (and optional manual import), never `NEXT_PUBLIC_*`
-- [ ] No affiliate credentials in client bundle (inspect Network tab — no Awin API calls from browser)
-- [ ] No secrets committed to GitHub (`.env` in `.gitignore`)
-- [ ] `MOCK_EXTERNAL=false` on production worker services
+- [ ] `ADMIN_AUTH_SECRET` set on **myperkfinder-web** (min 16 chars; e.g. `openssl rand -base64 32`)
+- [ ] `/admin` redirects to `/admin/login` when not authenticated
+- [ ] `/api/admin/*` returns 401 without session (except `/api/admin/login`)
+- [ ] Anonymous `PATCH /api/admin/offers/[id]` is blocked
+- [ ] Admin secret is **not** prefixed with `NEXT_PUBLIC_`
+
+## Secrets & affiliate
+
+- [ ] `AWIN_ACCESS_TOKEN` and `AWIN_PUBLISHER_ID` on **import worker only**, never `NEXT_PUBLIC_*`
+- [ ] `MOCK_EXTERNAL=false` on production Awin cron worker
+- [ ] `MOCK_EXTERNAL=true` works locally without Awin credentials (`pnpm worker:import-awin`)
+- [ ] No affiliate credentials in client bundle (no Awin API calls from browser)
+- [ ] No secrets committed to GitHub
 
 ## Cron workers
 
-- [ ] `myperkfinder-worker-awin-import` configured as **Cron** service (not always-on)
-- [ ] Cron schedule: `0 */6 * * *` (every 6 hours) or your chosen interval
-- [ ] Worker logs show JSON lines, job completes, process exits code 0
-- [ ] `myperkfinder-worker-expire-offers` cron schedule: `0 3 * * *` (daily 03:00 UTC)
-- [ ] Expire worker logs count of offers marked expired, exits cleanly
+- [ ] `myperkfinder-worker-awin-import` — **Cron** service, schedule `0 */6 * * *`
+- [ ] `myperkfinder-worker-expire-offers` — **Cron** service, schedule `0 3 * * *`
+- [ ] Worker logs show JSON lines, process exits code 0
+- [ ] ImportJob rows visible at `/admin/imports`
 
 ## Affiliate pipeline
 
-- [ ] Import creates `ImportJob` rows (visible at `/admin/imports`)
-- [ ] Raw records saved before normalization
-- [ ] Low-confidence offers land in `needs_review` — not auto-published as `active`
-- [ ] Admin review queue at `/admin/review` shows pending offers
-- [ ] Approve / reject / mark expired actions work
+- [ ] One `RawRecord` per normalized offer (not duplicate page payloads unless `DEBUG_RAW_PAGES=true`)
+- [ ] Missing affiliate URL / merchant → rejected (not upserted)
+- [ ] Low confidence / suspicious discount → `needs_review`
+- [ ] Admin review at `/admin/review` — approve / reject / mark expired works
 
 ## Click tracking & redirects
 
-- [ ] “Go to Deal” links use `/api/r/{offerId}` (not raw affiliate URLs in HTML)
-- [ ] Links include `rel="nofollow sponsored noopener noreferrer"` and `target="_blank"`
-- [ ] Redirect returns 302 to merchant; click count increments in database
+- [ ] “Go to Deal” uses `/api/r/{offerId}` (not raw affiliate URLs in HTML)
+- [ ] Links: `rel="nofollow sponsored noopener noreferrer"` + `target="_blank"`
+- [ ] Redirect returns 302 with `Cache-Control: no-store`
+- [ ] `Click` row created per redirect; `clicksToday` in admin counts today's `Click` rows
 - [ ] Inactive/expired offers return 404/410 on redirect
 
-## Content & compliance
+Verify:
 
-- [ ] Affiliate disclosure visible on deal pages
-- [ ] Privacy policy page live (add before launch if not yet present)
-- [ ] Terms of service page live (add before launch if not yet present)
-- [ ] No placeholder/mock offers shown on public site in production
+```bash
+curl -sI "https://myperkfinder.com/api/r/<active-offer-id>" | grep -E 'HTTP|Location|Cache-Control'
+```
+
+## Legal pages (affiliate / AdSense review)
+
+- [ ] `/about`, `/contact`, `/privacy-policy`, `/terms`, `/affiliate-disclosure` live
+- [ ] Footer links to all legal pages
+- [ ] Affiliate disclosure on deal detail pages and footer
+- [ ] No broken Blog/Alerts nav links
 
 ## Cost controls
 
-- [ ] Only **3 compute services** deployed: web + 2 cron workers
-- [ ] **No** always-on `apps/api`, `apps/admin`, or `apps/worker` BullMQ service
-- [ ] **No** Redis plugin unless you re-enable queue-based imports
-- [ ] **No** Meilisearch Cloud — Postgres search via `/api/search`
+- [ ] Only **web + 2 cron workers + Postgres** deployed
+- [ ] **No** `apps/api`, `apps/admin`, always-on BullMQ worker, Redis, or Meilisearch in prod
 
 ## Post-deploy smoke test
 
 ```bash
 curl -s https://myperkfinder.com/api/health | jq
-curl -sI "https://myperkfinder.com/api/r/<active-offer-id>" | head -5
+curl -sI "https://myperkfinder.com/api/r/<active-offer-id>" | head -8
 ```
 
-- [ ] Public homepage loads deals from database
-- [ ] Admin `/admin` overview loads KPIs
+- [ ] Public homepage loads DB-backed deals and merchants
+- [ ] Admin `/admin` loads after login

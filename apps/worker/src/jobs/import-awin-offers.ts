@@ -21,7 +21,16 @@ function resolveAwinConfig(override?: AffiliateSourceConfig): AffiliateSourceCon
   };
 }
 
+function inferOfferType(offer: NormalizedOffer): "product" | "coupon" | "promotion" | "sale" {
+  if (offer.couponCode) return "coupon";
+  if (offer.regularPrice > 0 && offer.salePrice > 0 && offer.salePrice < offer.regularPrice) return "sale";
+  if (offer.salePrice > 0 || offer.regularPrice > 0) return "product";
+  return "promotion";
+}
+
 function toImportedInput(offer: NormalizedOffer, status: ReturnType<typeof validateOfferForImport>) {
+  const regular = offer.regularPrice > 0 ? offer.regularPrice : null;
+  const sale = offer.salePrice > 0 ? offer.salePrice : null;
   return {
     externalId: offer.externalId,
     source: offer.source,
@@ -30,8 +39,9 @@ function toImportedInput(offer: NormalizedOffer, status: ReturnType<typeof valid
     merchantName: offer.merchantName,
     brand: offer.brand,
     category: offer.category,
-    regularPrice: offer.regularPrice,
-    salePrice: offer.salePrice,
+    offerType: inferOfferType(offer),
+    regularPrice: regular,
+    salePrice: sale,
     discountPercent: offer.discountPercent,
     couponCode: offer.couponCode,
     currency: offer.currency,
@@ -78,12 +88,15 @@ export async function importAwinOffers(
       });
       counters.pages += 1;
 
-      for (const rawResponse of result.rawResponses) {
-        await saveRawImportRecord({
-          source: "awin",
-          payload: rawResponse,
-          importJobId,
-        });
+      const savePagePayload = process.env.DEBUG_RAW_PAGES === "true";
+      if (savePagePayload) {
+        for (const rawResponse of result.rawResponses) {
+          await saveRawImportRecord({
+            source: "awin",
+            payload: rawResponse,
+            importJobId,
+          });
+        }
       }
 
       for (const offer of result.offers) {
@@ -105,6 +118,17 @@ export async function importAwinOffers(
             data: { status: "failed", normalized: offer as object },
           });
           log(`Rejected offer ${offer.externalId}: ${validation.flags.join(", ")}`);
+          continue;
+        }
+
+        if (validation.status === "expired") {
+          await upsertImportedOffer(toImportedInput(offer, validation));
+          counters.updated += 1;
+          await prisma.rawRecord.update({
+            where: { id: rawRecord.id },
+            data: { status: "processed", normalized: offer as object },
+          });
+          log(`Expired offer ${offer.externalId} stored as expired`);
           continue;
         }
 

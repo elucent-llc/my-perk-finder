@@ -2,6 +2,8 @@ import { prisma } from "./client.js";
 import type { Prisma } from "@prisma/client";
 import type { OfferStatus, SourceKind } from "@mpf/types";
 
+export type OfferType = "product" | "coupon" | "promotion" | "sale";
+
 /** Input for upserting a validated affiliate offer into the Deal table. */
 export interface ImportedOfferInput {
   externalId: string;
@@ -11,8 +13,9 @@ export interface ImportedOfferInput {
   merchantName: string | null;
   brand?: string | null;
   category?: string | null;
-  regularPrice: number;
-  salePrice: number;
+  offerType?: OfferType;
+  regularPrice?: number | null;
+  salePrice?: number | null;
   discountPercent: number;
   couponCode?: string | null;
   currency: string;
@@ -117,8 +120,9 @@ export async function upsertImportedOffer(
     title: input.title,
     slug,
     brand: input.brand ?? null,
-    regularPrice: input.regularPrice,
-    salePrice: input.salePrice,
+    offerType: input.offerType ?? "product",
+    regularPrice: input.regularPrice ?? null,
+    salePrice: input.salePrice ?? null,
     discountPercent: input.discountPercent,
     couponCode: input.couponCode ?? null,
     currency: input.currency,

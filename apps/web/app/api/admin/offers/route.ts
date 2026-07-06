@@ -1,8 +1,13 @@
+import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { OfferStatus } from "@mpf/types";
 import { listAdminOffers } from "@/lib/server/deals";
+import { guardAdminApi } from "@/lib/server/admin-guard";
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  const denied = guardAdminApi(request);
+  if (denied) return denied;
+
   const url = new URL(request.url);
   const status = url.searchParams.get("status") ?? undefined;
   const q = url.searchParams.get("q") ?? undefined;

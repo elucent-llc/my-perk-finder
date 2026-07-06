@@ -1,6 +1,6 @@
 import { prisma, type Prisma } from "@mpf/db";
 import type { DealFilterQuery } from "@mpf/types";
-import { serializeDeal } from "./serialize.js";
+import { serializeDeal, serializePublicDeal } from "./serialize.js";
 
 const orderByFor = (sort: string): Prisma.DealOrderByWithRelationInput => {
   switch (sort) {
@@ -46,7 +46,7 @@ export async function listDeals(q: DealFilterQuery) {
   ]);
 
   return {
-    data: rows.map(serializeDeal),
+    data: rows.map(serializePublicDeal),
     page: q.page,
     pageSize: q.pageSize,
     total,
@@ -59,7 +59,7 @@ export async function getDealBySlug(slug: string) {
     where: { slug },
     include: { merchant: true, category: true },
   });
-  return deal ? serializeDeal(deal) : null;
+  return deal ? serializePublicDeal(deal) : null;
 }
 
 export async function searchDealsPostgres(q: string, limit = 24) {
@@ -76,26 +76,25 @@ export async function searchDealsPostgres(q: string, limit = 24) {
     orderBy: { clicksCount: "desc" },
     take: limit,
   });
-  return rows.map(serializeDeal);
+  return rows.map(serializePublicDeal);
 }
 
 export async function getAdminOverview() {
-  const [active, needsReview, expired, subscribers] = await Promise.all([
+  const startOfDay = new Date(new Date().setHours(0, 0, 0, 0));
+  const [active, needsReview, expired, subscribers, clicksToday, importsToday] = await Promise.all([
     prisma.deal.count({ where: { status: "active" } }),
     prisma.deal.count({ where: { status: "needs_review" } }),
     prisma.deal.count({ where: { status: "expired" } }),
     prisma.subscriber.count(),
+    prisma.click.count({ where: { createdAt: { gte: startOfDay } } }),
+    prisma.importJob.count({ where: { createdAt: { gte: startOfDay } } }),
   ]);
-  const clicks = await prisma.deal.aggregate({ _sum: { clicksCount: true } });
-  const importsToday = await prisma.importJob.count({
-    where: { createdAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) } },
-  });
   return {
     activeOffers: active,
     needsReview,
     expiredToday: expired,
     importsToday,
-    clicksToday: clicks._sum.clicksCount ?? 0,
+    clicksToday,
     emailSubscribers: subscribers,
   };
 }
@@ -137,5 +136,53 @@ export async function listImportJobs() {
     rejected: j.rejected,
     needsReview: j.needsReview,
     error: j.error,
+  }));
+}
+
+export interface StoreCardData {
+  name: string;
+  slug: string;
+  initials: string;
+  dealsCount: number;
+  couponsCount: number;
+  verified: boolean;
+}
+
+function merchantInitials(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0]![0]! + parts[1]![0]!).toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+}
+
+const DEMO_STORES: StoreCardData[] = [
+  { name: "Best Buy", slug: "best-buy", initials: "BB", dealsCount: 0, couponsCount: 0, verified: true },
+  { name: "Amazon", slug: "amazon", initials: "AZ", dealsCount: 0, couponsCount: 0, verified: true },
+  { name: "Walmart", slug: "walmart", initials: "WM", dealsCount: 0, couponsCount: 0, verified: true },
+  { name: "Target", slug: "target", initials: "TG", dealsCount: 0, couponsCount: 0, verified: true },
+  { name: "Nike", slug: "nike", initials: "NK", dealsCount: 0, couponsCount: 0, verified: false },
+  { name: "Dell", slug: "dell", initials: "DL", dealsCount: 0, couponsCount: 0, verified: false },
+];
+
+/** Active merchants with deal/coupon counts. Falls back to demo list when DB is empty. */
+export async function listStores(): Promise<StoreCardData[]> {
+  const merchants = await prisma.merchant.findMany({
+    where: { isActive: true },
+    include: {
+      _count: { select: { deals: true, coupons: true } },
+    },
+    orderBy: { name: "asc" },
+  });
+
+  if (merchants.length === 0) {
+    return process.env.NODE_ENV === "development" ? DEMO_STORES : [];
+  }
+
+  return merchants.map((m) => ({
+    name: m.name,
+    slug: m.slug,
+    initials: merchantInitials(m.name),
+    dealsCount: m._count.deals,
+    couponsCount: m._count.coupons,
+    verified: Boolean(m.network),
   }));
 }

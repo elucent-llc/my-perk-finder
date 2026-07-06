@@ -13,7 +13,10 @@ export default async function DealDetailPage({ params }: { params: Promise<{ slu
   if (!deal) notFound();
 
   const e = expiryLabel(deal.expiryDate);
-  const save = deal.regularPrice - deal.salePrice;
+  const salePrice = deal.salePrice ?? 0;
+  const regularPrice = deal.regularPrice ?? 0;
+  const save = regularPrice > 0 && salePrice > 0 ? regularPrice - salePrice : 0;
+  const hasPricing = salePrice > 0 || regularPrice > 0;
   const similar = (await getDeals()).filter((d) => d.slug !== deal.slug).slice(0, 4);
 
   return (
@@ -42,18 +45,36 @@ export default async function DealDetailPage({ params }: { params: Promise<{ slu
               {deal.brand ? <> · Brand: <b>{deal.brand}</b></> : null}
             </p>
 
-            <div className="mt-4 flex items-baseline gap-3">
-              <span className="text-4xl font-extrabold text-slate-900">
-                {formatPrice(deal.salePrice, deal.currency)}
-              </span>
-              <span className="text-lg text-slate-400 line-through">
-                {formatPrice(deal.regularPrice, deal.currency)}
-              </span>
-              <Badge tone="discount" className="px-3 py-1 text-sm">
-                -{deal.discountPercent}%
-              </Badge>
-            </div>
-            {save > 0 ? <Badge tone="save" className="mt-2">You save {formatPrice(save, deal.currency)}</Badge> : null}
+            {hasPricing ? (
+              <>
+                <div className="mt-4 flex items-baseline gap-3">
+                  {salePrice > 0 ? (
+                    <span className="text-4xl font-extrabold text-slate-900">
+                      {formatPrice(salePrice, deal.currency)}
+                    </span>
+                  ) : null}
+                  {regularPrice > 0 ? (
+                    <span className="text-lg text-slate-400 line-through">
+                      {formatPrice(regularPrice, deal.currency)}
+                    </span>
+                  ) : null}
+                  {deal.discountPercent > 0 ? (
+                    <Badge tone="discount" className="px-3 py-1 text-sm">
+                      -{deal.discountPercent}%
+                    </Badge>
+                  ) : null}
+                </div>
+                {save > 0 ? (
+                  <Badge tone="save" className="mt-2">
+                    You save {formatPrice(save, deal.currency)}
+                  </Badge>
+                ) : null}
+              </>
+            ) : (
+              <p className="mt-4 text-sm font-semibold text-brand-700">
+                Promotion offer — see merchant site for current pricing.
+              </p>
+            )}
 
             {deal.couponCode ? (
               <div className="mt-4 rounded-card border border-brand-100 bg-brand-50 p-4">
