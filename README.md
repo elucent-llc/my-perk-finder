@@ -36,7 +36,7 @@ docs/deployment/
 
 ### Prerequisites
 
-- Node.js 20+
+- Node.js 24+ (see `engines` in root `package.json`)
 - pnpm 11+ (see `packageManager` in root `package.json`)
 - Docker (for local Postgres)
 

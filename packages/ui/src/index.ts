@@ -8,3 +8,9 @@ export { StoreCard, type StoreCardData } from "./StoreCard.js";
 export { StatCard, StatGrid, type StatCardProps } from "./StatCard.js";
 export { Table, Th, Td } from "./Table.js";
 export { Chip, EmptyState, AffiliateDisclosure, AlertBanner } from "./misc.js";
+export {
+  computeSavings,
+  hasDisplayablePrices,
+  priceFallbackLabel,
+  type DealPricingInput,
+} from "./deal-pricing.js";

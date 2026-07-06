@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Badge, Button, DealCard, DealGrid, Panel, PanelHead, PanelBody, AffiliateDisclosure, formatPrice } from "@mpf/ui";
+import { Badge, Button, DealCard, DealGrid, Panel, PanelHead, PanelBody, AffiliateDisclosure, formatPrice, computeSavings, hasDisplayablePrices } from "@mpf/ui";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { CouponReveal } from "@/components/CouponReveal";
 import { getDeal, getDeals, toCard, expiryLabel, offerRedirectUrl } from "@/lib/api";
@@ -13,10 +13,8 @@ export default async function DealDetailPage({ params }: { params: Promise<{ slu
   if (!deal) notFound();
 
   const e = expiryLabel(deal.expiryDate);
-  const salePrice = deal.salePrice ?? 0;
-  const regularPrice = deal.regularPrice ?? 0;
-  const save = regularPrice > 0 && salePrice > 0 ? regularPrice - salePrice : 0;
-  const hasPricing = salePrice > 0 || regularPrice > 0;
+  const showPrices = hasDisplayablePrices(deal);
+  const save = computeSavings(deal);
   const similar = (await getDeals()).filter((d) => d.slug !== deal.slug).slice(0, 4);
 
   return (
@@ -45,17 +43,17 @@ export default async function DealDetailPage({ params }: { params: Promise<{ slu
               {deal.brand ? <> · Brand: <b>{deal.brand}</b></> : null}
             </p>
 
-            {hasPricing ? (
+            {showPrices ? (
               <>
                 <div className="mt-4 flex items-baseline gap-3">
-                  {salePrice > 0 ? (
+                  {deal.salePrice != null && deal.salePrice > 0 ? (
                     <span className="text-4xl font-extrabold text-slate-900">
-                      {formatPrice(salePrice, deal.currency)}
+                      {formatPrice(deal.salePrice, deal.currency)}
                     </span>
                   ) : null}
-                  {regularPrice > 0 ? (
+                  {deal.regularPrice != null && deal.regularPrice > 0 ? (
                     <span className="text-lg text-slate-400 line-through">
-                      {formatPrice(regularPrice, deal.currency)}
+                      {formatPrice(deal.regularPrice, deal.currency)}
                     </span>
                   ) : null}
                   {deal.discountPercent > 0 ? (
@@ -64,7 +62,7 @@ export default async function DealDetailPage({ params }: { params: Promise<{ slu
                     </Badge>
                   ) : null}
                 </div>
-                {save > 0 ? (
+                {save != null && save > 0 ? (
                   <Badge tone="save" className="mt-2">
                     You save {formatPrice(save, deal.currency)}
                   </Badge>
@@ -72,7 +70,9 @@ export default async function DealDetailPage({ params }: { params: Promise<{ slu
               </>
             ) : (
               <p className="mt-4 text-sm font-semibold text-brand-700">
-                Promotion offer — see merchant site for current pricing.
+                {deal.couponCode
+                  ? "Promotion offer — see merchant site for current pricing."
+                  : "See merchant site for current pricing."}
               </p>
             )}
 

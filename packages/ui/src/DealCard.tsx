@@ -1,6 +1,7 @@
 import * as React from "react";
 import { cn, formatPrice } from "./cn.js";
 import { Badge } from "./Badge.js";
+import { computeSavings, hasDisplayablePrices, priceFallbackLabel } from "./deal-pricing.js";
 
 export interface DealCardData {
   title: string;
@@ -24,23 +25,10 @@ export interface DealCardProps {
   onSave?: () => void;
 }
 
-function hasDisplayablePrices(deal: DealCardData): boolean {
-  const sale = deal.salePrice;
-  const regular = deal.regularPrice;
-  return (sale != null && sale > 0) || (regular != null && regular > 0);
-}
-
-function priceFallbackLabel(deal: DealCardData): string {
-  if (deal.couponCode) return "Promotion offer";
-  return "See merchant site";
-}
-
 export function DealCard({ deal, href = "#", onSave }: DealCardProps) {
   const currency = deal.currency ?? "USD";
   const showPrices = hasDisplayablePrices(deal);
-  const sale = deal.salePrice ?? 0;
-  const regular = deal.regularPrice ?? 0;
-  const save = showPrices && regular > 0 && sale > 0 && sale < regular ? regular - sale : 0;
+  const save = computeSavings(deal);
   const showDiscount = showPrices && deal.discountPercent > 0;
 
   return (
@@ -83,13 +71,17 @@ export function DealCard({ deal, href = "#", onSave }: DealCardProps) {
         ) : null}
         {showPrices ? (
           <div className="mt-auto flex flex-wrap items-baseline gap-2">
-            {sale > 0 ? (
-              <span className="text-lg font-extrabold text-slate-900">{formatPrice(sale, currency)}</span>
+            {deal.salePrice != null && deal.salePrice > 0 ? (
+              <span className="text-lg font-extrabold text-slate-900">
+                {formatPrice(deal.salePrice, currency)}
+              </span>
             ) : null}
-            {regular > 0 ? (
-              <span className="text-xs text-slate-400 line-through">{formatPrice(regular, currency)}</span>
+            {deal.regularPrice != null && deal.regularPrice > 0 ? (
+              <span className="text-xs text-slate-400 line-through">
+                {formatPrice(deal.regularPrice, currency)}
+              </span>
             ) : null}
-            {save > 0 ? <Badge tone="save">Save {formatPrice(save, currency)}</Badge> : null}
+            {save != null && save > 0 ? <Badge tone="save">Save {formatPrice(save, currency)}</Badge> : null}
           </div>
         ) : (
           <p className="mt-auto text-sm font-semibold text-brand-700">{priceFallbackLabel(deal)}</p>

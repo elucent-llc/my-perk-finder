@@ -5,7 +5,7 @@
   "description": "Scalable deal discovery platform — Turborepo monorepo.",
   "packageManager": "pnpm@11.9.0",
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
   },
   "scripts": {
     "dev": "turbo run dev --filter=@mpf/web",

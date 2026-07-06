@@ -32,10 +32,16 @@ export default async function CouponsPage() {
         </div>
         <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4">
           {coupons.length === 0 ? (
-            <p className="text-sm text-slate-500">No active coupons right now. Check back soon.</p>
+            <p className="text-sm text-slate-500">
+              No active coupons right now. Check back soon.
+            </p>
           ) : (
             coupons.map((c) => (
-              <CouponCard key={c.id} coupon={c} shopHref={offerRedirectUrl(c.id)} />
+              <CouponCard
+                key={c.id}
+                coupon={c}
+                shopHref={offerRedirectUrl(c.id)}
+              />
             ))
           )}
         </div>

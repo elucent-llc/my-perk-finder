@@ -7,7 +7,7 @@ export default defineConfig({
     "cli/expire-offers": "src/cli/expire-offers.ts",
   },
   format: ["esm"],
-  target: "node20",
+  target: "node24",
   platform: "node",
   clean: true,
   sourcemap: true,
