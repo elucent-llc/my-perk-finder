@@ -10,8 +10,9 @@
   "scripts": {
     "dev": "turbo run dev --filter=@mpf/web",
     "dev:all": "turbo run dev",
-    "build": "turbo run build --filter=@mpf/web",
+    "build": "pnpm db:generate && pnpm --filter @mpf/web build",
     "build:web": "pnpm db:generate && pnpm --filter @mpf/web build",
+    "start": "pnpm --filter @mpf/web start",
     "start:web": "pnpm --filter @mpf/web start",
     "build:worker": "pnpm db:generate && pnpm --filter @mpf/worker build",
     "worker:import-awin": "pnpm --filter @mpf/worker import:awin",

@@ -8,4 +8,4 @@ Production admin UI lives in **`apps/web`** under `/admin/*`:
 
 This standalone Next.js app remains for local comparison/dev with `pnpm dev:all` only.
 
-**Railway:** deploy `apps/web` (`myperkfinder-web`), not this service.
+**Railway:** deploy the **web service at repo root** with config `apps/web/railway.json` — not this legacy app as Root Directory.

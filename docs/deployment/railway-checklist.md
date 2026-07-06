@@ -2,6 +2,13 @@
 
 Use this before and after each production deploy.
 
+## Service root & config path
+
+- [ ] **Root Directory** is the **repo root** (`/`) on web and both cron services
+- [ ] **Do not** set Root Directory to `apps/web` or `apps/worker`
+- [ ] Point **Config file** to the JSON under `apps/*` (e.g. `apps/web/railway.json`) — config path does not replace repo root
+- [ ] Build/start use root scripts: `pnpm build:web`, `pnpm start:web`, `pnpm build:worker`, `pnpm worker:import-awin`, `pnpm worker:expire-offers`
+
 ## Domain & TLS
 
 - [ ] Custom domain `myperkfinder.com` (and `www`) points to Railway `myperkfinder-web`

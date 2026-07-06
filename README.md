@@ -138,6 +138,10 @@ Configure on Railway service `myperkfinder-worker-awin-import` only — never on
 
 ## Railway deployment
 
+**Important — monorepo root:** Keep **Root Directory** at the **repo root** (`/`) for every Railway service (web and cron workers). **Do not** set Root Directory to `apps/web` or `apps/worker`.
+
+This repo uses root-level pnpm workspace scripts (`pnpm build:web`, `pnpm start:web`, etc.). Railway config files live under `apps/*` but are referenced by **Config file path** only — that path does not change the service root. See [Railway monorepo docs](https://docs.railway.com/guides/monorepo).
+
 ### 1. Create project
 
 1. [Railway](https://railway.com) → **New Project** → **Deploy from GitHub** → select this repo.
@@ -152,8 +156,9 @@ Configure on Railway service `myperkfinder-worker-awin-import` only — never on
 
 | Setting | Value |
 | ------- | ----- |
-| **Root directory** | `/` (repo root) |
+| **Root directory** | `/` (repo root) — **not** `apps/web` |
 | **Config file** | `apps/web/railway.json` |
+| **Builder** | Railpack (auto-detects root `start` / `build` in `package.json`; see `railpack.json`) |
 | **Build command** | `pnpm install --frozen-lockfile && pnpm build:web` |
 | **Start command** | `pnpm start:web` |
 | **Health check** | `/api/health` |
@@ -170,6 +175,7 @@ pnpm db:migrate:deploy
 
 | Setting | Value |
 | ------- | ----- |
+| **Root directory** | `/` (repo root) — **not** `apps/worker` |
 | **Config file** | `apps/worker/railway.import-awin.json` |
 | **Build command** | `pnpm install --frozen-lockfile && pnpm build:worker` |
 | **Start command** | `pnpm worker:import-awin` |
@@ -185,6 +191,7 @@ pnpm db:migrate:deploy
 
 | Setting | Value |
 | ------- | ----- |
+| **Root directory** | `/` (repo root) — **not** `apps/worker` |
 | **Config file** | `apps/worker/railway.expire-offers.json` |
 | **Start command** | `pnpm worker:expire-offers` |
 | **Service type** | **Cron Job** |
