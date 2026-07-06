@@ -164,7 +164,9 @@ This repo uses root-level pnpm workspace scripts (`pnpm build:web`, `pnpm start:
 | **Optional env** | `RAILPACK_INSTALL_CMD=pnpm install --frozen-lockfile` |
 | **Health check** | `/api/health` |
 
-**Env vars:** `DATABASE_URL`, `DIRECT_URL`, `NEXT_PUBLIC_SITE_URL`, `ADMIN_AUTH_SECRET`, `NODE_ENV=production`
+**Env vars:** `DATABASE_URL`, `DIRECT_URL`, `NEXT_PUBLIC_SITE_URL`, `ADMIN_AUTH_SECRET`
+
+Set `NODE_ENV=production` at runtime (or omit it — Railway sets production). **Do not** set `NODE_ENV=development` on Railway; it breaks `next build`.
 
 Run migrations once (Railway shell or one-off job):
 
