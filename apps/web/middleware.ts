@@ -8,7 +8,7 @@ function isProtectedPath(pathname: string): boolean {
   return ADMIN_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   if (!isProtectedPath(request.nextUrl.pathname)) {
     return NextResponse.next();
   }
@@ -19,7 +19,7 @@ export function middleware(request: NextRequest) {
     return new NextResponse("Admin auth is not configured. Set ADMIN_AUTH_SECRET.", { status: 503 });
   }
 
-  if (isAdminAuthorized(request)) {
+  if (await isAdminAuthorized(request)) {
     return NextResponse.next();
   }
 

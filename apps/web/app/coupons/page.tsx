@@ -1,6 +1,6 @@
 import { CouponCard, Chip } from "@mpf/ui";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
-import { getCouponDeals, expiryLabel } from "@/lib/api";
+import { getCouponDeals, expiryLabel, offerRedirectUrl } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
@@ -34,7 +34,9 @@ export default async function CouponsPage() {
           {coupons.length === 0 ? (
             <p className="text-sm text-slate-500">No active coupons right now. Check back soon.</p>
           ) : (
-            coupons.map((c) => <CouponCard key={c.id} coupon={c} />)
+            coupons.map((c) => (
+              <CouponCard key={c.id} coupon={c} shopHref={offerRedirectUrl(c.id)} />
+            ))
           )}
         </div>
       </main>

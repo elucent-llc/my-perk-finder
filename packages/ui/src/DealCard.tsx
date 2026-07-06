@@ -6,8 +6,8 @@ export interface DealCardData {
   title: string;
   slug: string;
   merchantName: string;
-  salePrice: number;
-  regularPrice: number;
+  salePrice?: number | null;
+  regularPrice?: number | null;
   discountPercent: number;
   couponCode?: string | null;
   currency?: string;
@@ -24,9 +24,25 @@ export interface DealCardProps {
   onSave?: () => void;
 }
 
+function hasDisplayablePrices(deal: DealCardData): boolean {
+  const sale = deal.salePrice;
+  const regular = deal.regularPrice;
+  return (sale != null && sale > 0) || (regular != null && regular > 0);
+}
+
+function priceFallbackLabel(deal: DealCardData): string {
+  if (deal.couponCode) return "Promotion offer";
+  return "See merchant site";
+}
+
 export function DealCard({ deal, href = "#", onSave }: DealCardProps) {
   const currency = deal.currency ?? "USD";
-  const save = deal.regularPrice - deal.salePrice;
+  const showPrices = hasDisplayablePrices(deal);
+  const sale = deal.salePrice ?? 0;
+  const regular = deal.regularPrice ?? 0;
+  const save = showPrices && regular > 0 && sale > 0 && sale < regular ? regular - sale : 0;
+  const showDiscount = showPrices && deal.discountPercent > 0;
+
   return (
     <article className="group relative flex flex-col overflow-hidden rounded-card border border-slate-200 bg-white shadow-card-sm transition hover:-translate-y-0.5 hover:shadow-card">
       <a href={href} className="relative block h-32 bg-gradient-to-br from-slate-100 to-slate-200">
@@ -38,9 +54,11 @@ export function DealCard({ deal, href = "#", onSave }: DealCardProps) {
             {deal.title}
           </span>
         )}
-        <Badge tone="discount" className="absolute left-2 top-2">
-          -{deal.discountPercent}%
-        </Badge>
+        {showDiscount ? (
+          <Badge tone="discount" className="absolute left-2 top-2">
+            -{deal.discountPercent}%
+          </Badge>
+        ) : null}
       </a>
       <button
         type="button"
@@ -63,11 +81,19 @@ export function DealCard({ deal, href = "#", onSave }: DealCardProps) {
             <Badge tone="coupon">✂ {deal.couponCode}</Badge>
           </div>
         ) : null}
-        <div className="mt-auto flex items-baseline gap-2">
-          <span className="text-lg font-extrabold text-slate-900">{formatPrice(deal.salePrice, currency)}</span>
-          <span className="text-xs text-slate-400 line-through">{formatPrice(deal.regularPrice, currency)}</span>
-          {save > 0 ? <Badge tone="save">Save {formatPrice(save, currency)}</Badge> : null}
-        </div>
+        {showPrices ? (
+          <div className="mt-auto flex flex-wrap items-baseline gap-2">
+            {sale > 0 ? (
+              <span className="text-lg font-extrabold text-slate-900">{formatPrice(sale, currency)}</span>
+            ) : null}
+            {regular > 0 ? (
+              <span className="text-xs text-slate-400 line-through">{formatPrice(regular, currency)}</span>
+            ) : null}
+            {save > 0 ? <Badge tone="save">Save {formatPrice(save, currency)}</Badge> : null}
+          </div>
+        ) : (
+          <p className="mt-auto text-sm font-semibold text-brand-700">{priceFallbackLabel(deal)}</p>
+        )}
         <div className="flex items-center justify-between text-[11px] text-slate-500">
           {deal.expiryLabel ? (
             <Badge tone={deal.isUrgent ? "urgent" : "expiry"}>⏳ {deal.expiryLabel}</Badge>

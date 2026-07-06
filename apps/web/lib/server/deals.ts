@@ -18,14 +18,24 @@ const orderByFor = (sort: string): Prisma.DealOrderByWithRelationInput => {
 };
 
 export function buildDealWhere(q: Partial<DealFilterQuery>): Prisma.DealWhereInput {
+  const startOfToday = new Date(new Date().setHours(0, 0, 0, 0));
   return {
     status: q.status ?? "active",
     ...(q.store ? { merchant: { slug: q.store } } : {}),
     ...(q.category ? { category: { slug: q.category } } : {}),
     ...(q.brand ? { brand: { contains: q.brand, mode: "insensitive" } } : {}),
     ...(q.minDiscount ? { discountPercent: { gte: q.minDiscount } } : {}),
+    ...(q.minPrice != null || q.maxPrice != null
+      ? {
+          salePrice: {
+            ...(q.minPrice != null ? { gte: q.minPrice } : {}),
+            ...(q.maxPrice != null ? { lte: q.maxPrice } : {}),
+          },
+        }
+      : {}),
     ...(q.couponAvailable ? { couponCode: { not: null } } : {}),
     ...(q.q ? { title: { contains: q.q, mode: "insensitive" } } : {}),
+    ...(q.verifiedToday ? { lastVerifiedAt: { gte: startOfToday } } : {}),
     ...(q.expiresSoon
       ? { expiryDate: { lte: new Date(Date.now() + 3 * 864e5), gte: new Date() } }
       : {}),

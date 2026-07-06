@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { prisma } from "@mpf/db";
 import { hashIp } from "@/lib/server/click-tracking";

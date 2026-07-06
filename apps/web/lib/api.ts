@@ -1,6 +1,6 @@
 import type { DealCardData } from "@mpf/ui";
 import { DealFilterQuery } from "@mpf/types";
-import { listDeals, getDealBySlug, listStores, type StoreCardData } from "@/lib/server/deals";
+import { listDeals, getDealBySlug, listStores, searchDealsPostgres, type StoreCardData } from "@/lib/server/deals";
 import type { SerializedPublicDeal } from "@/lib/server/serialize";
 import { offerRedirectPath } from "@/lib/site";
 
@@ -37,6 +37,12 @@ export async function getStores(): Promise<StoreCardData[]> {
   return listStores();
 }
 
+export async function searchDeals(q: string): Promise<DealDTO[]> {
+  const trimmed = q.trim();
+  if (!trimmed) return [];
+  return searchDealsPostgres(trimmed);
+}
+
 export function expiryLabel(iso?: string | null): { label: string | null; urgent: boolean } {
   if (!iso) return { label: null, urgent: false };
   const diff = new Date(iso).getTime() - Date.now();
@@ -49,14 +55,12 @@ export function expiryLabel(iso?: string | null): { label: string | null; urgent
 
 export function toCard(d: DealDTO): DealCardData {
   const e = expiryLabel(d.expiryDate);
-  const salePrice = d.salePrice ?? 0;
-  const regularPrice = d.regularPrice ?? 0;
   return {
     title: d.title,
     slug: d.slug,
     merchantName: d.merchantName,
-    salePrice,
-    regularPrice,
+    salePrice: d.salePrice,
+    regularPrice: d.regularPrice,
     discountPercent: d.discountPercent,
     couponCode: d.couponCode,
     currency: d.currency,

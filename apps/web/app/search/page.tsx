@@ -1,6 +1,6 @@
 import { DealCard, DealGrid, Chip, EmptyState, Button } from "@mpf/ui";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
-import { getDeals, toCard } from "@/lib/api";
+import { searchDeals, toCard } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
@@ -10,10 +10,7 @@ export default async function SearchPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const { q = "" } = await searchParams;
-  const all = await getDeals();
-  const results = q
-    ? all.filter((d) => `${d.title} ${d.merchantName} ${d.category}`.toLowerCase().includes(q.toLowerCase()))
-    : all;
+  const results = q.trim() ? await searchDeals(q) : [];
 
   return (
     <>
@@ -28,7 +25,17 @@ export default async function SearchPage({
             </Chip>
           ))}
         </div>
-        {results.length === 0 ? (
+        {!q.trim() ? (
+          <EmptyState
+            title="Enter a search term"
+            description="Use the search bar to find deals by product, brand, or store."
+            action={
+              <a href="/deals">
+                <Button variant="primary">Browse all deals</Button>
+              </a>
+            }
+          />
+        ) : results.length === 0 ? (
           <EmptyState
             title="No exact matches"
             description="Try a broader search term or browse popular deals."

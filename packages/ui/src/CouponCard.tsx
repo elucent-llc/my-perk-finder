@@ -11,7 +11,7 @@ export interface CouponCardData {
   isUrgent?: boolean;
 }
 
-export function CouponCard({ coupon, shopHref = "#" }: { coupon: CouponCardData; shopHref?: string }) {
+export function CouponCard({ coupon, shopHref }: { coupon: CouponCardData; shopHref: string }) {
   const [revealed, setRevealed] = React.useState(false);
   return (
     <div className="relative overflow-hidden rounded-card border border-slate-200 bg-white shadow-card-sm">
@@ -40,7 +40,7 @@ export function CouponCard({ coupon, shopHref = "#" }: { coupon: CouponCardData;
           ) : (
             <span />
           )}
-          <a href={shopHref}>
+          <a href={shopHref} target="_blank" rel="nofollow sponsored noopener noreferrer">
             <Button variant="primary" size="sm">
               Shop Now
             </Button>
