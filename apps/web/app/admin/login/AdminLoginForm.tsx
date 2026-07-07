@@ -1,11 +1,10 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@mpf/ui";
 
 export default function AdminLoginForm() {
-  const router = useRouter();
   const params = useSearchParams();
   const next = params.get("next") ?? "/admin";
   const [secret, setSecret] = useState("");
@@ -26,8 +25,7 @@ export default function AdminLoginForm() {
         setError("Invalid admin secret.");
         return;
       }
-      router.push(next);
-      router.refresh();
+      window.location.assign(next);
     } catch {
       setError("Could not sign in.");
     } finally {

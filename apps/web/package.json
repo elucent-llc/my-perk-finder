@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev --port 3000",
     "build": "NODE_ENV=production next build",
-    "start": "next start -p ${PORT:-3000}",
+    "start": "NODE_ENV=production next start -p ${PORT:-3000}",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf .next .turbo *.tsbuildinfo"

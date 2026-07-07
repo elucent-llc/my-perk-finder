@@ -90,7 +90,7 @@ Copy `.env.example` to `.env`. **Never** prefix secrets with `NEXT_PUBLIC_`.
 | -------- | -------- | ------- | ----------- |
 | `DATABASE_URL` | Yes | web, workers | PostgreSQL connection string |
 | `DIRECT_URL` | Yes | web, workers | Same as DATABASE_URL for Prisma |
-| `NEXT_PUBLIC_SITE_URL` | Yes (prod web) | web | Public URL, e.g. `https://myperkfinder.com` |
+| `NEXT_PUBLIC_SITE_URL` | Yes (prod web) | web | Public URL, e.g. `https://myperkfinder.com` — **set explicitly on Railway** |
 | `ADMIN_AUTH_SECRET` | Yes (prod web) | web | Admin login secret (min 16 chars). Generate: `openssl rand -base64 32` |
 | `AWIN_ACCESS_TOKEN` | Yes when `MOCK_EXTERNAL=false` | worker | Awin API bearer token — **server only** |
 | `AWIN_PUBLISHER_ID` | Yes when `MOCK_EXTERNAL=false` | worker | Awin publisher ID — **server only** |
@@ -98,7 +98,26 @@ Copy `.env.example` to `.env`. **Never** prefix secrets with `NEXT_PUBLIC_`.
 | `REDIS_URL` | No | legacy worker | Only if running BullMQ locally |
 | `RESEND_API_KEY` | No | — | Email (future) |
 | `OPENAI_API_KEY` | No | — | LLM extraction (future) |
+| `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` | Recommended (web) | web | Stable Server Action key across deploys. Generate: `openssl rand -base64 32` — set before **build** and at runtime |
 | `PORT` | Auto | web | Set by Railway |
+
+### Railway web service variables (required)
+
+Set these on **myperkfinder-web** before deploy:
+
+| Variable | How to set |
+| -------- | ------------ |
+| `DATABASE_URL` | Reference from Postgres plugin |
+| `DIRECT_URL` | Same value as `DATABASE_URL` |
+| `NEXT_PUBLIC_SITE_URL` | `https://your-app.up.railway.app` or custom domain (no trailing slash) |
+| `ADMIN_AUTH_SECRET` | `openssl rand -base64 32` |
+
+Optional:
+
+| Variable | How to set |
+| -------- | ------------ |
+| `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` | `openssl rand -base64 32` — reduces post-deploy Server Action log noise |
+| `NODE_ENV` | **Remove** if set to `development` — start script forces `production` |
 
 ### Admin authentication
 

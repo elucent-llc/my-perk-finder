@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@mpf/ui";
 
@@ -14,14 +13,13 @@ async function patchOffer(id: string, status: string) {
 }
 
 export function ReviewActions({ offerId }: { offerId: string }) {
-  const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
 
   const act = async (status: string, label: string) => {
     setLoading(label);
     try {
       await patchOffer(offerId, status);
-      router.refresh();
+      window.location.reload();
     } catch (err) {
       console.error(err);
       alert(`Could not ${label.toLowerCase()} offer.`);

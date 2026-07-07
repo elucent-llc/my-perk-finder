@@ -13,7 +13,11 @@ Use this before and after each production deploy.
 
 - [ ] Custom domain `myperkfinder.com` (and `www`) points to Railway `myperkfinder-web`
 - [ ] HTTPS certificate is active (Railway managed)
-- [ ] `NEXT_PUBLIC_SITE_URL` matches production URL (e.g. `https://myperkfinder.com`)
+- [ ] `NEXT_PUBLIC_SITE_URL` set to production URL (e.g. `https://myperkfinder.com` or Railway public URL)
+- [ ] `DIRECT_URL` set (same as `DATABASE_URL`)
+- [ ] `ADMIN_AUTH_SECRET` set on web service (min 16 chars)
+- [ ] `NODE_ENV` is **not** `development` on Railway (remove manual override)
+- [ ] Optional: `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` if you see post-deploy Server Action log noise
 
 ## Health & uptime
 
