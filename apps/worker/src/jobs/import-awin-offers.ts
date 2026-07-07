@@ -1,4 +1,9 @@
-import { fetchAwinOffers, type NormalizedOffer, type AffiliateSourceConfig } from "@mpf/affiliate";
+import {
+  fetchAwinOffers,
+  type AffiliateSourceConfig,
+  type NormalizedOffer,
+  type OfferType,
+} from "@mpf/affiliate";
 import { prisma } from "@mpf/db";
 import { saveRawImportRecord, upsertImportedOffer } from "@mpf/db";
 import { validateOfferForImport } from "@mpf/validators";
@@ -9,28 +14,21 @@ export interface AwinImportResult {
   updated: number;
   rejected: number;
   needsReview: number;
+  expired: number;
   pages: number;
 }
 
-function resolveAwinConfig(override?: AffiliateSourceConfig): AffiliateSourceConfig {
-  if (override) return override;
-  return {
-    accessToken: process.env.AWIN_ACCESS_TOKEN ?? "mock",
-    publisherId: process.env.AWIN_PUBLISHER_ID ?? "mock",
-    mockExternal: process.env.MOCK_EXTERNAL === "true",
-  };
-}
-
-function inferOfferType(offer: NormalizedOffer): "product" | "coupon" | "promotion" | "sale" {
+function resolveOfferType(offer: NormalizedOffer): OfferType {
+  if (offer.offerType) return offer.offerType;
   if (offer.couponCode) return "coupon";
-  if (offer.regularPrice > 0 && offer.salePrice > 0 && offer.salePrice < offer.regularPrice) return "sale";
-  if (offer.salePrice > 0 || offer.regularPrice > 0) return "product";
+  const regular = offer.regularPrice ?? 0;
+  const sale = offer.salePrice ?? 0;
+  if (regular > 0 && sale > 0 && sale < regular) return "sale";
+  if (sale > 0 || regular > 0) return "product";
   return "promotion";
 }
 
 function toImportedInput(offer: NormalizedOffer, status: ReturnType<typeof validateOfferForImport>) {
-  const regular = offer.regularPrice > 0 ? offer.regularPrice : null;
-  const sale = offer.salePrice > 0 ? offer.salePrice : null;
   return {
     externalId: offer.externalId,
     source: offer.source,
@@ -39,9 +37,9 @@ function toImportedInput(offer: NormalizedOffer, status: ReturnType<typeof valid
     merchantName: offer.merchantName,
     brand: offer.brand,
     category: offer.category,
-    offerType: inferOfferType(offer),
-    regularPrice: regular,
-    salePrice: sale,
+    offerType: resolveOfferType(offer),
+    regularPrice: offer.regularPrice,
+    salePrice: offer.salePrice,
     discountPercent: offer.discountPercent,
     couponCode: offer.couponCode,
     currency: offer.currency,
@@ -62,34 +60,41 @@ function toImportedInput(offer: NormalizedOffer, status: ReturnType<typeof valid
 export async function importAwinOffers(
   importJobId: string,
   log: (msg: string) => void,
-  config?: AffiliateSourceConfig
+  config: AffiliateSourceConfig
 ): Promise<AwinImportResult> {
-  const counters = { offersFound: 0, created: 0, updated: 0, rejected: 0, needsReview: 0, pages: 0 };
+  const counters = {
+    offersFound: 0,
+    created: 0,
+    updated: 0,
+    rejected: 0,
+    needsReview: 0,
+    expired: 0,
+    pages: 0,
+  };
 
   await prisma.importJob.update({
     where: { id: importJobId },
     data: { status: "running", startedAt: new Date(), error: null },
   });
 
-  const awinConfig = resolveAwinConfig(config);
-
   let page = 1;
   let hasMore = true;
-  const updatedSince = new Date(Date.now() - 7 * 864e5);
+  const pageSize = config.pageSize ?? 100;
+  const regionCodes = config.regionCodes ?? ["US"];
+  const membershipFilter = config.membershipFilter ?? "all";
 
   try {
     while (hasMore) {
-      log(`Fetching Awin page ${page}…`);
-      const result = await fetchAwinOffers(awinConfig, {
+      log(`Fetching Awin page ${page} (membership=${membershipFilter}, regions=${regionCodes.join(",")})…`);
+      const result = await fetchAwinOffers(config, {
         page,
-        pageSize: 100,
-        regionCodes: ["US"],
-        updatedSince,
+        pageSize,
+        regionCodes,
+        membershipFilter,
       });
       counters.pages += 1;
 
-      const savePagePayload = process.env.DEBUG_RAW_PAGES === "true";
-      if (savePagePayload) {
+      if (config.debugRawPages) {
         for (const rawResponse of result.rawResponses) {
           await saveRawImportRecord({
             source: "awin",
@@ -123,7 +128,7 @@ export async function importAwinOffers(
 
         if (validation.status === "expired") {
           await upsertImportedOffer(toImportedInput(offer, validation));
-          counters.updated += 1;
+          counters.expired += 1;
           await prisma.rawRecord.update({
             where: { id: rawRecord.id },
             data: { status: "processed", normalized: offer as object },
@@ -154,7 +159,7 @@ export async function importAwinOffers(
     }
 
     const finalStatus =
-      counters.rejected > 0 && counters.created + counters.updated === 0
+      counters.rejected > 0 && counters.created + counters.updated + counters.expired === 0
         ? "failed"
         : counters.rejected > 0 || counters.needsReview > 0
           ? "partial_success"
@@ -174,8 +179,9 @@ export async function importAwinOffers(
     });
 
     log(
-      `Awin import done — found=${counters.offersFound} created=${counters.created} ` +
-        `updated=${counters.updated} needsReview=${counters.needsReview} rejected=${counters.rejected}`
+      `Awin import done — fetched=${counters.offersFound} pages=${counters.pages} ` +
+        `created=${counters.created} updated=${counters.updated} expired=${counters.expired} ` +
+        `needsReview=${counters.needsReview} rejected=${counters.rejected}`
     );
 
     return counters;

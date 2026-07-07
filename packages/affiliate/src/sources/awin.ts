@@ -3,7 +3,9 @@ import type {
   AffiliateFetchOptions,
   AffiliateSourceConfig,
   AffiliateSourceResult,
+  AwinMembershipFilter,
   NormalizedOffer,
+  OfferType,
 } from "../types.js";
 
 const AwinPromotionSchema = z.object({
@@ -20,6 +22,12 @@ const AwinPromotionSchema = z.object({
   endDate: z.string().optional().nullable(),
   voucherCode: z.string().optional().nullable(),
   code: z.string().optional().nullable(),
+  voucher: z
+    .object({
+      code: z.string().optional().nullable(),
+    })
+    .optional()
+    .nullable(),
   advertiser: z
     .object({
       id: z.union([z.number(), z.string()]).optional(),
@@ -27,7 +35,20 @@ const AwinPromotionSchema = z.object({
     })
     .optional()
     .nullable(),
-  regions: z.array(z.string()).optional(),
+  regions: z
+    .union([
+      z.array(z.string()),
+      z.object({
+        list: z
+          .array(
+            z.object({
+              countryCode: z.string().optional(),
+            })
+          )
+          .optional(),
+      }),
+    ])
+    .optional(),
 });
 
 const AwinResponseSchema = z.object({
@@ -56,6 +77,37 @@ function parsePrice(text?: string | null): number | null {
   return match ? Number(match[1]) : null;
 }
 
+function extractCountryCodes(regions: z.infer<typeof AwinPromotionSchema>["regions"]): string[] {
+  if (!regions) return [];
+  if (Array.isArray(regions)) {
+    return regions.map(String).filter(Boolean);
+  }
+  const list = regions.list ?? [];
+  return list.map((r) => r.countryCode).filter((c): c is string => Boolean(c));
+}
+
+function awinTypeToOfferType(type?: string | null): OfferType {
+  const t = (type ?? "").toLowerCase();
+  if (t === "voucher") return "coupon";
+  if (t === "promotion") return "promotion";
+  return "promotion";
+}
+
+function resolveOfferType(
+  awinType: string | undefined | null,
+  couponCode: string | null,
+  regularPrice: number | null,
+  salePrice: number | null
+): OfferType {
+  let offerType = awinTypeToOfferType(awinType);
+  if (couponCode) offerType = "coupon";
+  if (salePrice != null && salePrice > 0) {
+    if (regularPrice != null && regularPrice > salePrice) return "sale";
+    return "product";
+  }
+  return offerType;
+}
+
 /** Normalize a single Awin promotion into our canonical offer shape. */
 export function normalizeAwinPromotion(raw: unknown): NormalizedOffer | null {
   const parsed = AwinPromotionSchema.safeParse(raw);
@@ -65,33 +117,38 @@ export function normalizeAwinPromotion(raw: unknown): NormalizedOffer | null {
   const externalId = String(p.promotionId ?? p.id ?? "");
   if (!externalId) return null;
 
-  const title = (p.title ?? p.description ?? "Untitled promotion").trim();
+  const title = (p.title ?? "").trim();
   const merchantName = p.advertiser?.name?.trim() ?? null;
+  const merchantExternalId = p.advertiser?.id != null ? String(p.advertiser.id) : null;
   const affiliateUrl = p.urlTracking ?? p.deeplink ?? p.url ?? null;
-  const couponCode = p.voucherCode ?? p.code ?? null;
+  const couponCode = p.voucher?.code ?? p.voucherCode ?? p.code ?? null;
+  const countryCodes = extractCountryCodes(p.regions);
 
-  const descPrices = parsePrice(p.description);
-  const salePrice = descPrices ?? 0;
-  const regularPrice = salePrice > 0 ? salePrice : 0;
+  const descSale = parsePrice(p.description);
+  const salePrice = descSale;
+  const regularPrice: number | null = null;
   const discountPercent =
-    regularPrice > 0 && salePrice < regularPrice
+    regularPrice != null && salePrice != null && salePrice < regularPrice
       ? Math.round(((regularPrice - salePrice) / regularPrice) * 100)
       : 0;
+
+  const offerType = resolveOfferType(p.type, couponCode, regularPrice, salePrice);
 
   let confidence = 0.75;
   if (!affiliateUrl) confidence -= 0.2;
   if (!merchantName) confidence -= 0.15;
   if (!title || title.length < 5) confidence -= 0.1;
-  if (p.type && p.type !== "promotion" && p.type !== "voucher") confidence -= 0.05;
 
   return {
     externalId,
     source: "awin",
     title,
-    slug: slugify(`${title}-${merchantName ?? "awin"}-${externalId}`),
+    slug: slugify(`${title || "offer"}-${merchantName ?? "awin"}-${externalId}`),
     merchantName,
+    merchantExternalId,
     brand: null,
     category: null,
+    offerType,
     regularPrice,
     salePrice,
     discountPercent,
@@ -100,7 +157,9 @@ export function normalizeAwinPromotion(raw: unknown): NormalizedOffer | null {
     imageUrl: null,
     affiliateUrl,
     productUrl: p.url ?? null,
+    startDate: p.startDate ? new Date(p.startDate) : null,
     expiryDate: p.endDate ? new Date(p.endDate) : null,
+    countryCodes,
     description: p.description ?? p.terms ?? null,
     confidenceScore: Math.max(0, Math.min(1, confidence)),
     rawPayload: raw,
@@ -118,8 +177,9 @@ function mockAwinPromotions(): NormalizedOffer[] {
       urlTracking: "https://www.awin1.com/cread.php?awinmid=mock&awinaffid=mock",
       url: "https://bestbuy.com/deals",
       endDate: new Date(Date.now() + 7 * 864e5).toISOString(),
-      voucherCode: "BB20OFF",
-      type: "promotion",
+      voucher: { code: "BB20OFF" },
+      type: "voucher",
+      regions: { list: [{ countryCode: "US" }] },
     },
     {
       promotionId: "mock-1002",
@@ -129,7 +189,8 @@ function mockAwinPromotions(): NormalizedOffer[] {
       urlTracking: "https://www.awin1.com/cread.php?awinmid=mock2&awinaffid=mock",
       url: "https://nike.com",
       endDate: new Date(Date.now() + 14 * 864e5).toISOString(),
-      type: "voucher",
+      type: "promotion",
+      regions: { list: [{ countryCode: "US" }] },
     },
     {
       promotionId: "mock-1003",
@@ -139,9 +200,17 @@ function mockAwinPromotions(): NormalizedOffer[] {
       urlTracking: "https://www.awin1.com/cread.php?awinmid=mock3&awinaffid=mock",
       endDate: new Date(Date.now() + 3 * 864e5).toISOString(),
       type: "promotion",
+      regions: { list: [{ countryCode: "US" }] },
     },
   ];
   return samples.map((s) => normalizeAwinPromotion(s)).filter(Boolean) as NormalizedOffer[];
+}
+
+function resolveMembership(
+  config: AffiliateSourceConfig,
+  options: AffiliateFetchOptions
+): AwinMembershipFilter {
+  return options.membershipFilter ?? config.membershipFilter ?? "all";
 }
 
 /**
@@ -155,8 +224,9 @@ export async function fetchAwinOffers(
   options: AffiliateFetchOptions = {}
 ): Promise<AffiliateSourceResult> {
   const page = options.page ?? 1;
-  const pageSize = options.pageSize ?? 100;
-  const regionCodes = options.regionCodes ?? ["US"];
+  const pageSize = options.pageSize ?? config.pageSize ?? 100;
+  const regionCodes = options.regionCodes ?? config.regionCodes ?? ["US"];
+  const membership = resolveMembership(config, options);
   const updatedSince = options.updatedSince?.toISOString();
 
   const useMock =
@@ -182,9 +252,10 @@ export async function fetchAwinOffers(
 
   const body: Record<string, unknown> = {
     filters: {
-      regionCodes,
-      membership: "joined",
+      membership,
       status: "active",
+      type: "all",
+      regionCodes,
       ...(updatedSince ? { updatedSince } : {}),
     },
     pagination: { page, pageSize },

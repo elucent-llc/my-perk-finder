@@ -4,12 +4,22 @@ import { prisma, disconnectDb } from "@mpf/db";
 import { importAwinOffers } from "../jobs/import-awin-offers.js";
 
 function log(msg: string) {
-  console.log(JSON.stringify({ level: "info", service: "myperkfinder-worker-awin-import", msg, ts: new Date().toISOString() }));
+  console.log(
+    JSON.stringify({
+      level: "info",
+      service: "myperkfinder-worker-awin-import",
+      msg,
+      ts: new Date().toISOString(),
+    })
+  );
 }
 
 async function main() {
   const env = getWorkerEnv();
-  log("Environment validated");
+  log(
+    `Environment validated (mock=${env.MOCK_EXTERNAL}, membership=${env.AWIN_MEMBERSHIP_FILTER}, ` +
+      `regions=${env.AWIN_REGION_CODES.join(",")}, pageSize=${env.AWIN_PAGE_SIZE})`
+  );
 
   const job = await prisma.importJob.create({
     data: { source: "awin", status: "pending" },
@@ -20,7 +30,11 @@ async function main() {
     const result = await importAwinOffers(job.id, log, {
       accessToken: env.AWIN_ACCESS_TOKEN ?? "mock",
       publisherId: env.AWIN_PUBLISHER_ID ?? "mock",
-      mockExternal: env.MOCK_EXTERNAL === true,
+      mockExternal: env.MOCK_EXTERNAL,
+      membershipFilter: env.AWIN_MEMBERSHIP_FILTER,
+      regionCodes: env.AWIN_REGION_CODES,
+      pageSize: env.AWIN_PAGE_SIZE,
+      debugRawPages: env.AWIN_DEBUG_RAW_PAGES,
     });
     log(`Import finished ${JSON.stringify(result)}`);
     await disconnectDb();

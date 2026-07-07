@@ -54,9 +54,24 @@ Use this before and after each production deploy.
 - [ ] Worker logs show JSON lines, process exits code 0
 - [ ] ImportJob rows visible at `/admin/imports`
 
+## Awin import worker (Phase 3)
+
+- [ ] Separate Railway service: `myperkfinder-worker-awin-import`
+- [ ] Root directory `/`, config file `apps/worker/railway.import-awin.json`
+- [ ] Service type: **Cron Job** (not always-on)
+- [ ] `AWIN_ACCESS_TOKEN` and `AWIN_PUBLISHER_ID` on **worker only** — never on web service
+- [ ] No `NEXT_PUBLIC_AWIN_*` variables anywhere
+- [ ] `MOCK_EXTERNAL=true` manual test passes (`pnpm worker:import-awin` exits 0)
+- [ ] `MOCK_EXTERNAL=false` real Awin test passes with `AWIN_MEMBERSHIP_FILTER=all`
+- [ ] Worker exits cleanly (no long-running process, no setInterval)
+- [ ] Imported offers visible at `/admin/review` or `/admin/offers`
+- [ ] ImportJob row at `/admin/imports` shows counts
+- [ ] Production: `AWIN_MEMBERSHIP_FILTER=joined`
+- [ ] Cron schedule `0 */6 * * *` configured **only after** manual tests pass
+
 ## Affiliate pipeline
 
-- [ ] One `RawRecord` per normalized offer (not duplicate page payloads unless `DEBUG_RAW_PAGES=true`)
+- [ ] One `RawRecord` per normalized offer (not duplicate page payloads unless `AWIN_DEBUG_RAW_PAGES=true`)
 - [ ] Missing affiliate URL / merchant → rejected (not upserted)
 - [ ] Low confidence / suspicious discount → `needs_review`
 - [ ] Admin review at `/admin/review` — approve / reject / mark expired works

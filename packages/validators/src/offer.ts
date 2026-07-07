@@ -49,6 +49,17 @@ export function validateOfferForImport(offer: NormalizedOffer): OfferImportValid
     };
   }
 
+  const title = offer.title?.trim() ?? "";
+  if (!title) {
+    flags.push("missing_title");
+    return {
+      flags,
+      confidenceScore: 0,
+      status: "rejected",
+      rejected: true,
+    };
+  }
+
   if (offer.expiryDate instanceof Date && Number.isNaN(offer.expiryDate.getTime())) {
     flags.push("expired_date");
     return {

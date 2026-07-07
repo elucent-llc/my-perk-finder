@@ -32,6 +32,7 @@ export type RawRecordStatus = z.infer<typeof RawRecordStatus>;
 /** Validation flags surfaced during import/review. */
 export const ValidationFlag = z.enum([
   "missing_affiliate_url",
+  "missing_title",
   "expired_date",
   "discount_too_high",
   "sale_higher_than_regular",
@@ -45,6 +46,7 @@ export type ValidationFlag = z.infer<typeof ValidationFlag>;
 /** Human-readable labels for validation flags (used in admin UI). */
 export const VALIDATION_FLAG_LABELS: Record<ValidationFlag, string> = {
   missing_affiliate_url: "Missing affiliate URL",
+  missing_title: "Missing title",
   expired_date: "Expired date",
   discount_too_high: "Discount too high",
   sale_higher_than_regular: "Sale price higher than regular price",

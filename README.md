@@ -93,7 +93,11 @@ Copy `.env.example` to `.env`. **Never** prefix secrets with `NEXT_PUBLIC_`.
 | `NEXT_PUBLIC_SITE_URL` | Yes (prod web) | web | Public URL, e.g. `https://myperkfinder.com` — **set explicitly on Railway** |
 | `ADMIN_AUTH_SECRET` | Yes (prod web) | web | Admin login secret (min 16 chars). Generate: `openssl rand -base64 32` |
 | `AWIN_ACCESS_TOKEN` | Yes when `MOCK_EXTERNAL=false` | worker | Awin API bearer token — **server only** |
-| `AWIN_PUBLISHER_ID` | Yes when `MOCK_EXTERNAL=false` | worker | Awin publisher ID — **server only** |
+| `AWIN_PUBLISHER_ID` | Yes when `MOCK_EXTERNAL=false` | worker | Awin publisher ID — **server only** (default `2975213`) |
+| `AWIN_MEMBERSHIP_FILTER` | No | worker | `all` (test) / `joined` (prod) / `notJoined` |
+| `AWIN_REGION_CODES` | No | worker | Comma-separated, default `US` |
+| `AWIN_PAGE_SIZE` | No | worker | Default `100` |
+| `AWIN_DEBUG_RAW_PAGES` | No | worker | Save full API page payloads to RawRecord |
 | `MOCK_EXTERNAL` | No | workers | `true` = mock Awin (no credentials needed); **`false` in prod** |
 | `REDIS_URL` | No | legacy worker | Only if running BullMQ locally |
 | `RESEND_API_KEY` | No | — | Email (future) |
@@ -132,26 +136,81 @@ openssl rand -base64 32
 - API automation can use `Authorization: Bearer <ADMIN_AUTH_SECRET>`.
 - In local development, admin routes are open if `ADMIN_AUTH_SECRET` is unset.
 
-### Awin import: mock vs real
+## Phase 3: Awin API Worker Setup
 
-**Mock import (local / staging):**
+Awin credentials are **worker-only**. Never add `AWIN_ACCESS_TOKEN` to `apps/web` or prefix with `NEXT_PUBLIC_`.
+
+### Get Awin API token
+
+1. Log in to [Awin](https://ui.awin.com)
+2. Top-right user menu → **API Credentials**
+3. Enter password → **Show my API token**
+
+**Publisher ID:** `2975213`
+
+### Local test (mock — no token required)
 
 ```bash
-MOCK_EXTERNAL=true
-pnpm build:worker && pnpm worker:import-awin
+cp .env.example .env
+# Ensure MOCK_EXTERNAL=true
+pnpm build:worker
+pnpm worker:import-awin
 ```
 
-No `AWIN_ACCESS_TOKEN` or `AWIN_PUBLISHER_ID` required.
+Verify at `/admin/imports` and `/admin/review`.
 
-**Real import (production worker):**
+### Local test (real Awin API)
 
 ```bash
 MOCK_EXTERNAL=false
 AWIN_ACCESS_TOKEN=your_token
-AWIN_PUBLISHER_ID=your_publisher_id
+AWIN_PUBLISHER_ID=2975213
+AWIN_MEMBERSHIP_FILTER=all
+pnpm build:worker && pnpm worker:import-awin
 ```
 
-Configure on Railway service `myperkfinder-worker-awin-import` only — never on the web service.
+Use `AWIN_MEMBERSHIP_FILTER=all` for API testing. Use `joined` for production publishing once advertiser approvals are in place.
+
+If real import returns zero offers, advertiser approvals may still be pending or no active promotions match your filters.
+
+### Railway service: `myperkfinder-worker-awin-import`
+
+| Setting | Value |
+| ------- | ----- |
+| Root directory | `/` (repo root) |
+| Config file | `apps/worker/railway.import-awin.json` |
+| Build command | `pnpm build:worker` |
+| Start command | `pnpm worker:import-awin` |
+| Service type | **Cron Job** (not always-on) |
+
+**First test variables:**
+
+```
+NODE_ENV=production
+DATABASE_URL=${{Postgres.DATABASE_URL}}
+DIRECT_URL=${{Postgres.DATABASE_URL}}
+MOCK_EXTERNAL=true
+```
+
+**Real Awin variables (after mock test passes):**
+
+```
+NODE_ENV=production
+DATABASE_URL=${{Postgres.DATABASE_URL}}
+DIRECT_URL=${{Postgres.DATABASE_URL}}
+MOCK_EXTERNAL=false
+AWIN_ACCESS_TOKEN=your_token
+AWIN_PUBLISHER_ID=2975213
+AWIN_MEMBERSHIP_FILTER=all
+AWIN_REGION_CODES=US
+AWIN_PAGE_SIZE=100
+```
+
+**Production publishing:** set `AWIN_MEMBERSHIP_FILTER=joined`.
+
+**Cron schedule (after manual test passes):** `0 */6 * * *`
+
+See `apps/worker/.env.example` for all worker-only Awin variables.
 
 ---
 
