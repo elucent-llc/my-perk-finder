@@ -1,7 +1,9 @@
 import { prisma, type Prisma } from "@mpf/db";
 import type { DealFilterQuery } from "@mpf/types";
+import type { StoreCardData } from "@mpf/ui";
 import { serializeDeal, serializePublicDeal } from "./serialize.js";
 
+export type { StoreCardData };
 const orderByFor = (sort: string): Prisma.DealOrderByWithRelationInput => {
   switch (sort) {
     case "highest_discount":
@@ -17,10 +19,11 @@ const orderByFor = (sort: string): Prisma.DealOrderByWithRelationInput => {
   }
 };
 
-export function buildDealWhere(q: Partial<DealFilterQuery>): Prisma.DealWhereInput {
+export function buildDealWhere(q: Partial<DealFilterQuery>, opts?: { publicOnly?: boolean }): Prisma.DealWhereInput {
   const startOfToday = new Date(new Date().setHours(0, 0, 0, 0));
+  const publicOnly = opts?.publicOnly !== false;
   return {
-    status: q.status ?? "active",
+    status: publicOnly ? "active" : (q.status ?? "active"),
     ...(q.store ? { merchant: { slug: q.store } } : {}),
     ...(q.category ? { category: { slug: q.category } } : {}),
     ...(q.brand ? { brand: { contains: q.brand, mode: "insensitive" } } : {}),
@@ -43,7 +46,7 @@ export function buildDealWhere(q: Partial<DealFilterQuery>): Prisma.DealWhereInp
 }
 
 export async function listDeals(q: DealFilterQuery) {
-  const where = buildDealWhere(q);
+  const where = buildDealWhere(q, { publicOnly: true });
   const [rows, total] = await Promise.all([
     prisma.deal.findMany({
       where,
@@ -69,7 +72,8 @@ export async function getDealBySlug(slug: string) {
     where: { slug },
     include: { merchant: true, category: true },
   });
-  return deal ? serializePublicDeal(deal) : null;
+  if (!deal || deal.status !== "active") return null;
+  return serializePublicDeal(deal);
 }
 
 export async function searchDealsPostgres(q: string, limit = 24) {
@@ -91,32 +95,49 @@ export async function searchDealsPostgres(q: string, limit = 24) {
 
 export async function getAdminOverview() {
   const startOfDay = new Date(new Date().setHours(0, 0, 0, 0));
-  const [active, needsReview, expired, subscribers, clicksToday, importsToday] = await Promise.all([
-    prisma.deal.count({ where: { status: "active" } }),
-    prisma.deal.count({ where: { status: "needs_review" } }),
-    prisma.deal.count({ where: { status: "expired" } }),
-    prisma.subscriber.count(),
-    prisma.click.count({ where: { createdAt: { gte: startOfDay } } }),
-    prisma.importJob.count({ where: { createdAt: { gte: startOfDay } } }),
-  ]);
+  const [active, needsReview, expiredToday, subscribers, clicksToday, importsToday] =
+    await Promise.all([
+      prisma.deal.count({ where: { status: "active" } }),
+      prisma.deal.count({ where: { status: "needs_review" } }),
+      prisma.deal.count({
+        where: {
+          status: "expired",
+          expiryDate: { gte: startOfDay, lt: new Date(startOfDay.getTime() + 864e5) },
+        },
+      }),
+      prisma.subscriber.count(),
+      prisma.click.count({ where: { createdAt: { gte: startOfDay } } }),
+      prisma.importJob.count({ where: { createdAt: { gte: startOfDay } } }),
+    ]);
   return {
     activeOffers: active,
     needsReview,
-    expiredToday: expired,
+    expiredToday,
     importsToday,
     clicksToday,
     emailSubscribers: subscribers,
   };
 }
 
-export async function getReviewQueue() {
-  const rows = await prisma.deal.findMany({
-    where: { status: "needs_review" },
-    include: { merchant: true, category: true },
-    orderBy: { confidenceScore: "asc" },
-    take: 50,
-  });
-  return rows.map(serializeDeal);
+export async function getReviewQueue(page = 1, pageSize = 50) {
+  const where = { status: "needs_review" as const };
+  const [rows, total] = await Promise.all([
+    prisma.deal.findMany({
+      where,
+      include: { merchant: true, category: true },
+      orderBy: { confidenceScore: "asc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+    prisma.deal.count({ where }),
+  ]);
+  return {
+    data: rows.map(serializeDeal),
+    page,
+    pageSize,
+    total,
+    totalPages: Math.max(1, Math.ceil(total / pageSize)),
+  };
 }
 
 export async function listAdminOffers(params: { status?: string; q?: string }) {
@@ -149,28 +170,13 @@ export async function listImportJobs() {
   }));
 }
 
-export interface StoreCardData {
-  name: string;
-  slug: string;
-  initials: string;
-  dealsCount: number;
-  couponsCount: number;
-  verified: boolean;
-}
-
-function merchantInitials(name: string): string {
-  const parts = name.trim().split(/\s+/);
-  if (parts.length >= 2) return (parts[0]![0]! + parts[1]![0]!).toUpperCase();
-  return name.slice(0, 2).toUpperCase();
-}
-
 const DEMO_STORES: StoreCardData[] = [
-  { name: "Best Buy", slug: "best-buy", initials: "BB", dealsCount: 0, couponsCount: 0, verified: true },
-  { name: "Amazon", slug: "amazon", initials: "AZ", dealsCount: 0, couponsCount: 0, verified: true },
-  { name: "Walmart", slug: "walmart", initials: "WM", dealsCount: 0, couponsCount: 0, verified: true },
-  { name: "Target", slug: "target", initials: "TG", dealsCount: 0, couponsCount: 0, verified: true },
-  { name: "Nike", slug: "nike", initials: "NK", dealsCount: 0, couponsCount: 0, verified: false },
-  { name: "Dell", slug: "dell", initials: "DL", dealsCount: 0, couponsCount: 0, verified: false },
+  { name: "Best Buy", slug: "best-buy", dealsCount: 0, couponsCount: 0, verified: true },
+  { name: "Amazon", slug: "amazon", dealsCount: 0, couponsCount: 0, verified: true },
+  { name: "Walmart", slug: "walmart", dealsCount: 0, couponsCount: 0, verified: true },
+  { name: "Target", slug: "target", dealsCount: 0, couponsCount: 0, verified: true },
+  { name: "Nike", slug: "nike", dealsCount: 0, couponsCount: 0, verified: false },
+  { name: "Dell", slug: "dell", dealsCount: 0, couponsCount: 0, verified: false },
 ];
 
 /** Active merchants with deal/coupon counts. Falls back to demo list when DB is empty. */
@@ -180,7 +186,7 @@ export async function listStores(): Promise<StoreCardData[]> {
     include: {
       _count: { select: { deals: true, coupons: true } },
     },
-    orderBy: { name: "asc" },
+    orderBy: [{ deals: { _count: "desc" } }, { name: "asc" }],
   });
 
   if (merchants.length === 0) {
@@ -190,9 +196,44 @@ export async function listStores(): Promise<StoreCardData[]> {
   return merchants.map((m) => ({
     name: m.name,
     slug: m.slug,
-    initials: merchantInitials(m.name),
     dealsCount: m._count.deals,
     couponsCount: m._count.coupons,
     verified: Boolean(m.network),
+    logoUrl: m.logoUrl,
   }));
+}
+
+export async function getStoreBySlug(slug: string) {
+  const merchant = await prisma.merchant.findUnique({
+    where: { slug },
+    include: {
+      _count: {
+        select: {
+          deals: { where: { status: "active" } },
+          coupons: true,
+        },
+      },
+    },
+  });
+  if (!merchant || !merchant.isActive) return null;
+
+  const deals = await prisma.deal.findMany({
+    where: { status: "active", merchantId: merchant.id },
+    include: { merchant: true, category: true },
+    orderBy: { createdAt: "desc" },
+    take: 48,
+  });
+
+  return {
+    store: {
+      name: merchant.name,
+      slug: merchant.slug,
+      dealsCount: merchant._count.deals,
+      couponsCount: merchant._count.coupons,
+      verified: Boolean(merchant.network),
+      logoUrl: merchant.logoUrl,
+      homepageUrl: merchant.homepageUrl,
+    } satisfies StoreCardData & { homepageUrl?: string | null },
+    deals: deals.map(serializePublicDeal),
+  };
 }

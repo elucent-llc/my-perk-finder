@@ -6,14 +6,14 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminOverviewPage() {
   const kpis = await getKpis();
-  const review = await getReviewQueueData();
+  const review = await getReviewQueueData(1, 8);
 
   return (
     <AdminShell title="Overview">
       <StatGrid className="mb-4">
         <StatCard label="Active offers" value={kpis.activeOffers.toLocaleString()} icon="🛒" />
         <StatCard label="Needs review" value={kpis.needsReview.toLocaleString()} icon="⚑" />
-        <StatCard label="Expired" value={kpis.expiredToday.toLocaleString()} icon="⏳" />
+        <StatCard label="Expired today" value={kpis.expiredToday.toLocaleString()} icon="⏳" />
         <StatCard label="Imports today" value={kpis.importsToday.toLocaleString()} icon="⟳" />
         <StatCard label="Total clicks" value={kpis.clicksToday.toLocaleString()} icon="👆" />
         <StatCard label="Subscribers" value={kpis.emailSubscribers.toLocaleString()} icon="✉" />
@@ -31,14 +31,14 @@ export default async function AdminOverviewPage() {
             </tr>
           </thead>
           <tbody>
-            {review.length === 0 ? (
+            {review.data.length === 0 ? (
               <tr>
                 <Td colSpan={4} className="text-slate-500">
                   No offers in review queue.
                 </Td>
               </tr>
             ) : (
-              review.map((d) => (
+              review.data.map((d) => (
                 <tr key={d.id}>
                   <Td className="font-medium text-slate-800">{d.title}</Td>
                   <Td>{d.merchantName}</Td>

@@ -100,7 +100,10 @@ curl -sI "https://myperkfinder.com/api/r/<active-offer-id>" | grep -E 'HTTP|Loca
 ## Cost controls
 
 - [ ] Only **web + 2 cron workers + Postgres** deployed
-- [ ] **No** `apps/api`, `apps/admin`, always-on BullMQ worker, Redis, or Meilisearch in prod
+- [ ] **No** always-on BullMQ worker, Redis, or Meilisearch in prod (web + cron workers + Postgres only)
+- [ ] Do **not** deploy `apps/api` or `apps/admin` to Railway (use `apps/web` only)
+- [ ] Web start runs `pnpm db:migrate:deploy` before `next start`
+- [ ] `/api/health` returns 503 when Postgres is down
 
 ## Post-deploy smoke test
 

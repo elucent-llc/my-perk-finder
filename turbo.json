@@ -18,7 +18,9 @@
     "AWIN_DEBUG_RAW_PAGES",
     "DEBUG_RAW_PAGES",
     "NEXT_PUBLIC_SITE_URL",
-    "ADMIN_AUTH_SECRET"
+    "ADMIN_AUTH_SECRET",
+    "ALLOW_DEV_ADMIN_BYPASS",
+    "CLICK_HASH_SECRET"
   ],
   "tasks": {
     "build": {

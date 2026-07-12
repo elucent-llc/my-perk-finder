@@ -1,6 +1,6 @@
 /**
  * Shared Tailwind preset — MyPerkFinder design tokens.
- * Indigo/blue primary, green savings, amber/red expiry, slate neutrals.
+ * Teal primary (deals/value), green savings, amber/red expiry, slate neutrals.
  * Consumed by apps/web, apps/admin and packages/ui.
  */
 /** @type {import('tailwindcss').Config} */
@@ -9,13 +9,14 @@ module.exports = {
     extend: {
       colors: {
         brand: {
-          50: "#eef2ff",
-          100: "#e0e7ff",
-          200: "#c7d2fe",
-          400: "#818cf8",
-          500: "#6366f1",
-          600: "#4f46e5",
-          700: "#4338ca",
+          50: "#f0fdfa",
+          100: "#ccfbf1",
+          200: "#99f6e4",
+          300: "#5eead4",
+          400: "#2dd4bf",
+          500: "#14b8a6",
+          600: "#0d9488",
+          700: "#0f766e",
         },
         savings: {
           50: "#ecfdf5",

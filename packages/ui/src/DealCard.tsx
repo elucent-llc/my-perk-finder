@@ -1,7 +1,10 @@
+"use client";
+
 import * as React from "react";
 import { cn, formatPrice } from "./cn.js";
 import { Badge } from "./Badge.js";
 import { computeSavings, hasDisplayablePrices, priceFallbackLabel } from "./deal-pricing.js";
+import { merchantInitials, resolveStoreLogoUrl } from "./store-logos.js";
 
 export interface DealCardData {
   title: string;
@@ -13,6 +16,8 @@ export interface DealCardData {
   couponCode?: string | null;
   currency?: string;
   imageUrl?: string | null;
+  /** Optional DB/custom merchant logo; popular stores also resolve by name. */
+  merchantLogoUrl?: string | null;
   expiryLabel?: string | null;
   isUrgent?: boolean;
   confidenceScore?: number | null;
@@ -25,21 +30,77 @@ export interface DealCardProps {
   onSave?: () => void;
 }
 
+const PLACEHOLDER_PALETTES = [
+  { from: "from-teal-500", to: "to-emerald-700" },
+  { from: "from-emerald-500", to: "to-teal-700" },
+  { from: "from-amber-500", to: "to-orange-600" },
+  { from: "from-rose-500", to: "to-orange-600" },
+  { from: "from-cyan-500", to: "to-teal-700" },
+  { from: "from-lime-500", to: "to-green-700" },
+  { from: "from-sky-500", to: "to-cyan-700" },
+  { from: "from-orange-500", to: "to-amber-600" },
+] as const;
+
+function placeholderPalette(seed: string) {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i += 1) {
+    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  }
+  return PLACEHOLDER_PALETTES[hash % PLACEHOLDER_PALETTES.length]!;
+}
+
 export function DealCard({ deal, href = "#", onSave }: DealCardProps) {
   const currency = deal.currency ?? "USD";
   const showPrices = hasDisplayablePrices(deal);
   const save = computeSavings(deal);
   const showDiscount = showPrices && deal.discountPercent > 0;
+  const palette = placeholderPalette(`${deal.slug}|${deal.merchantName}`);
+  const [imageFailed, setImageFailed] = React.useState(false);
+  const [logoFailed, setLogoFailed] = React.useState(false);
+  const merchantLogo = resolveStoreLogoUrl(deal.merchantName, deal.merchantLogoUrl);
+  const showProductImage = Boolean(deal.imageUrl) && !imageFailed;
+  const showMerchantLogo = !showProductImage && Boolean(merchantLogo) && !logoFailed;
 
   return (
     <article className="group relative flex flex-col overflow-hidden rounded-card border border-slate-200 bg-white shadow-card-sm transition hover:-translate-y-0.5 hover:shadow-card">
-      <a href={href} className="relative block h-32 bg-gradient-to-br from-slate-100 to-slate-200">
-        {deal.imageUrl ? (
+      <a
+        href={href}
+        className={cn(
+          "relative block h-32",
+          showProductImage || showMerchantLogo
+            ? "bg-slate-50"
+            : `bg-gradient-to-br ${palette.from} ${palette.to}`
+        )}
+      >
+        {showProductImage ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={deal.imageUrl} alt={deal.title} className="h-full w-full object-cover" />
+          <img
+            src={deal.imageUrl!}
+            alt={deal.title}
+            className="h-full w-full object-cover"
+            onError={() => setImageFailed(true)}
+          />
+        ) : showMerchantLogo ? (
+          <span className="flex h-full flex-col items-center justify-center gap-2 px-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={merchantLogo!}
+              alt=""
+              className="h-14 w-14 object-contain"
+              onError={() => setLogoFailed(true)}
+            />
+            <span className="line-clamp-2 text-center text-[11px] font-semibold text-slate-500">
+              {deal.merchantName}
+            </span>
+          </span>
         ) : (
-          <span className="flex h-full items-center justify-center text-xs font-semibold text-slate-400">
-            {deal.title}
+          <span className="flex h-full flex-col items-center justify-center gap-1.5 px-3 text-center text-white/90">
+            <span className="grid h-11 w-11 place-items-center rounded-full bg-white/20 text-sm font-extrabold tracking-wide backdrop-blur-sm">
+              {merchantInitials(deal.merchantName)}
+            </span>
+            <span className="line-clamp-2 text-[11px] font-semibold leading-snug opacity-90">
+              {deal.title}
+            </span>
           </span>
         )}
         {showDiscount ? (

@@ -8,46 +8,72 @@ import { serializeDeal } from "../lib/serialize.js";
 export async function adminRoutes(app: FastifyInstance) {
   const r = app.withTypeProvider<ZodTypeProvider>();
 
-  // Overview KPIs
   r.get(
     "/overview",
     { schema: { tags: ["admin"], summary: "Dashboard KPI summary", response: { 200: z.record(z.number()) } } },
     async () => {
-      const [active, needsReview, expired, subscribers] = await Promise.all([
-        prisma.deal.count({ where: { status: "active" } }),
-        prisma.deal.count({ where: { status: "needs_review" } }),
-        prisma.deal.count({ where: { status: "expired" } }),
-        prisma.subscriber.count(),
-      ]);
-      const clicks = await prisma.deal.aggregate({ _sum: { clicksCount: true } });
-      const importsToday = await prisma.importJob.count();
+      const startOfDay = new Date(new Date().setHours(0, 0, 0, 0));
+      const [active, needsReview, expiredToday, subscribers, clicksToday, importsToday] =
+        await Promise.all([
+          prisma.deal.count({ where: { status: "active" } }),
+          prisma.deal.count({ where: { status: "needs_review" } }),
+          prisma.deal.count({
+            where: {
+              status: "expired",
+              expiryDate: { gte: startOfDay, lt: new Date(startOfDay.getTime() + 864e5) },
+            },
+          }),
+          prisma.subscriber.count(),
+          prisma.click.count({ where: { createdAt: { gte: startOfDay } } }),
+          prisma.importJob.count({ where: { createdAt: { gte: startOfDay } } }),
+        ]);
       return {
         activeOffers: active,
         needsReview,
-        expiredToday: expired,
+        expiredToday,
         importsToday,
-        clicksToday: clicks._sum.clicksCount ?? 0,
+        clicksToday,
         emailSubscribers: subscribers,
       };
     }
   );
 
-  // Review queue
   r.get(
     "/review",
-    { schema: { tags: ["admin"], summary: "Offers needing review", response: { 200: z.array(z.record(z.unknown())) } } },
-    async () => {
-      const rows = await prisma.deal.findMany({
-        where: { status: "needs_review" },
-        include: { merchant: true, category: true },
-        orderBy: { confidenceScore: "asc" },
-        take: 50,
-      });
-      return rows.map(serializeDeal);
+    {
+      schema: {
+        tags: ["admin"],
+        summary: "Offers needing review (paginated)",
+        querystring: z.object({
+          page: z.coerce.number().int().min(1).default(1),
+          pageSize: z.coerce.number().int().min(1).max(100).default(50),
+        }),
+        response: { 200: z.record(z.unknown()) },
+      },
+    },
+    async (req) => {
+      const { page, pageSize } = req.query;
+      const where = { status: "needs_review" as const };
+      const [rows, total] = await Promise.all([
+        prisma.deal.findMany({
+          where,
+          include: { merchant: true, category: true },
+          orderBy: { confidenceScore: "asc" },
+          skip: (page - 1) * pageSize,
+          take: pageSize,
+        }),
+        prisma.deal.count({ where }),
+      ]);
+      return {
+        data: rows.map(serializeDeal),
+        page,
+        pageSize,
+        total,
+        totalPages: Math.max(1, Math.ceil(total / pageSize)),
+      };
     }
   );
 
-  // All offers with status filter
   r.get(
     "/offers",
     {
@@ -72,7 +98,6 @@ export async function adminRoutes(app: FastifyInstance) {
     }
   );
 
-  // Update offer (edit / approve / reject / mark expired)
   r.patch(
     "/offers/:id",
     {

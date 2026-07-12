@@ -13,9 +13,6 @@ CREATE TYPE "SourceKind" AS ENUM ('cj', 'rakuten', 'impact', 'awin', 'walmart', 
 -- CreateEnum
 CREATE TYPE "SubscriberStatus" AS ENUM ('confirmed', 'unconfirmed', 'bounced', 'unsubscribed');
 
--- CreateEnum
-CREATE TYPE "OfferType" AS ENUM ('product', 'coupon', 'promotion', 'sale');
-
 -- CreateTable
 CREATE TABLE "Merchant" (
     "id" TEXT NOT NULL,
@@ -53,9 +50,8 @@ CREATE TABLE "Deal" (
     "title" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
     "brand" TEXT,
-    "offerType" "OfferType" NOT NULL DEFAULT 'product',
-    "regularPrice" DECIMAL(10,2),
-    "salePrice" DECIMAL(10,2),
+    "regularPrice" DECIMAL(10,2) NOT NULL,
+    "salePrice" DECIMAL(10,2) NOT NULL,
     "discountPercent" INTEGER NOT NULL DEFAULT 0,
     "couponCode" TEXT,
     "currency" TEXT NOT NULL DEFAULT 'USD',
@@ -65,8 +61,6 @@ CREATE TABLE "Deal" (
     "expiryDate" TIMESTAMP(3),
     "lastVerifiedAt" TIMESTAMP(3),
     "sourceName" TEXT,
-    "externalId" TEXT,
-    "source" "SourceKind",
     "status" "OfferStatus" NOT NULL DEFAULT 'needs_review',
     "confidenceScore" DOUBLE PRECISION,
     "validationFlags" TEXT[] DEFAULT ARRAY[]::TEXT[],
@@ -78,18 +72,6 @@ CREATE TABLE "Deal" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Deal_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "Click" (
-    "id" TEXT NOT NULL,
-    "dealId" TEXT NOT NULL,
-    "referrer" TEXT,
-    "userAgent" TEXT,
-    "ipHash" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "Click_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -192,21 +174,6 @@ CREATE INDEX "Deal_categoryId_idx" ON "Deal"("categoryId");
 CREATE INDEX "Deal_expiryDate_idx" ON "Deal"("expiryDate");
 
 -- CreateIndex
-CREATE INDEX "Deal_source_idx" ON "Deal"("source");
-
--- CreateIndex
-CREATE INDEX "Deal_offerType_idx" ON "Deal"("offerType");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Deal_source_externalId_key" ON "Deal"("source", "externalId");
-
--- CreateIndex
-CREATE INDEX "Click_dealId_idx" ON "Click"("dealId");
-
--- CreateIndex
-CREATE INDEX "Click_createdAt_idx" ON "Click"("createdAt");
-
--- CreateIndex
 CREATE INDEX "Coupon_isActive_idx" ON "Coupon"("isActive");
 
 -- CreateIndex
@@ -243,11 +210,7 @@ ALTER TABLE "Deal" ADD CONSTRAINT "Deal_merchantId_fkey" FOREIGN KEY ("merchantI
 ALTER TABLE "Deal" ADD CONSTRAINT "Deal_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Click" ADD CONSTRAINT "Click_dealId_fkey" FOREIGN KEY ("dealId") REFERENCES "Deal"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "Coupon" ADD CONSTRAINT "Coupon_merchantId_fkey" FOREIGN KEY ("merchantId") REFERENCES "Merchant"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "RawRecord" ADD CONSTRAINT "RawRecord_importJobId_fkey" FOREIGN KEY ("importJobId") REFERENCES "ImportJob"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-

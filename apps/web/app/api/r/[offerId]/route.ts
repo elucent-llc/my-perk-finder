@@ -33,7 +33,13 @@ export async function GET(request: Request, context: { params: Promise<{ offerId
     return NextResponse.json({ message: "Invalid affiliate URL" }, { status: 410 });
   }
 
-  const ipHashSecret = process.env.ADMIN_AUTH_SECRET ?? process.env.DATABASE_URL ?? "mpf";
+  const ipHashSecret =
+    process.env.CLICK_HASH_SECRET?.trim() ||
+    process.env.ADMIN_AUTH_SECRET?.trim() ||
+    null;
+  if (!ipHashSecret) {
+    return NextResponse.json({ message: "Click tracking is not configured" }, { status: 503 });
+  }
   const referrer = request.headers.get("referer");
   const userAgent = request.headers.get("user-agent");
 

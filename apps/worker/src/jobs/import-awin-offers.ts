@@ -4,8 +4,13 @@ import {
   type NormalizedOffer,
   type OfferType,
 } from "@mpf/affiliate";
-import { prisma } from "@mpf/db";
-import { saveRawImportRecord, upsertImportedOffer } from "@mpf/db";
+import {
+  prisma,
+  saveRawImportRecord,
+  upsertImportedOffer,
+  inferCategoryFromText,
+  loadCategoryKeywordMap,
+} from "@mpf/db";
 import { validateOfferForImport } from "@mpf/validators";
 
 export interface AwinImportResult {
@@ -77,6 +82,12 @@ export async function importAwinOffers(
     data: { status: "running", startedAt: new Date(), error: null },
   });
 
+  const categoryMaps = await loadCategoryKeywordMap(() =>
+    prisma.category.findMany({
+      select: { name: true, mappingKeywords: true },
+    })
+  );
+
   let page = 1;
   let hasMore = true;
   const pageSize = config.pageSize ?? 100;
@@ -106,6 +117,17 @@ export async function importAwinOffers(
 
       for (const offer of result.offers) {
         counters.offersFound += 1;
+
+        if (!offer.category) {
+          offer.category = inferCategoryFromText(
+            {
+              title: offer.title,
+              description: offer.description,
+              merchantName: offer.merchantName,
+            },
+            categoryMaps
+          );
+        }
 
         const rawRecord = await saveRawImportRecord({
           source: "awin",

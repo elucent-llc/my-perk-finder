@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandLogo } from "@mpf/ui";
 
 const NAV: Array<[string, string]> = [
   ["Overview", "/"],
@@ -22,9 +23,7 @@ export function AdminShell({ title, children }: { title: string; children: React
     <div className="flex min-h-screen">
       <aside className="fixed inset-y-0 left-0 w-60 overflow-y-auto bg-slate-900 p-3 text-slate-300">
         <div className="flex items-center gap-2.5 px-2 py-3">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-brand-500 to-blue-600 font-extrabold text-white">
-            M
-          </span>
+          <BrandLogo size={32} withWordmark={false} />
           <div>
             <div className="text-sm font-bold text-white">MyPerkFinder</div>
             <div className="text-[11px] text-slate-500">Admin</div>

@@ -1,10 +1,9 @@
 import type { Deal as PrismaDeal, Merchant, Coupon } from "@mpf/db";
 
-/** Convert Prisma Decimal | number | null into a plain number. */
-function num(v: unknown): number {
-  if (v == null) return 0;
+/** Convert Prisma Decimal | number | null into a plain number | null. */
+function num(v: unknown): number | null {
+  if (v == null) return null;
   if (typeof v === "number") return v;
-  // Prisma.Decimal has toNumber(); fall back to Number().
   const asDecimal = v as { toNumber?: () => number };
   return typeof asDecimal.toNumber === "function" ? asDecimal.toNumber() : Number(v);
 }
@@ -36,6 +35,14 @@ export function serializeDeal(
     clicksCount: d.clicksCount,
     savesCount: d.savesCount,
   };
+}
+
+/** Public API shape — never expose raw affiliate URLs. */
+export function serializePublicDeal(
+  d: PrismaDeal & { merchant?: Merchant | null; category?: { name: string } | null }
+) {
+  const { affiliateUrl: _omit, ...rest } = serializeDeal(d);
+  return rest;
 }
 
 export function serializeCoupon(c: Coupon & { merchant?: Merchant | null }) {

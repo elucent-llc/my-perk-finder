@@ -3,7 +3,10 @@ import { notFound } from "next/navigation";
 import { Badge, Button, DealCard, DealGrid, Panel, PanelHead, PanelBody, AffiliateDisclosure, formatPrice, computeSavings, hasDisplayablePrices } from "@mpf/ui";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { CouponReveal } from "@/components/CouponReveal";
+import { DealHeroMedia } from "@/components/DealHeroMedia";
+import { DealShareActions } from "@/components/DealShareActions";
 import { getDeal, getDeals, toCard, expiryLabel, offerRedirectUrl } from "@/lib/api";
+import { getSiteUrl } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -26,9 +29,12 @@ export default async function DealDetailPage({ params }: { params: Promise<{ slu
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
-          <div className="grid h-[340px] place-items-center rounded-card bg-gradient-to-br from-slate-100 to-slate-200 text-sm text-slate-400">
-            Product image (alt: “{deal.title}”)
-          </div>
+          <DealHeroMedia
+            title={deal.title}
+            merchantName={deal.merchantName}
+            imageUrl={deal.imageUrl}
+            merchantLogoUrl={deal.merchantLogoUrl}
+          />
 
           <div>
             <div className="mb-2 flex gap-2">
@@ -107,16 +113,9 @@ export default async function DealDetailPage({ params }: { params: Promise<{ slu
                 Go to Deal at {deal.merchantName} ↗
               </Button>
             </a>
-            <div className="mt-3 flex gap-2.5">
-              <Button variant="outline" className="flex-1">♡ Save</Button>
-              <Button variant="outline" className="flex-1">🔔 Set Alert</Button>
-              <Button variant="outline" className="flex-1">↗ Share</Button>
-            </div>
+            <DealShareActions title={deal.title} url={`${getSiteUrl()}/deal/${deal.slug}`} />
 
             <AffiliateDisclosure className="mt-3" />
-            <div className="mt-3 text-center">
-              <button className="text-sm text-slate-500 hover:text-slate-700">⚑ Report expired / incorrect deal</button>
-            </div>
           </div>
         </div>
 

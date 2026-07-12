@@ -19,6 +19,7 @@ import { adminRoutes } from "./routes/admin.js";
 import { importsRoutes } from "./routes/imports.js";
 import { healthRoutes } from "./routes/health.js";
 import { redirectRoutes } from "./routes/redirect.js";
+import { registerAdminAuthGuard } from "./lib/admin-auth.js";
 
 export async function buildServer() {
   const app = Fastify({
@@ -33,13 +34,17 @@ export async function buildServer() {
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
 
-  await app.register(cors, { origin: true });
+  // Local/dev-friendly; tighten for any shared deploy.
+  await app.register(cors, {
+    origin: process.env.NODE_ENV === "production" ? false : true,
+  });
 
   await app.register(swagger, {
     openapi: {
       info: {
         title: "MyPerkFinder API",
-        description: "Deal discovery platform API — deals, stores, coupons, search, admin & imports.",
+        description:
+          "Deal discovery platform API — deals, stores, coupons, search, admin & imports. Admin routes require Bearer ADMIN_AUTH_SECRET.",
         version: "0.1.0",
       },
       tags: [
@@ -49,15 +54,25 @@ export async function buildServer() {
         { name: "categories", description: "Category tree" },
         { name: "search", description: "Search across deals" },
         { name: "subscribers", description: "Email subscribers" },
-        { name: "admin", description: "Admin operations" },
-        { name: "imports", description: "Affiliate import operations" },
+        { name: "admin", description: "Admin operations (auth required)" },
+        { name: "imports", description: "Affiliate import operations (auth required)" },
         { name: "redirect", description: "Affiliate click tracking redirects" },
       ],
+      components: {
+        securitySchemes: {
+          bearerAuth: {
+            type: "http",
+            scheme: "bearer",
+            description: "ADMIN_AUTH_SECRET",
+          },
+        },
+      },
     },
     transform: jsonSchemaTransform,
   });
 
   await app.register(swaggerUi, { routePrefix: "/docs" });
+  await registerAdminAuthGuard(app);
 
   await app.register(healthRoutes);
   await app.register(dealsRoutes, { prefix: "/api/deals" });

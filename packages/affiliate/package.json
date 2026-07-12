@@ -15,6 +15,7 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/**/*.test.ts",
     "lint": "echo \"(lint) @mpf/affiliate\"",
     "clean": "rm -rf dist .turbo *.tsbuildinfo"
   },
@@ -25,6 +26,7 @@
   "devDependencies": {
     "@mpf/config": "workspace:*",
     "@types/node": "^22.9.0",
+    "tsx": "^4.19.2",
     "typescript": "^5.6.3"
   }
 }

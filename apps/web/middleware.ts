@@ -15,7 +15,10 @@ export async function middleware(request: NextRequest) {
 
   const secret = process.env.ADMIN_AUTH_SECRET?.trim();
   if (!secret) {
-    if (process.env.NODE_ENV === "development") return NextResponse.next();
+    // Explicit opt-in only — never open admin just because NODE_ENV=development.
+    if (process.env.ALLOW_DEV_ADMIN_BYPASS === "true" && process.env.NODE_ENV !== "production") {
+      return NextResponse.next();
+    }
     return new NextResponse("Admin auth is not configured. Set ADMIN_AUTH_SECRET.", { status: 503 });
   }
 

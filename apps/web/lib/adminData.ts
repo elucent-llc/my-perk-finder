@@ -11,8 +11,8 @@ export async function getKpis() {
   return getAdminOverview();
 }
 
-export async function getReviewQueueData() {
-  return getReviewQueue();
+export async function getReviewQueueData(page = 1, pageSize = 50) {
+  return getReviewQueue(page, pageSize);
 }
 
 export async function getOffers() {

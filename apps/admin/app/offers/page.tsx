@@ -39,8 +39,10 @@ export default async function OffersPage() {
                 <Td className="font-medium text-slate-800">{d.title}</Td>
                 <Td>{d.merchantName}</Td>
                 <Td>{d.category}</Td>
-                <Td>{formatPrice(d.salePrice)}</Td>
-                <Td className="text-slate-400">{formatPrice(d.regularPrice)}</Td>
+                <Td>{d.salePrice != null ? formatPrice(d.salePrice) : "—"}</Td>
+                <Td className="text-slate-400">
+                  {d.regularPrice != null ? formatPrice(d.regularPrice) : "—"}
+                </Td>
                 <Td>{d.discountPercent}%</Td>
                 <Td>
                   <Badge tone={STATUS_TONE[d.status] ?? "neutral"}>{d.status}</Badge>

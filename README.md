@@ -14,7 +14,7 @@ Scalable deal discovery platform — product offers, coupons, affiliate imports,
 | Imports    | Railway cron workers (`@mpf/worker` CLI)        |
 | Search     | PostgreSQL `ILIKE` (no Meilisearch in prod MVP) |
 
-Legacy apps (`apps/api`, `apps/admin`, BullMQ worker) remain for local full-stack dev but are **not deployed** to Railway.
+Legacy local apps (`apps/api` Fastify, `apps/admin`) are available for full-stack local use. **Railway production only deploys `apps/web` + workers.** Admin Fastify routes require `Authorization: Bearer $ADMIN_AUTH_SECRET`.
 
 ## Layout
 
@@ -22,8 +22,8 @@ Legacy apps (`apps/api`, `apps/admin`, BullMQ worker) remain for local full-stac
 apps/
   web/       ← Railway: myperkfinder-web (public + admin + /api/*)
   worker/    ← Railway cron CLIs (import + expire)
-  api/       ← Local dev only (Fastify)
-  admin/     ← Local dev only (superseded by web /admin)
+  api/       ← Local Fastify API (auth-gated admin; not Railway)
+  admin/     ← Local Next admin UI (optional; web /admin is preferred)
 packages/
   affiliate/ validators/ db/ types/ ui/ env/ config/
 docs/deployment/
@@ -63,9 +63,10 @@ pnpm dev               # Next.js web on :3000
 | Command | Description |
 | ------- | ----------- |
 | `pnpm dev` | Start web app |
-| `pnpm dev:all` | Start all turbo apps (legacy api/admin/worker) |
+| `pnpm dev:all` | Start web + local api/admin/worker via turbo |
+| `pnpm test` | Unit tests (validators, category infer, safe redirect) |
 | `pnpm build` / `pnpm build:web` | Production build |
-| `pnpm start:web` | Start production web server |
+| `pnpm start:web` | Migrate + start production web server |
 | `pnpm db:migrate` | Dev migrations |
 | `pnpm db:migrate:deploy` | Production migrations |
 | `pnpm db:studio` | Prisma Studio |

@@ -19,7 +19,7 @@ export default async function HomePage() {
     <>
       <SiteHeader />
 
-      <section className="bg-gradient-to-br from-brand-600 to-blue-600 px-6 py-12 text-center text-white">
+      <section className="bg-gradient-to-br from-brand-700 to-emerald-600 px-6 py-12 text-center text-white">
         <h1 className="mx-auto max-w-2xl text-3xl font-extrabold">
           Find better deals, rewards, and hidden perks.
         </h1>
@@ -91,7 +91,7 @@ export default async function HomePage() {
 
         <h2 className="mb-3 text-base font-bold">Popular stores</h2>
         <div className="mb-8 grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3.5">
-          {stores.map((s) => (
+          {stores.slice(0, 12).map((s) => (
             <StoreCard key={s.slug} store={s} href={`/stores/${s.slug}`} />
           ))}
         </div>

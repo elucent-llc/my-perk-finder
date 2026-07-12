@@ -22,6 +22,9 @@ const AwinPromotionSchema = z.object({
   endDate: z.string().optional().nullable(),
   voucherCode: z.string().optional().nullable(),
   code: z.string().optional().nullable(),
+  imageUrl: z.string().url().optional().nullable(),
+  bannerUrl: z.string().url().optional().nullable(),
+  campaignLogoUri: z.string().url().optional().nullable(),
   voucher: z
     .object({
       code: z.string().optional().nullable(),
@@ -32,6 +35,8 @@ const AwinPromotionSchema = z.object({
     .object({
       id: z.union([z.number(), z.string()]).optional(),
       name: z.string().optional(),
+      logoUrl: z.string().url().optional().nullable(),
+      primaryRegion: z.string().optional().nullable(),
     })
     .optional()
     .nullable(),
@@ -71,10 +76,24 @@ function slugify(input: string): string {
     .slice(0, 80);
 }
 
-function parsePrice(text?: string | null): number | null {
-  if (!text) return null;
-  const match = text.match(/(\d+(?:\.\d{1,2})?)/);
-  return match ? Number(match[1]) : null;
+/**
+ * Only extract prices when the text has an unambiguous was/now (or now $X) pattern.
+ * Avoid grabbing the first number from coupon copy (e.g. "AFF15" → $15).
+ */
+function parseWasNowPrices(text?: string | null): {
+  salePrice: number | null;
+  regularPrice: number | null;
+} {
+  if (!text) return { salePrice: null, regularPrice: null };
+  const wasNow = text.match(
+    /was\s*\$?\s*(\d+(?:\.\d{1,2})?).{0,40}?(?:now|only|just)\s*\$?\s*(\d+(?:\.\d{1,2})?)/i
+  );
+  if (wasNow) {
+    return { regularPrice: Number(wasNow[1]), salePrice: Number(wasNow[2]) };
+  }
+  const nowOnly = text.match(/(?:now|only|just)\s*\$\s*(\d+(?:\.\d{1,2})?)/i);
+  if (nowOnly) return { salePrice: Number(nowOnly[1]), regularPrice: null };
+  return { salePrice: null, regularPrice: null };
 }
 
 function extractCountryCodes(regions: z.infer<typeof AwinPromotionSchema>["regions"]): string[] {
@@ -124,15 +143,15 @@ export function normalizeAwinPromotion(raw: unknown): NormalizedOffer | null {
   const couponCode = p.voucher?.code ?? p.voucherCode ?? p.code ?? null;
   const countryCodes = extractCountryCodes(p.regions);
 
-  const descSale = parsePrice(p.description);
-  const salePrice = descSale;
-  const regularPrice: number | null = null;
+  const { salePrice, regularPrice } = parseWasNowPrices(p.description);
   const discountPercent =
     regularPrice != null && salePrice != null && salePrice < regularPrice
       ? Math.round(((regularPrice - salePrice) / regularPrice) * 100)
       : 0;
 
   const offerType = resolveOfferType(p.type, couponCode, regularPrice, salePrice);
+  const imageUrl =
+    p.imageUrl ?? p.bannerUrl ?? p.campaignLogoUri ?? p.advertiser?.logoUrl ?? null;
 
   let confidence = 0.75;
   if (!affiliateUrl) confidence -= 0.2;
@@ -154,7 +173,7 @@ export function normalizeAwinPromotion(raw: unknown): NormalizedOffer | null {
     discountPercent,
     couponCode,
     currency: "USD",
-    imageUrl: null,
+    imageUrl,
     affiliateUrl,
     productUrl: p.url ?? null,
     startDate: p.startDate ? new Date(p.startDate) : null,
@@ -195,7 +214,7 @@ function mockAwinPromotions(): NormalizedOffer[] {
     {
       promotionId: "mock-1003",
       title: "Instant Pot Duo — $59",
-      description: "Limited time $59 (was $119)",
+      description: "Limited time was $119 now $59",
       advertiser: { id: 103, name: "Amazon" },
       urlTracking: "https://www.awin1.com/cread.php?awinmid=mock3&awinaffid=mock",
       endDate: new Date(Date.now() + 3 * 864e5).toISOString(),

@@ -8,12 +8,27 @@ export const webEnvSchema = optionalServerEnvSchema.extend({
     .string()
     .min(16, "ADMIN_AUTH_SECRET must be at least 16 characters in production")
     .optional(),
+  CLICK_HASH_SECRET: z.preprocess(
+    (v) => (typeof v === "string" && v.trim() === "" ? undefined : v),
+    z.string().min(16).optional()
+  ),
 }).superRefine((data, ctx) => {
   if (process.env.NODE_ENV === "production" && !data.ADMIN_AUTH_SECRET?.trim()) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: "ADMIN_AUTH_SECRET is required in production",
       path: ["ADMIN_AUTH_SECRET"],
+    });
+  }
+  if (
+    process.env.NODE_ENV === "production" &&
+    !data.CLICK_HASH_SECRET?.trim() &&
+    !data.ADMIN_AUTH_SECRET?.trim()
+  ) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "CLICK_HASH_SECRET or ADMIN_AUTH_SECRET is required in production for click hashing",
+      path: ["CLICK_HASH_SECRET"],
     });
   }
 });

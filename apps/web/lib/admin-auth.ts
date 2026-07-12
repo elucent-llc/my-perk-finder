@@ -8,7 +8,9 @@ export const ADMIN_COOKIE = "mpf_admin";
 export async function isAdminAuthorized(request: NextRequest): Promise<boolean> {
   const secret = process.env.ADMIN_AUTH_SECRET?.trim();
   if (!secret) {
-    return process.env.NODE_ENV === "development";
+    return (
+      process.env.ALLOW_DEV_ADMIN_BYPASS === "true" && process.env.NODE_ENV !== "production"
+    );
   }
 
   const authHeader = request.headers.get("authorization");

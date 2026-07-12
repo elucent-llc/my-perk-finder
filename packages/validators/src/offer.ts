@@ -23,6 +23,7 @@ function isValidHttpUrl(url: string): boolean {
 
 /**
  * Validate a normalized affiliate offer before DB upsert.
+ * missing_category alone does not force needs_review (inferred categories cover most cases).
  */
 export function validateOfferForImport(offer: NormalizedOffer): OfferImportValidation {
   const flags: ValidationFlag[] = [];
@@ -82,14 +83,14 @@ export function validateOfferForImport(offer: NormalizedOffer): OfferImportValid
 
   if (!offer.category || offer.category.trim() === "") {
     flags.push("missing_category");
-    confidence = Math.min(confidence, 0.7);
+    confidence = Math.min(confidence, 0.72);
   }
 
   const regular = offer.regularPrice ?? 0;
   const sale = offer.salePrice ?? 0;
   const isCouponOnly = Boolean(offer.couponCode) && regular <= 0 && sale <= 0;
 
-  if (!isCouponOnly && regular > 0 && sale > regular) {
+  if (!isCouponOnly && regular > 0 && sale > 0 && sale > regular) {
     flags.push("sale_higher_than_regular");
     return {
       flags,
@@ -108,14 +109,10 @@ export function validateOfferForImport(offer: NormalizedOffer): OfferImportValid
     flags.push("low_confidence_score");
   }
 
-  let status: OfferStatus = "active";
-  if (flags.includes("discount_too_high") || flags.includes("low_confidence_score") || flags.includes("missing_category")) {
-    status = "needs_review";
-  } else if (flags.length === 0 && confidence >= 0.8) {
-    status = "active";
-  } else if (flags.includes("missing_category")) {
-    status = "needs_review";
-  }
+  const needsReview =
+    flags.includes("discount_too_high") || flags.includes("low_confidence_score");
+
+  const status: OfferStatus = needsReview ? "needs_review" : "active";
 
   return {
     flags,

@@ -1,7 +1,7 @@
 import "../load-env.js";
 import { getWorkerEnv } from "@mpf/env/worker";
 import { prisma, disconnectDb } from "@mpf/db";
-import { importAwinOffers } from "../jobs/import-awin-offers.js";
+import { importAwinOffers, type AwinImportResult } from "../jobs/import-awin-offers.js";
 
 function log(msg: string) {
   console.log(
@@ -12,6 +12,24 @@ function log(msg: string) {
       ts: new Date().toISOString(),
     })
   );
+}
+
+function printSummary(result: AwinImportResult, jobId: string) {
+  const lines = [
+    "",
+    "======== Awin import summary ========",
+    `  ImportJob:     ${jobId}`,
+    `  Fetched:       ${result.offersFound}`,
+    `  Pages:         ${result.pages}`,
+    `  Created:       ${result.created}`,
+    `  Updated:       ${result.updated}`,
+    `  Expired:       ${result.expired}`,
+    `  Needs review:  ${result.needsReview}`,
+    `  Rejected:      ${result.rejected}`,
+    "=====================================",
+    "",
+  ];
+  console.log(lines.join("\n"));
 }
 
 async function main() {
@@ -37,6 +55,7 @@ async function main() {
       debugRawPages: env.AWIN_DEBUG_RAW_PAGES,
     });
     log(`Import finished ${JSON.stringify(result)}`);
+    printSummary(result, job.id);
     await disconnectDb();
     process.exit(0);
   } catch (err) {

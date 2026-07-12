@@ -3,7 +3,7 @@ import type { ZodTypeProvider } from "fastify-type-provider-zod";
 import { z } from "zod";
 import { DealFilterQuery } from "@mpf/types";
 import { prisma, type Prisma } from "@mpf/db";
-import { serializeDeal } from "../lib/serialize.js";
+import { serializePublicDeal } from "../lib/serialize.js";
 
 const DealResponse = z.object({
   data: z.array(z.record(z.unknown())),
@@ -43,14 +43,24 @@ export async function dealsRoutes(app: FastifyInstance) {
     },
     async (req) => {
       const q = req.query;
+      const startOfToday = new Date(new Date().setHours(0, 0, 0, 0));
       const where: Prisma.DealWhereInput = {
-        status: q.status ?? "active",
+        status: "active",
         ...(q.store ? { merchant: { slug: q.store } } : {}),
         ...(q.category ? { category: { slug: q.category } } : {}),
         ...(q.brand ? { brand: { contains: q.brand, mode: "insensitive" } } : {}),
         ...(q.minDiscount ? { discountPercent: { gte: q.minDiscount } } : {}),
+        ...(q.minPrice != null || q.maxPrice != null
+          ? {
+              salePrice: {
+                ...(q.minPrice != null ? { gte: q.minPrice } : {}),
+                ...(q.maxPrice != null ? { lte: q.maxPrice } : {}),
+              },
+            }
+          : {}),
         ...(q.couponAvailable ? { couponCode: { not: null } } : {}),
         ...(q.q ? { title: { contains: q.q, mode: "insensitive" } } : {}),
+        ...(q.verifiedToday ? { lastVerifiedAt: { gte: startOfToday } } : {}),
         ...(q.expiresSoon
           ? { expiryDate: { lte: new Date(Date.now() + 3 * 864e5), gte: new Date() } }
           : {}),
@@ -68,7 +78,7 @@ export async function dealsRoutes(app: FastifyInstance) {
       ]);
 
       return {
-        data: rows.map(serializeDeal),
+        data: rows.map(serializePublicDeal),
         page: q.page,
         pageSize: q.pageSize,
         total,
@@ -92,8 +102,10 @@ export async function dealsRoutes(app: FastifyInstance) {
         where: { slug: req.params.slug },
         include: { merchant: true, category: true },
       });
-      if (!deal) return reply.code(404).send({ message: "Deal not found" });
-      return serializeDeal(deal);
+      if (!deal || deal.status !== "active") {
+        return reply.code(404).send({ message: "Deal not found" });
+      }
+      return serializePublicDeal(deal);
     }
   );
 }

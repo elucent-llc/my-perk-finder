@@ -22,7 +22,7 @@ const TONES: Record<BadgeTone, string> = {
   save: "bg-savings-50 text-savings-700 border border-savings-100",
   expiry: "bg-warn-50 text-warn-700 border border-warn-100",
   urgent: "bg-danger-50 text-danger-700 border border-danger-100",
-  verified: "bg-blue-50 text-blue-600",
+  verified: "bg-brand-50 text-brand-700",
   coupon: "bg-brand-50 text-brand-700 border border-dashed border-brand-200",
   draft: "bg-slate-100 text-slate-600",
   active: "bg-savings-50 text-savings-700",

@@ -1,6 +1,6 @@
-import type { DealCardData } from "@mpf/ui";
+import type { DealCardData, StoreCardData } from "@mpf/ui";
 import { DealFilterQuery } from "@mpf/types";
-import { listDeals, getDealBySlug, listStores, searchDealsPostgres, type StoreCardData } from "@/lib/server/deals";
+import { listDeals, getDealBySlug, listStores, searchDealsPostgres, getStoreBySlug } from "@/lib/server/deals";
 import type { SerializedPublicDeal } from "@/lib/server/serialize";
 import { offerRedirectPath } from "@/lib/site";
 
@@ -24,17 +24,25 @@ export async function getDeals(query = ""): Promise<DealDTO[]> {
   return result.data;
 }
 
+export async function getDealsPage(query = "") {
+  return listDeals(parseDealQuery(query));
+}
+
 export async function getDeal(slug: string): Promise<DealDTO | null> {
   return getDealBySlug(slug);
 }
 
 export async function getCouponDeals(): Promise<DealDTO[]> {
-  const deals = await getDeals("?status=active&couponAvailable=true&pageSize=50");
+  const deals = await getDeals("?couponAvailable=true&pageSize=50");
   return deals.filter((d) => d.couponCode);
 }
 
 export async function getStores(): Promise<StoreCardData[]> {
   return listStores();
+}
+
+export async function getStore(slug: string) {
+  return getStoreBySlug(slug);
 }
 
 export async function searchDeals(q: string): Promise<DealDTO[]> {
@@ -65,6 +73,7 @@ export function toCard(d: DealDTO): DealCardData {
     couponCode: d.couponCode,
     currency: d.currency,
     imageUrl: d.imageUrl,
+    merchantLogoUrl: d.merchantLogoUrl,
     expiryLabel: e.label,
     isUrgent: e.urgent,
     confidenceScore: d.confidenceScore,

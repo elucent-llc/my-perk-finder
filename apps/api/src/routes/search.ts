@@ -4,7 +4,7 @@ import { z } from "zod";
 import { SearchQuery } from "@mpf/types";
 import { prisma } from "@mpf/db";
 import { searchDeals } from "@mpf/search";
-import { serializeDeal } from "../lib/serialize.js";
+import { serializePublicDeal } from "../lib/serialize.js";
 
 export async function searchRoutes(app: FastifyInstance) {
   const r = app.withTypeProvider<ZodTypeProvider>();
@@ -16,16 +16,26 @@ export async function searchRoutes(app: FastifyInstance) {
         tags: ["search"],
         summary: "Search deals (Meilisearch with Postgres fallback)",
         querystring: SearchQuery,
-        response: { 200: z.object({ query: z.string(), source: z.string(), data: z.array(z.record(z.unknown())) }) },
+        response: {
+          200: z.object({
+            query: z.string(),
+            source: z.string(),
+            data: z.array(z.record(z.unknown())),
+          }),
+        },
       },
     },
     async (req) => {
       const { q } = req.query;
-      // Try Meilisearch first; gracefully fall back to Postgres ILIKE.
       try {
         const res = await searchDeals(q, { limit: 24, filter: "status = active" });
         if (res.hits.length > 0) {
-          const data = res.hits.map((h) => ({ ...h }) as Record<string, unknown>);
+          // Strip any affiliateUrl fields from Meili hits.
+          const data = res.hits.map((h) => {
+            const row = { ...(h as unknown as Record<string, unknown>) };
+            delete row.affiliateUrl;
+            return row;
+          });
           return { query: q, source: "meilisearch", data };
         }
       } catch {
@@ -36,7 +46,7 @@ export async function searchRoutes(app: FastifyInstance) {
         include: { merchant: true, category: true },
         take: 24,
       });
-      return { query: q, source: "postgres", data: rows.map(serializeDeal) };
+      return { query: q, source: "postgres", data: rows.map(serializePublicDeal) };
     }
   );
 }

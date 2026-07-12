@@ -6,3 +6,9 @@ export {
   type ImportedOfferInput,
   type UpsertImportedOfferResult,
 } from "./import.js";
+export {
+  inferCategoryFromText,
+  loadCategoryKeywordMap,
+  DEFAULT_CATEGORY_KEYWORDS,
+  type CategoryKeywordMap,
+} from "./category-infer.js";

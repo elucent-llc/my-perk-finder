@@ -11,7 +11,11 @@ export const optionalServerEnvSchema = z.object({
   MEILI_MASTER_KEY: z.string().min(1).optional(),
   MEILISEARCH_HOST: z.string().url().optional(),
   MEILISEARCH_API_KEY: z.string().min(1).optional(),
-  ADMIN_AUTH_SECRET: z.string().min(16).optional(),
+  // Empty string in .env should be treated as unset (worker doesn't need this).
+  ADMIN_AUTH_SECRET: z.preprocess(
+    (v) => (typeof v === "string" && v.trim() === "" ? undefined : v),
+    z.string().min(16).optional()
+  ),
   MOCK_EXTERNAL: z
     .enum(["true", "false"])
     .optional()

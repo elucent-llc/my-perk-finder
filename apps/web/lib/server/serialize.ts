@@ -24,6 +24,7 @@ export function serializeDeal(
     couponCode: d.couponCode,
     currency: d.currency,
     imageUrl: d.imageUrl,
+    merchantLogoUrl: d.merchant?.logoUrl ?? null,
     affiliateUrl: d.affiliateUrl,
     productUrl: d.productUrl,
     expiryDate: d.expiryDate ? d.expiryDate.toISOString() : null,

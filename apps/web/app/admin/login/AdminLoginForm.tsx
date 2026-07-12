@@ -3,10 +3,11 @@
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@mpf/ui";
+import { safeAdminNextPath } from "@/lib/safe-redirect";
 
 export default function AdminLoginForm() {
   const params = useSearchParams();
-  const next = params.get("next") ?? "/admin";
+  const next = safeAdminNextPath(params.get("next"));
   const [secret, setSecret] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);

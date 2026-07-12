@@ -16,6 +16,7 @@
     "seed": "tsx prisma/seed.ts",
     "studio": "prisma studio",
     "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/**/*.test.ts",
     "lint": "echo \"(lint) @mpf/db\"",
     "clean": "rm -rf dist .turbo *.tsbuildinfo"
   },
@@ -24,12 +25,12 @@
   },
   "dependencies": {
     "@mpf/types": "workspace:*",
-    "@prisma/client": "^5.22.0"
+    "@prisma/client": "^5.22.0",
+    "prisma": "^5.22.0"
   },
   "devDependencies": {
     "@mpf/config": "workspace:*",
     "@types/node": "^22.9.0",
-    "prisma": "^5.22.0",
     "tsx": "^4.19.2",
     "typescript": "^5.6.3"
   }

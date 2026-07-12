@@ -35,7 +35,7 @@ export const DealFilterQuery = PaginationQuery.extend({
 export type DealFilterQuery = z.infer<typeof DealFilterQuery>;
 
 export const SearchQuery = z.object({
-  q: z.string().min(1),
+  q: z.string().min(1).max(200),
   type: z.enum(["deals", "stores", "coupons", "guides"]).default("deals"),
   page: z.coerce.number().int().min(1).default(1),
 });

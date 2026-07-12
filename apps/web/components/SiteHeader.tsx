@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Button } from "@mpf/ui";
+import { BrandLogo, Button } from "@mpf/ui";
 
 const NAV = [
   ["Deals", "/deals"],
@@ -19,11 +19,8 @@ const FOOTER_LINKS = [
 export function SiteHeader() {
   return (
     <header className="flex items-center gap-5 border-b border-slate-200 bg-white px-5 py-3.5">
-      <Link href="/" className="flex items-center gap-2.5 text-base font-extrabold text-slate-900">
-        <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-brand-500 to-blue-600 text-white">
-          M
-        </span>
-        MyPerkFinder
+      <Link href="/" className="inline-flex shrink-0" aria-label="MyPerkFinder home">
+        <BrandLogo size={32} />
       </Link>
       <nav className="hidden gap-4 text-[13.5px] font-medium text-slate-600 md:flex">
         {NAV.map(([label, href]) => (
@@ -48,7 +45,7 @@ export function SiteFooter() {
     <footer className="mt-10 border-t border-slate-200 bg-white px-5 py-8 text-sm text-slate-500">
       <div className="mx-auto grid max-w-6xl gap-6 md:grid-cols-2">
         <div>
-          <div className="font-extrabold text-slate-900">MyPerkFinder</div>
+          <BrandLogo size={28} />
           <p className="mt-2 max-w-md">Deals, coupons &amp; perks in one place. Verified daily.</p>
           <p className="mt-3 text-xs leading-relaxed">
             <strong>Affiliate disclosure:</strong> MyPerkFinder may earn a commission from qualifying

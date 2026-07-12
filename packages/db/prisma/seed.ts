@@ -14,25 +14,25 @@ async function main() {
 
   // --- Merchants ---
   const merchantData = [
-    { name: "Best Buy", network: "cj" as const, commissionRate: 2.5 },
-    { name: "Amazon", network: "rakuten" as const, commissionRate: 3.0 },
-    { name: "Walmart", network: "impact" as const, commissionRate: 1.5 },
-    { name: "Target", network: "impact" as const, commissionRate: 2.0 },
-    { name: "Nike", network: "awin" as const, commissionRate: 6.0 },
-    { name: "Dell", network: "cj" as const, commissionRate: 2.0 },
-    { name: "eBay", network: "ebay" as const, commissionRate: 2.0 },
+    { name: "Best Buy", homepageUrl: "https://bestbuy.com", network: "cj" as const, commissionRate: 2.5 },
+    { name: "Amazon", homepageUrl: "https://amazon.com", network: "rakuten" as const, commissionRate: 3.0 },
+    { name: "Walmart", homepageUrl: "https://walmart.com", network: "impact" as const, commissionRate: 1.5 },
+    { name: "Target", homepageUrl: "https://target.com", network: "impact" as const, commissionRate: 2.0 },
+    { name: "Nike", homepageUrl: "https://nike.com", network: "awin" as const, commissionRate: 6.0 },
+    { name: "Dell", homepageUrl: "https://dell.com", network: "cj" as const, commissionRate: 2.0 },
+    { name: "eBay", homepageUrl: "https://ebay.com", network: "ebay" as const, commissionRate: 2.0 },
   ];
   const merchants = await Promise.all(
     merchantData.map((m) =>
       prisma.merchant.upsert({
         where: { slug: slugify(m.name) },
-        update: {},
+        update: { homepageUrl: m.homepageUrl },
         create: {
           name: m.name,
           slug: slugify(m.name),
           network: m.network,
           commissionRate: m.commissionRate,
-          homepageUrl: `https://${slugify(m.name)}.com`,
+          homepageUrl: m.homepageUrl,
           isActive: true,
         },
       })
@@ -43,34 +43,90 @@ async function main() {
   // --- Categories ---
   const electronics = await prisma.category.upsert({
     where: { slug: "electronics" },
-    update: {},
+    update: {
+      mappingKeywords: [
+        "laptop",
+        "phone",
+        "smartphone",
+        "tablet",
+        "tv",
+        "monitor",
+        "electronics",
+        "computer",
+        "camera",
+        "charger",
+      ],
+    },
     create: {
       name: "Electronics",
       slug: "electronics",
       seoTitle: "Electronics Deals — Laptops, Phones, Audio & TVs",
       seoDescription: "The best verified electronics deals, updated hourly.",
-      mappingKeywords: ["laptop", "phone", "headphones", "tv", "monitor"],
+      mappingKeywords: [
+        "laptop",
+        "phone",
+        "smartphone",
+        "tablet",
+        "tv",
+        "monitor",
+        "electronics",
+        "computer",
+        "camera",
+        "charger",
+      ],
     },
   });
   const audio = await prisma.category.upsert({
     where: { slug: "audio" },
-    update: {},
+    update: {
+      mappingKeywords: ["headphones", "earbuds", "speaker", "soundbar", "audio", "headset", "airpods"],
+    },
     create: {
       name: "Audio",
       slug: "audio",
       parentId: electronics.id,
-      mappingKeywords: ["headphones", "earbuds", "speaker", "soundbar"],
+      mappingKeywords: ["headphones", "earbuds", "speaker", "soundbar", "audio", "headset", "airpods"],
     },
   });
   const home = await prisma.category.upsert({
     where: { slug: "home-kitchen" },
-    update: {},
-    create: { name: "Home & Kitchen", slug: "home-kitchen", mappingKeywords: ["kitchen", "appliance", "cookware"] },
+    update: {
+      mappingKeywords: ["kitchen", "appliance", "cookware", "air fryer", "instant pot", "home", "furniture"],
+    },
+    create: {
+      name: "Home & Kitchen",
+      slug: "home-kitchen",
+      mappingKeywords: ["kitchen", "appliance", "cookware", "air fryer", "instant pot", "home", "furniture"],
+    },
   });
   const fashion = await prisma.category.upsert({
     where: { slug: "fashion" },
-    update: {},
-    create: { name: "Fashion", slug: "fashion", mappingKeywords: ["shoes", "apparel", "clothing"] },
+    update: {
+      mappingKeywords: ["shoes", "apparel", "clothing", "fashion", "sneakers", "footwear", "running"],
+    },
+    create: {
+      name: "Fashion",
+      slug: "fashion",
+      mappingKeywords: ["shoes", "apparel", "clothing", "fashion", "sneakers", "footwear", "running"],
+    },
+  });
+  await prisma.category.upsert({
+    where: { slug: "beauty" },
+    update: { mappingKeywords: ["beauty", "skincare", "makeup", "cosmetic", "perfume"] },
+    create: {
+      name: "Beauty",
+      slug: "beauty",
+      mappingKeywords: ["beauty", "skincare", "makeup", "cosmetic", "perfume"],
+    },
+  });
+  await prisma.category.upsert({
+    where: { slug: "sports-outdoors" },
+    update: { mappingKeywords: ["sports", "outdoor", "fitness", "gym", "hiking", "camping"] },
+    create: {
+      name: "Sports & Outdoors",
+      slug: "sports-outdoors",
+      mappingKeywords: ["sports", "outdoor", "fitness", "gym", "hiking", "camping"],
+    },
   });
 
   const days = (n: number) => new Date(Date.now() + n * 864e5);
