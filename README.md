@@ -209,7 +209,7 @@ AWIN_PAGE_SIZE=100
 
 **Production publishing:** set `AWIN_MEMBERSHIP_FILTER=joined`.
 
-**Cron schedule (after manual test passes):** `0 */6 * * *`
+**Cron schedule (after manual test passes):** `0 */12 * * *`
 
 See `apps/worker/.env.example` for all worker-only Awin variables.
 
@@ -259,15 +259,15 @@ pnpm db:migrate:deploy
 | ------- | ----- |
 | **Root directory** | `/` (repo root) — **not** `apps/worker` |
 | **Config file** | `apps/worker/railway.import-awin.json` |
-| **Build command** | `pnpm install --frozen-lockfile && pnpm build:worker` |
+| **Build command** | `pnpm build:worker` (from config file) |
 | **Start command** | `pnpm worker:import-awin` |
-| **Service type** | **Cron Job** (not always-on) |
+| **Cron schedule** | `0 */12 * * *` (in `railway.import-awin.json` → `deploy.cronSchedule`) |
 
-**Cron schedule:** `0 */6 * * *` (every 6 hours)
+Create this as a **second service** from the same GitHub repo (not on the web service). Point **Config file** at `apps/worker/railway.import-awin.json`. Railway applies `cronSchedule` from that file — do **not** put the schedule in Variables.
 
-> Railway cron UI: Service → Settings → Cron Schedule. Config-as-code cron may require dashboard setup depending on Railway version.
+> Cron schedule is **not** an environment variable. Railway only reads it from Settings → Cron Schedule or from `deploy.cronSchedule` in the service config file. App vars like `AWIN_*` stay in Variables.
 
-**Env vars:** `DATABASE_URL`, `DIRECT_URL`, `AWIN_ACCESS_TOKEN`, `AWIN_PUBLISHER_ID`, `MOCK_EXTERNAL=false`
+**Env vars (Variables tab on this worker only):** `DATABASE_URL`, `DIRECT_URL`, `AWIN_ACCESS_TOKEN`, `AWIN_PUBLISHER_ID`, `AWIN_MEMBERSHIP_FILTER=joined`, `AWIN_REGION_CODES=US`, `AWIN_PAGE_SIZE=100`, `MOCK_EXTERNAL=false`, `NODE_ENV=production`
 
 ### 5. Service: `myperkfinder-worker-expire-offers`
 
@@ -276,11 +276,9 @@ pnpm db:migrate:deploy
 | **Root directory** | `/` (repo root) — **not** `apps/worker` |
 | **Config file** | `apps/worker/railway.expire-offers.json` |
 | **Start command** | `pnpm worker:expire-offers` |
-| **Service type** | **Cron Job** |
+| **Cron schedule** | `0 */12 * * *` (in `railway.expire-offers.json` → `deploy.cronSchedule`) |
 
-**Cron schedule:** `0 3 * * *` (daily 03:00 UTC)
-
-**Env vars:** `DATABASE_URL`, `DIRECT_URL`
+**Env vars:** `DATABASE_URL`, `DIRECT_URL`, `NODE_ENV=production`
 
 ### 6. What NOT to deploy (cost saving)
 

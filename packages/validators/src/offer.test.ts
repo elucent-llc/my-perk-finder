@@ -52,9 +52,24 @@ describe("validateOfferForImport", () => {
     assert.equal(result.status, "active");
   });
 
-  it("sends low confidence to needs_review", () => {
+  it("auto-approves low confidence as active (flags kept for audit)", () => {
     const result = validateOfferForImport(baseOffer({ confidenceScore: 0.4 }));
-    assert.equal(result.status, "needs_review");
+    assert.equal(result.rejected, false);
+    assert.equal(result.status, "active");
     assert.ok(result.flags.includes("low_confidence_score"));
+  });
+
+  it("auto-approves high discount as active (flags kept for audit)", () => {
+    const result = validateOfferForImport(
+      baseOffer({
+        regularPrice: 100,
+        salePrice: 5,
+        discountPercent: 95,
+        confidenceScore: 0.9,
+      })
+    );
+    assert.equal(result.rejected, false);
+    assert.equal(result.status, "active");
+    assert.ok(result.flags.includes("discount_too_high"));
   });
 });

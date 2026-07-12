@@ -23,7 +23,10 @@ function isValidHttpUrl(url: string): boolean {
 
 /**
  * Validate a normalized affiliate offer before DB upsert.
- * missing_category alone does not force needs_review (inferred categories cover most cases).
+ *
+ * Hard rejects (missing affiliate URL/merchant/title, invalid prices) are not upserted.
+ * Soft quality flags (low confidence, high discount, missing category) are recorded but
+ * imports are auto-approved as `active` so cron deals go live without manual review.
  */
 export function validateOfferForImport(offer: NormalizedOffer): OfferImportValidation {
   const flags: ValidationFlag[] = [];
@@ -109,15 +112,10 @@ export function validateOfferForImport(offer: NormalizedOffer): OfferImportValid
     flags.push("low_confidence_score");
   }
 
-  const needsReview =
-    flags.includes("discount_too_high") || flags.includes("low_confidence_score");
-
-  const status: OfferStatus = needsReview ? "needs_review" : "active";
-
   return {
     flags,
     confidenceScore: confidence,
-    status,
+    status: "active",
     rejected: false,
   };
 }
