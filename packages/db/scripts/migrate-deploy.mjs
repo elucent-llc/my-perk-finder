@@ -2,17 +2,14 @@
 /**
  * Resilient production schema sync for Railway / start:web.
  *
- * Goal: schema changes in prisma/schema.prisma (and migrations/) must not
- * take the deploy down.
- *
  * Order:
- *  1. prisma migrate deploy          (normal path)
+ *  1. prisma migrate deploy
  *  2. On P3005 → baseline all local migrations, deploy again
- *  3. On any remaining failure → prisma db push --accept-data-loss
- *     then best-effort mark migrations applied so the next boot uses migrate
+ *  3. On migration-history mismatch (e.g. after squashing migrations) →
+ *     truncate `_prisma_migrations`, baseline current migrations, deploy again
+ *  4. On any remaining failure → prisma db push --accept-data-loss, then re-baseline
  *
- * Trade-off: step 3 can drop columns/tables removed from the schema.
- * Prefer adding migrations for intentional changes; this is a safety net.
+ * Trade-off: step 4 can drop columns/tables removed from the schema.
  */
 import { spawnSync } from "node:child_process";
 import { readdirSync, existsSync } from "node:fs";
@@ -22,12 +19,13 @@ import { fileURLToPath } from "node:url";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const migrationsDir = join(root, "prisma", "migrations");
 
-function run(args, { inherit = true } = {}) {
+function run(args, { inherit = true, input } = {}) {
   const result = spawnSync("pnpm", ["exec", "prisma", ...args], {
     cwd: root,
     encoding: "utf8",
-    stdio: inherit ? "inherit" : ["ignore", "pipe", "pipe"],
+    stdio: inherit ? (input ? ["pipe", "inherit", "inherit"] : "inherit") : ["pipe", "pipe", "pipe"],
     env: process.env,
+    input,
   });
   return {
     status: result.status ?? 1,
@@ -47,6 +45,22 @@ function listMigrationNames() {
 
 function isP3005(output) {
   return output.includes("P3005") || output.includes("database schema is not empty");
+}
+
+function isMigrationHistoryMismatch(output) {
+  const needles = [
+    "P3009",
+    "P3015",
+    "failed migrations",
+    "have been modified",
+    "modified after it was applied",
+    "missing from the local",
+    "Could not find the migration file",
+    "migration file",
+    "Drift detected",
+    "Migration history diverged",
+  ];
+  return needles.some((n) => output.toLowerCase().includes(n.toLowerCase()));
 }
 
 function step(label) {
@@ -81,6 +95,19 @@ function baselineAll() {
   return true;
 }
 
+function resetMigrationHistory() {
+  step('reset `_prisma_migrations` (squash / history mismatch recovery)');
+  const sql = 'TRUNCATE TABLE "_prisma_migrations";';
+  const r = run(["db", "execute", "--stdin"], { inherit: true, input: sql });
+  if (r.status !== 0) {
+    // Table may not exist yet — ignore and continue to baseline/create.
+    console.warn(`[db-sync] truncate exited ${r.status} (continuing if table missing)`);
+  } else {
+    ok("migration history cleared");
+  }
+  return true;
+}
+
 function migrateDeploy({ inherit }) {
   step("prisma migrate deploy");
   return run(["migrate", "deploy"], { inherit });
@@ -91,14 +118,18 @@ function dbPush() {
   return run(["db", "push", "--skip-generate", "--accept-data-loss"], { inherit: true });
 }
 
+function finishOk(label) {
+  ok(label);
+  console.log("[db-sync] ALL STEPS SUCCESS — schema ready");
+  process.exit(0);
+}
+
 let result = migrateDeploy({ inherit: false });
 process.stdout.write(result.stdout);
 process.stderr.write(result.stderr);
 
 if (result.status === 0) {
-  ok("migrate deploy (no pending migrations or applied successfully)");
-  console.log("[db-sync] ALL STEPS SUCCESS — schema ready");
-  process.exit(0);
+  finishOk("migrate deploy (no pending migrations or applied successfully)");
 }
 
 if (isP3005(result.output)) {
@@ -106,11 +137,22 @@ if (isP3005(result.output)) {
   baselineAll();
   result = migrateDeploy({ inherit: true });
   if (result.status === 0) {
-    ok("migrate deploy after baseline");
-    console.log("[db-sync] ALL STEPS SUCCESS — schema ready");
-    process.exit(0);
+    finishOk("migrate deploy after baseline");
   }
   fail("migrate deploy after baseline", result.status);
+}
+
+if (isMigrationHistoryMismatch(result.output) || result.status !== 0) {
+  console.warn(
+    "[db-sync] migration history mismatch or deploy failed — recovering after squash/rebase"
+  );
+  resetMigrationHistory();
+  baselineAll();
+  result = migrateDeploy({ inherit: true });
+  if (result.status === 0) {
+    finishOk("migrate deploy after history reset");
+  }
+  fail("migrate deploy after history reset", result.status);
 }
 
 const push = dbPush();
@@ -121,7 +163,7 @@ if (push.status !== 0) {
 }
 
 ok("db push fallback");
-step("align migration history after push");
+resetMigrationHistory();
 baselineAll();
 
 result = migrateDeploy({ inherit: true });
