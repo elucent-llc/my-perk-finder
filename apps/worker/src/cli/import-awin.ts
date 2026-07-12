@@ -3,9 +3,9 @@ import { getWorkerEnv } from "@mpf/env/worker";
 import { prisma, disconnectDb } from "@mpf/db";
 import { importAwinOffers, type AwinImportResult } from "../jobs/import-awin-offers.js";
 
-// Railway cron: apps/worker/railway.import-awin.json → "0 16 * * *" (12:00 PM EDT / 16:00 UTC)
+// Railway cron: apps/worker/railway.import-awin.json → "30 18 * * *" (2:30 PM EDT / 18:30 UTC)
 const CRON_HINT =
-  "0 16 * * * (12:00 PM EDT / 11:00 AM EST — Railway cron is UTC; redeploy worker for schedule changes)";
+  "30 18 * * * (2:30 PM EDT / 1:30 PM EST — Railway cron is UTC; redeploy worker for schedule changes)";
 
 function log(msg: string, step?: string) {
   console.log(

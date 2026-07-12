@@ -6,8 +6,8 @@ Production imports and maintenance run as **one-shot cron jobs** — not an alwa
 
 | Script | Railway service | Schedule |
 | ------ | --------------- | -------- |
-| `pnpm import:awin` | `myperkfinder-worker-awin-import` | `0 16 * * *` (12:00 PM EDT) |
-| `pnpm expire:offers` | `myperkfinder-worker-expire-offers` | `0 16 * * *` (12:00 PM EDT) |
+| `pnpm import:awin` | `myperkfinder-worker-awin-import` | `30 18 * * *` (2:30 PM EDT) |
+| `pnpm expire:offers` | `myperkfinder-worker-expire-offers` | `30 18 * * *` (2:30 PM EDT) |
 
 Build first: `pnpm build` (from repo root: `pnpm build:worker`).
 

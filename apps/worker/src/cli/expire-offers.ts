@@ -3,9 +3,9 @@ import { getExpireWorkerEnv } from "@mpf/env/worker";
 import { disconnectDb } from "@mpf/db";
 import { expireOffers } from "../jobs/expire-offers.js";
 
-// Railway cron: apps/worker/railway.expire-offers.json → "0 16 * * *" (12:00 PM EDT / 16:00 UTC)
+// Railway cron: apps/worker/railway.expire-offers.json → "30 18 * * *" (2:30 PM EDT / 18:30 UTC)
 const CRON_HINT =
-  "0 16 * * * (12:00 PM EDT / 11:00 AM EST — Railway cron is UTC; redeploy worker for schedule changes)";
+  "30 18 * * * (2:30 PM EDT / 1:30 PM EST — Railway cron is UTC; redeploy worker for schedule changes)";
 
 function log(msg: string, step?: string) {
   console.log(

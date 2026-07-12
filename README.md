@@ -209,7 +209,7 @@ AWIN_PAGE_SIZE=100
 
 **Production publishing:** set `AWIN_MEMBERSHIP_FILTER=joined`.
 
-**Cron schedule (after manual test passes):** `0 16 * * *` (12:00 PM EDT / 16:00 UTC daily)
+**Cron schedule (after manual test passes):** `30 18 * * *` (2:30 PM EDT / 18:30 UTC daily)
 
 See `apps/worker/.env.example` for all worker-only Awin variables.
 
@@ -261,7 +261,7 @@ pnpm db:migrate:deploy
 | **Config file** | `apps/worker/railway.import-awin.json` |
 | **Build command** | `pnpm build:worker` (from config file) |
 | **Start command** | `pnpm worker:import-awin` |
-| **Cron schedule** | `0 16 * * *` — 12:00 PM EDT (16:00 UTC) daily |
+| **Cron schedule** | `30 18 * * *` — 2:30 PM EDT (18:30 UTC) daily |
 
 Create this as a **second service** from the same GitHub repo (not on the web service). Point **Config file** at `apps/worker/railway.import-awin.json`. Railway applies `cronSchedule` from that file — do **not** put the schedule in Variables.
 
@@ -276,7 +276,7 @@ Create this as a **second service** from the same GitHub repo (not on the web se
 | **Root directory** | `/` (repo root) — **not** `apps/worker` |
 | **Config file** | `apps/worker/railway.expire-offers.json` |
 | **Start command** | `pnpm worker:expire-offers` |
-| **Cron schedule** | `0 16 * * *` — 12:00 PM EDT (16:00 UTC) daily |
+| **Cron schedule** | `30 18 * * *` — 2:30 PM EDT (18:30 UTC) daily |
 
 **Env vars:** `DATABASE_URL`, `DIRECT_URL`, `NODE_ENV=production`
 
