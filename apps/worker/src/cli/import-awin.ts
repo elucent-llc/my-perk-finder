@@ -3,15 +3,24 @@ import { getWorkerEnv } from "@mpf/env/worker";
 import { prisma, disconnectDb } from "@mpf/db";
 import { importAwinOffers, type AwinImportResult } from "../jobs/import-awin-offers.js";
 
-function log(msg: string) {
+// Railway cron: apps/worker/railway.import-awin.json → "0 16 * * *" (12:00 PM EDT / 16:00 UTC)
+const CRON_HINT =
+  "0 16 * * * (12:00 PM EDT / 11:00 AM EST — Railway cron is UTC; redeploy worker for schedule changes)";
+
+function log(msg: string, step?: string) {
   console.log(
     JSON.stringify({
       level: "info",
       service: "myperkfinder-worker-awin-import",
+      step: step ?? undefined,
       msg,
       ts: new Date().toISOString(),
     })
   );
+}
+
+function stepOk(step: string, msg: string) {
+  log(`SUCCESS — ${msg}`, step);
 }
 
 function printSummary(result: AwinImportResult, jobId: string) {
@@ -33,19 +42,23 @@ function printSummary(result: AwinImportResult, jobId: string) {
 }
 
 async function main() {
+  log(`Cron config: ${CRON_HINT}`, "cron");
+  stepOk("1/4", "worker process started");
+
   const env = getWorkerEnv();
-  log(
-    `Environment validated (mock=${env.MOCK_EXTERNAL}, membership=${env.AWIN_MEMBERSHIP_FILTER}, ` +
+  stepOk(
+    "2/4",
+    `environment validated (mock=${env.MOCK_EXTERNAL}, membership=${env.AWIN_MEMBERSHIP_FILTER}, ` +
       `regions=${env.AWIN_REGION_CODES.join(",")}, pageSize=${env.AWIN_PAGE_SIZE})`
   );
 
   const job = await prisma.importJob.create({
     data: { source: "awin", status: "pending" },
   });
-  log(`ImportJob created id=${job.id}`);
+  stepOk("3/4", `ImportJob created id=${job.id}`);
 
   try {
-    const result = await importAwinOffers(job.id, log, {
+    const result = await importAwinOffers(job.id, (msg) => log(msg, "import"), {
       accessToken: env.AWIN_ACCESS_TOKEN ?? "mock",
       publisherId: env.AWIN_PUBLISHER_ID ?? "mock",
       mockExternal: env.MOCK_EXTERNAL,
@@ -54,8 +67,9 @@ async function main() {
       pageSize: env.AWIN_PAGE_SIZE,
       debugRawPages: env.AWIN_DEBUG_RAW_PAGES,
     });
-    log(`Import finished ${JSON.stringify(result)}`);
+    stepOk("4/4", `import finished ${JSON.stringify(result)}`);
     printSummary(result, job.id);
+    log("ALL STEPS SUCCESS — exiting 0", "done");
     await disconnectDb();
     process.exit(0);
   } catch (err) {
@@ -64,6 +78,7 @@ async function main() {
       JSON.stringify({
         level: "error",
         service: "myperkfinder-worker-awin-import",
+        step: "failed",
         msg: message,
         ts: new Date().toISOString(),
       })

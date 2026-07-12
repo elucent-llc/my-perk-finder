@@ -52,7 +52,7 @@ Use this before and after each production deploy.
 - [ ] Separate services (not the web service): `myperkfinder-worker-awin-import`, `myperkfinder-worker-expire-offers`
 - [ ] Config files set: `apps/worker/railway.import-awin.json`, `apps/worker/railway.expire-offers.json`
 - [ ] Schedules come from config (`cronSchedule`) — **not** from Variables / env vars
-- [ ] Import + expire: `0 */12 * * *` (every 12 hours, UTC)
+- [ ] Import + expire: `0 16 * * *` (12:00 PM EDT / 16:00 UTC daily; 11:00 AM EST in winter)
 - [ ] Worker logs show JSON lines, process exits code 0
 - [ ] ImportJob rows visible at `/admin/imports`
 
@@ -69,7 +69,7 @@ Use this before and after each production deploy.
 - [ ] Imported offers visible at `/admin/review` or `/admin/offers`
 - [ ] ImportJob row at `/admin/imports` shows counts
 - [ ] Production: `AWIN_MEMBERSHIP_FILTER=joined`
-- [ ] Cron schedule `0 */12 * * *` configured **only after** manual tests pass
+- [ ] Cron schedule `0 16 * * *` configured **only after** manual tests pass
 
 ## Affiliate pipeline
 

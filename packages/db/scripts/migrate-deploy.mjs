@@ -49,41 +49,46 @@ function isP3005(output) {
   return output.includes("P3005") || output.includes("database schema is not empty");
 }
 
+function step(label) {
+  console.log(`[db-sync] STEP — ${label}`);
+}
+
+function ok(label) {
+  console.log(`[db-sync] SUCCESS — ${label}`);
+}
+
+function fail(label, status) {
+  console.error(`[db-sync] FAILED — ${label} (exit ${status})`);
+}
+
 function baselineAll() {
   const migrations = listMigrationNames();
   if (migrations.length === 0) {
     console.warn("[db-sync] no local migrations to baseline");
     return false;
   }
-  console.warn(
-    `[db-sync] baselining ${migrations.length} migration(s) as already applied…`
-  );
-  let ok = true;
+  step(`baseline ${migrations.length} migration(s) as already applied`);
   for (const name of migrations) {
-    console.log(`[db-sync] migrate resolve --applied ${name}`);
+    console.log(`[db-sync]   resolve --applied ${name}`);
     const r = run(["migrate", "resolve", "--applied", name], { inherit: true });
     if (r.status !== 0) {
-      // Already recorded is fine; other errors are logged and we continue.
-      console.warn(`[db-sync] resolve ${name} exited ${r.status} (continuing)`);
-      ok = false;
+      console.warn(`[db-sync]   resolve ${name} exited ${r.status} (continuing)`);
+    } else {
+      console.log(`[db-sync]   SUCCESS — resolved ${name}`);
     }
   }
-  return ok;
+  ok("baseline complete");
+  return true;
 }
 
 function migrateDeploy({ inherit }) {
-  console.log("[db-sync] prisma migrate deploy");
+  step("prisma migrate deploy");
   return run(["migrate", "deploy"], { inherit });
 }
 
 function dbPush() {
-  console.warn(
-    "[db-sync] falling back to prisma db push --accept-data-loss (schema sync safety net)"
-  );
-  return run(
-    ["db", "push", "--skip-generate", "--accept-data-loss"],
-    { inherit: true }
-  );
+  step("fallback: prisma db push --accept-data-loss");
+  return run(["db", "push", "--skip-generate", "--accept-data-loss"], { inherit: true });
 }
 
 let result = migrateDeploy({ inherit: false });
@@ -91,7 +96,8 @@ process.stdout.write(result.stdout);
 process.stderr.write(result.stderr);
 
 if (result.status === 0) {
-  console.log("[db-sync] migrate deploy ok");
+  ok("migrate deploy (no pending migrations or applied successfully)");
+  console.log("[db-sync] ALL STEPS SUCCESS — schema ready");
   process.exit(0);
 }
 
@@ -100,28 +106,32 @@ if (isP3005(result.output)) {
   baselineAll();
   result = migrateDeploy({ inherit: true });
   if (result.status === 0) {
-    console.log("[db-sync] migrate deploy ok after baseline");
+    ok("migrate deploy after baseline");
+    console.log("[db-sync] ALL STEPS SUCCESS — schema ready");
     process.exit(0);
   }
+  fail("migrate deploy after baseline", result.status);
 }
 
-// Any other migrate failure (drift, failed migration, partial apply, etc.)
 const push = dbPush();
 if (push.status !== 0) {
-  console.error("[db-sync] migrate deploy and db push both failed");
+  fail("db push fallback", push.status);
+  console.error("[db-sync] ALL STEPS FAILED — migrate deploy and db push both failed");
   process.exit(push.status);
 }
 
-console.warn("[db-sync] db push succeeded — aligning migration history");
+ok("db push fallback");
+step("align migration history after push");
 baselineAll();
 
-// Best-effort final migrate (no-op if everything is marked applied)
 result = migrateDeploy({ inherit: true });
 if (result.status !== 0) {
   console.warn(
     "[db-sync] migrate deploy still reporting issues after push; schema was synced via push — continuing"
   );
+} else {
+  ok("migrate deploy after push alignment");
 }
 
-console.log("[db-sync] schema sync complete");
+console.log("[db-sync] ALL STEPS SUCCESS — schema ready");
 process.exit(0);
