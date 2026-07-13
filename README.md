@@ -70,14 +70,20 @@ pnpm dev               # Next.js web on :3000
 | `pnpm db:migrate` | Dev migrations |
 | `pnpm db:migrate:deploy` | Production migrations |
 | `pnpm db:studio` | Prisma Studio |
-| `pnpm worker:import-awin` | Run Awin import once (build worker first) |
+| `pnpm worker:import` | Run all enabled sources (Awin/CJ/Walmart) once — **Railway import cron** |
+| `pnpm worker:import-awin` | Run Awin only (local/debug) |
+| `pnpm worker:import-cj` | Run CJ only (local/debug) |
+| `pnpm worker:import-walmart` | Run Walmart only (local/debug) |
 | `pnpm worker:expire-offers` | Mark expired offers |
 
 ### Cron workers locally
 
 ```bash
 pnpm build:worker
-pnpm worker:import-awin      # requires AWIN_* or MOCK_EXTERNAL=true
+pnpm worker:import         # combined: enabled sources only (or MOCK_EXTERNAL=true)
+pnpm worker:import-awin    # single-source debug helpers
+pnpm worker:import-cj
+pnpm worker:import-walmart
 pnpm worker:expire-offers
 ```
 
@@ -98,8 +104,22 @@ Copy `.env.example` to `.env`. **Never** prefix secrets with `NEXT_PUBLIC_`.
 | `AWIN_MEMBERSHIP_FILTER` | No | worker | `all` (test) / `joined` (prod) / `notJoined` |
 | `AWIN_REGION_CODES` | No | worker | Comma-separated, default `US` |
 | `AWIN_PAGE_SIZE` | No | worker | Default `100` |
+| `AWIN_MAX_PAGES` | No | worker | Default `50` (safety cap) |
 | `AWIN_DEBUG_RAW_PAGES` | No | worker | Save full API page payloads to RawRecord |
-| `MOCK_EXTERNAL` | No | workers | `true` = mock Awin (no credentials needed); **`false` in prod** |
+| `CJ_ACCESS_TOKEN` | Yes when `MOCK_EXTERNAL=false` | worker | CJ personal access token — **server only** |
+| `CJ_WEBSITE_ID` | Yes when `MOCK_EXTERNAL=false` | worker | CJ website/company ID — **server only** |
+| `CJ_RELATIONSHIP_STATUS` | No | worker | Default `joined` |
+| `CJ_PAGE_SIZE` | No | worker | Default `100` |
+| `CJ_MAX_PAGES` | No | worker | Default `1` (first tests) |
+| `CJ_DEBUG_RAW_PAGES` | No | worker | Save full CJ page payloads |
+| `WALMART_API_KEY` | Yes when `MOCK_EXTERNAL=false` | worker | Walmart Affiliate API key — **server only** |
+| `WALMART_PUBLISHER_ID` | Yes when `MOCK_EXTERNAL=false` | worker | Walmart publisher ID — **server only** |
+| `WALMART_SEARCH_TERMS` | No | worker | Comma-separated queries (default `electronics,home`) |
+| `WALMART_PAGE_SIZE` | No | worker | Default `25` (API max) |
+| `WALMART_MAX_PAGES` | No | worker | Default `1` (first tests; try `2` next) |
+| `WALMART_DEBUG_RAW_PAGES` | No | worker | Save full Walmart page payloads |
+| `DEBUG_RAW_PAGES` | No | workers | Global raw-page debug for any source |
+| `MOCK_EXTERNAL` | No | workers | `true` = mock source data (no credentials); **`false` in prod** |
 | `REDIS_URL` | No | legacy worker | Only if running BullMQ locally |
 | `RESEND_API_KEY` | No | — | Email (future) |
 | `OPENAI_API_KEY` | No | — | LLM extraction (future) |
@@ -137,6 +157,37 @@ openssl rand -base64 32
 - API automation can use `Authorization: Bearer <ADMIN_AUTH_SECRET>`.
 - In local development, admin routes are open if `ADMIN_AUTH_SECRET` is unset.
 
+## Affiliate / retail source roadmap
+
+| Source | Status | Adapter | Worker CLI | Railway |
+| ------ | ------ | ------- | ---------- | ------- |
+| **Awin** | Implemented | `sources/awin.ts` | `worker:import` (or `import-awin`) | shared import cron |
+| **CJ Affiliate** | Implemented | `sources/cj.ts` | `worker:import` (or `import-cj`) | shared import cron |
+| **Walmart** | Implemented | `sources/walmart.ts` | `worker:import` (or `import-walmart`) | shared import cron |
+| Impact | Placeholder | `sources/impact.ts` | — | — |
+| Rakuten | Placeholder | `sources/rakuten.ts` | — | — |
+| eBay | Placeholder | `sources/ebay.ts` | — | — |
+| Amazon | Not started | — | — | — |
+
+All live sources share `apps/worker/src/jobs/run-source-import.ts`. Railway uses **two** cron services only:
+
+| Worker | Config | Cron (UTC) | Command |
+| ------ | ------ | ---------- | ------- |
+| **Import** (Awin + CJ + Walmart) | `apps/worker/railway.import.json` | `0 */6 * * *` | `pnpm worker:import` |
+| **Expire** | `apps/worker/railway.expire-offers.json` | `30 18 * * *` | `pnpm worker:expire-offers` |
+
+Sources without credentials are **skipped** on the combined import (unless `MOCK_EXTERNAL=true`, which runs all with mock data).
+
+**Testing order (every new source):**
+
+1. `MOCK_EXTERNAL=true` (no credentials)
+2. Real credentials with `*_MAX_PAGES=1`
+3. Review `/admin/imports` + `/admin/review`
+4. Raise max pages carefully
+5. Enable Railway cron schedule
+
+---
+
 ## Phase 3: Awin API Worker Setup
 
 Awin credentials are **worker-only**. Never add `AWIN_ACCESS_TOKEN` to `apps/web` or prefix with `NEXT_PUBLIC_`.
@@ -167,6 +218,7 @@ MOCK_EXTERNAL=false
 AWIN_ACCESS_TOKEN=your_token
 AWIN_PUBLISHER_ID=2975213
 AWIN_MEMBERSHIP_FILTER=all
+AWIN_MAX_PAGES=1
 pnpm build:worker && pnpm worker:import-awin
 ```
 
@@ -174,15 +226,18 @@ Use `AWIN_MEMBERSHIP_FILTER=all` for API testing. Use `joined` for production pu
 
 If real import returns zero offers, advertiser approvals may still be pending or no active promotions match your filters.
 
-### Railway service: `myperkfinder-worker-awin-import`
+### Railway service: `myperkfinder-worker-import`
 
 | Setting | Value |
 | ------- | ----- |
 | Root directory | `/` (repo root) |
-| Config file | `apps/worker/railway.import-awin.json` |
+| Config file | `apps/worker/railway.import.json` |
 | Build command | `pnpm build:worker` |
-| Start command | `pnpm worker:import-awin` |
+| Start command | `pnpm worker:import` |
 | Service type | **Cron Job** (not always-on) |
+| Cron schedule | `0 */6 * * *` |
+
+Put **all** source credentials on this one worker (`AWIN_*`, `CJ_*`, `WALMART_*`). Missing networks are skipped.
 
 **First test variables:**
 
@@ -193,7 +248,7 @@ DIRECT_URL=${{Postgres.DATABASE_URL}}
 MOCK_EXTERNAL=true
 ```
 
-**Real Awin variables (after mock test passes):**
+**Real import variables (after mock test passes):**
 
 ```
 NODE_ENV=production
@@ -202,16 +257,94 @@ DIRECT_URL=${{Postgres.DATABASE_URL}}
 MOCK_EXTERNAL=false
 AWIN_ACCESS_TOKEN=your_token
 AWIN_PUBLISHER_ID=2975213
-AWIN_MEMBERSHIP_FILTER=all
+AWIN_MEMBERSHIP_FILTER=joined
 AWIN_REGION_CODES=US
 AWIN_PAGE_SIZE=100
+AWIN_MAX_PAGES=1
+CJ_ACCESS_TOKEN=…
+CJ_WEBSITE_ID=…
+CJ_MAX_PAGES=1
+WALMART_API_KEY=…
+WALMART_PUBLISHER_ID=…
+WALMART_MAX_PAGES=1
 ```
 
-**Production publishing:** set `AWIN_MEMBERSHIP_FILTER=joined`.
+**Production publishing:** set `AWIN_MEMBERSHIP_FILTER=joined` and raise `*_MAX_PAGES` as needed.
 
-**Cron schedule (after manual test passes):** `30 18 * * *` (2:30 PM EDT / 18:30 UTC daily)
+See `apps/worker/.env.example` for all worker-only variables.
 
-See `apps/worker/.env.example` for all worker-only Awin variables.
+---
+
+## CJ Affiliate Worker Setup
+
+CJ credentials are **worker-only**. Never add `CJ_ACCESS_TOKEN` / `CJ_WEBSITE_ID` to `apps/web`.
+
+### Get CJ credentials
+
+1. Log in to [CJ Affiliate](https://members.cj.com)
+2. Account → **Web Services** / API credentials → personal access token
+3. Note your **Website ID** (PID / company id used by Link Search)
+
+### Local / single-source CJ
+
+Use `pnpm worker:import-cj` for debugging. Production uses the **combined** `pnpm worker:import` cron (same `CJ_*` vars on `myperkfinder-worker-import`).
+
+### Local test (mock)
+
+```bash
+MOCK_EXTERNAL=true
+pnpm build:worker
+pnpm worker:import-cj
+```
+
+### Local test (real CJ Link Search)
+
+```bash
+MOCK_EXTERNAL=false
+CJ_ACCESS_TOKEN=your_token
+CJ_WEBSITE_ID=your_website_id
+CJ_RELATIONSHIP_STATUS=joined
+CJ_PAGE_SIZE=100
+CJ_MAX_PAGES=1
+pnpm build:worker && pnpm worker:import-cj
+```
+
+---
+
+## Walmart Retail Worker Setup
+
+Walmart credentials are **worker-only**. Never add `WALMART_API_KEY` to `apps/web`.
+
+### Get Walmart Affiliate credentials
+
+1. Apply / log in via [Walmart Affiliate](https://affiliates.walmart.com) (or legacy Impact/Walmart Labs keys if still active)
+2. Copy API key + publisher ID for Product Search (`api.walmartlabs.com/v1/search`)
+
+> Newer walmart.io signed APIs can be added later without changing `NormalizedOffer`.
+
+### Local / single-source Walmart
+
+Use `pnpm worker:import-walmart` for debugging. Production uses the **combined** `pnpm worker:import` cron (same `WALMART_*` vars on `myperkfinder-worker-import`).
+
+### Local test (mock)
+
+```bash
+MOCK_EXTERNAL=true
+pnpm build:worker
+pnpm worker:import-walmart
+```
+
+### Local test (real Walmart search)
+
+```bash
+MOCK_EXTERNAL=false
+WALMART_API_KEY=your_key
+WALMART_PUBLISHER_ID=your_publisher_id
+WALMART_SEARCH_TERMS=electronics,home
+WALMART_PAGE_SIZE=25
+WALMART_MAX_PAGES=1
+pnpm build:worker && pnpm worker:import-walmart
+```
 
 ---
 
@@ -253,21 +386,23 @@ Run migrations once (Railway shell or one-off job):
 pnpm db:migrate:deploy
 ```
 
-### 4. Service: `myperkfinder-worker-awin-import`
+### 4. Service: `myperkfinder-worker-import`
 
 | Setting | Value |
 | ------- | ----- |
 | **Root directory** | `/` (repo root) — **not** `apps/worker` |
-| **Config file** | `apps/worker/railway.import-awin.json` |
+| **Config file** | `apps/worker/railway.import.json` |
 | **Build command** | `pnpm build:worker` (from config file) |
-| **Start command** | `pnpm worker:import-awin` |
-| **Cron schedule** | `30 18 * * *` — 2:30 PM EDT (18:30 UTC) daily |
+| **Start command** | `pnpm worker:import` |
+| **Cron schedule** | `0 */6 * * *` |
 
-Create this as a **second service** from the same GitHub repo (not on the web service). Point **Config file** at `apps/worker/railway.import-awin.json`. Railway applies `cronSchedule` from that file — do **not** put the schedule in Variables.
+Create this as a **second service** from the same GitHub repo (not on the web service). Point **Config file** at `apps/worker/railway.import.json`. Railway applies `cronSchedule` from that file — do **not** put the schedule in Variables.
 
-> Cron schedule is **not** an environment variable. Railway only reads it from Settings → Cron Schedule or from `deploy.cronSchedule` in the service config file. App vars like `AWIN_*` stay in Variables.
+> Cron schedule is **not** an environment variable. Railway only reads it from Settings → Cron Schedule or from `deploy.cronSchedule` in the service config file. App vars like `AWIN_*` / `CJ_*` / `WALMART_*` stay in Variables.
 
-**Env vars (Variables tab on this worker only):** `DATABASE_URL`, `DIRECT_URL`, `AWIN_ACCESS_TOKEN`, `AWIN_PUBLISHER_ID`, `AWIN_MEMBERSHIP_FILTER=joined`, `AWIN_REGION_CODES=US`, `AWIN_PAGE_SIZE=100`, `MOCK_EXTERNAL=false`, `NODE_ENV=production`
+**Env vars (this worker only):** `DATABASE_URL`, `DIRECT_URL`, `MOCK_EXTERNAL=false`, plus any of `AWIN_*` / `CJ_*` / `WALMART_*` you use. Sources without credentials are skipped.
+
+If you already have an older Awin-only cron, update its **Config file** to `apps/worker/railway.import.json`, set start to `pnpm worker:import`, and add CJ/Walmart env vars to that service.
 
 ### 5. Service: `myperkfinder-worker-expire-offers`
 
@@ -314,9 +449,11 @@ See [docs/deployment/railway-checklist.md](./docs/deployment/railway-checklist.m
 flowchart LR
   User[Users] --> Web[myperkfinder-web]
   Web --> PG[(PostgreSQL)]
-  CronAwin[Awin cron worker] --> PG
-  CronExpire[Expire cron worker] --> PG
-  CronAwin --> Awin[Awin API]
+  CronImport[Import cron] --> PG
+  CronExpire[Expire cron] --> PG
+  CronImport --> Awin[Awin API]
+  CronImport --> CJ[CJ API]
+  CronImport --> Walmart[Walmart API]
   User -->|Go to Deal| Web
   Web -->|302| Merchant[Merchant site]
 ```

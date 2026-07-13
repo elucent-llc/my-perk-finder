@@ -3,9 +3,11 @@ import { DealFilterQuery } from "@mpf/types";
 import { listDeals, getDealBySlug, listStores, searchDealsPostgres, getStoreBySlug } from "@/lib/server/deals";
 import type { SerializedPublicDeal } from "@/lib/server/serialize";
 import { offerRedirectPath } from "@/lib/site";
+import { expiryLabel } from "@/lib/expiry";
 
 export type DealDTO = SerializedPublicDeal;
 export type { StoreCardData };
+export { expiryLabel } from "@/lib/expiry";
 
 /** Internal click-tracking redirect (same Next.js service). */
 export function offerRedirectUrl(offerId: string): string {
@@ -49,16 +51,6 @@ export async function searchDeals(q: string): Promise<DealDTO[]> {
   const trimmed = q.trim();
   if (!trimmed) return [];
   return searchDealsPostgres(trimmed);
-}
-
-export function expiryLabel(iso?: string | null): { label: string | null; urgent: boolean } {
-  if (!iso) return { label: null, urgent: false };
-  const diff = new Date(iso).getTime() - Date.now();
-  const days = Math.ceil(diff / 864e5);
-  if (diff <= 0) return { label: "Expired", urgent: true };
-  if (days <= 1) return { label: "Ends today", urgent: true };
-  if (days <= 3) return { label: `${days} days`, urgent: true };
-  return { label: `${days} days`, urgent: false };
 }
 
 export function toCard(d: DealDTO): DealCardData {

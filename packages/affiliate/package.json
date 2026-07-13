@@ -11,7 +11,9 @@
     "./sources/awin": "./src/sources/awin.ts",
     "./sources/cj": "./src/sources/cj.ts",
     "./sources/walmart": "./src/sources/walmart.ts",
-    "./sources/impact": "./src/sources/impact.ts"
+    "./sources/impact": "./src/sources/impact.ts",
+    "./sources/rakuten": "./src/sources/rakuten.ts",
+    "./sources/ebay": "./src/sources/ebay.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

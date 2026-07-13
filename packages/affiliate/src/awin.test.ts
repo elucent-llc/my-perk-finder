@@ -43,4 +43,16 @@ describe("normalizeAwinPromotion", () => {
     assert.ok(offer);
     assert.equal(offer!.imageUrl, "https://example.com/product.jpg");
   });
+
+  it("nulls absurd far-future end dates as ongoing", () => {
+    const offer = normalizeAwinPromotion({
+      promotionId: "p4",
+      title: "Evergreen promo",
+      advertiser: { id: 4, name: "TideWe" },
+      urlTracking: "https://www.awin1.com/cread.php?awinmid=4",
+      endDate: new Date(Date.now() + 9000 * 864e5).toISOString(),
+    });
+    assert.ok(offer);
+    assert.equal(offer!.expiryDate, null);
+  });
 });

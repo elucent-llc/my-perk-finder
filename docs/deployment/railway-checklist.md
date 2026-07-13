@@ -7,7 +7,7 @@ Use this before and after each production deploy.
 - [ ] **Root Directory** is the **repo root** (`/`) on web and both cron services
 - [ ] **Do not** set Root Directory to `apps/web` or `apps/worker`
 - [ ] Point **Config file** to the JSON under `apps/*` (e.g. `apps/web/railway.json`) — config path does not replace repo root
-- [ ] Build/start use root scripts: `pnpm build:web`, `pnpm start:web`, `pnpm build:worker`, `pnpm worker:import-awin`, `pnpm worker:expire-offers`
+- [ ] Build/start use root scripts: `pnpm build:web`, `pnpm start:web`, `pnpm build:worker`, `pnpm worker:import`, `pnpm worker:expire-offers`
 
 ## Domain & TLS
 
@@ -41,35 +41,28 @@ Use this before and after each production deploy.
 
 ## Secrets & affiliate
 
-- [ ] `AWIN_ACCESS_TOKEN` and `AWIN_PUBLISHER_ID` on **import worker only**, never `NEXT_PUBLIC_*`
-- [ ] `MOCK_EXTERNAL=false` on production Awin cron worker
-- [ ] `MOCK_EXTERNAL=true` works locally without Awin credentials (`pnpm worker:import-awin`)
-- [ ] No affiliate credentials in client bundle (no Awin API calls from browser)
+- [ ] `AWIN_*`, `CJ_*`, `WALMART_*` on **import workers only**, never `NEXT_PUBLIC_*`
+- [ ] `MOCK_EXTERNAL=false` on production import cron workers
+- [ ] `MOCK_EXTERNAL=true` works locally without credentials (`pnpm worker:import-awin|cj|walmart`)
+- [ ] No affiliate credentials in client bundle (no network API calls from browser)
 - [ ] No secrets committed to GitHub
 
 ## Cron workers
 
-- [ ] Separate services (not the web service): `myperkfinder-worker-awin-import`, `myperkfinder-worker-expire-offers`
-- [ ] Config files set: `apps/worker/railway.import-awin.json`, `apps/worker/railway.expire-offers.json`
-- [ ] Schedules come from config (`cronSchedule`) — **not** from Variables / env vars
-- [ ] Import + expire: `30 18 * * *` (2:30 PM EDT / 18:30 UTC daily; 1:30 PM EST in winter)
+- [ ] **Only two** cron services (not the web service): `myperkfinder-worker-import`, `myperkfinder-worker-expire-offers`
+- [ ] Config files: `apps/worker/railway.import.json`, `apps/worker/railway.expire-offers.json`
+- [ ] Schedules from config: Import `0 */6 * * *`, Expire `30 18 * * *` — **not** from Variables
+- [ ] Import start command: `pnpm worker:import` (runs Awin + CJ + Walmart; skips missing credentials)
 - [ ] Worker logs show JSON lines, process exits code 0
 - [ ] ImportJob rows visible at `/admin/imports`
 
-## Awin import worker (Phase 3)
+## Combined import worker
 
-- [ ] Separate Railway service: `myperkfinder-worker-awin-import`
-- [ ] Root directory `/`, config file `apps/worker/railway.import-awin.json`
-- [ ] Service type: **Cron Job** (not always-on)
-- [ ] `AWIN_ACCESS_TOKEN` and `AWIN_PUBLISHER_ID` on **worker only** — never on web service
-- [ ] No `NEXT_PUBLIC_AWIN_*` variables anywhere
-- [ ] `MOCK_EXTERNAL=true` manual test passes (`pnpm worker:import-awin` exits 0)
-- [ ] `MOCK_EXTERNAL=false` real Awin test passes with `AWIN_MEMBERSHIP_FILTER=all`
-- [ ] Worker exits cleanly (no long-running process, no setInterval)
-- [ ] Imported offers visible at `/admin/review` or `/admin/offers`
-- [ ] ImportJob row at `/admin/imports` shows counts
-- [ ] Production: `AWIN_MEMBERSHIP_FILTER=joined`
-- [ ] Cron schedule `30 18 * * *` configured **only after** manual tests pass
+- [ ] Service: `myperkfinder-worker-import` → `apps/worker/railway.import.json`
+- [ ] `AWIN_*` / `CJ_*` / `WALMART_*` on **this worker only** — never on web
+- [ ] `MOCK_EXTERNAL=true` manual test: `pnpm worker:import` exits 0
+- [ ] Real test with `*_MAX_PAGES=1` then enable cron
+- [ ] Worker exits cleanly (no long-running process)
 
 ## Affiliate pipeline
 

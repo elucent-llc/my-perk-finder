@@ -5,8 +5,8 @@
     "buildCommand": "pnpm build:worker"
   },
   "deploy": {
-    "startCommand": "pnpm worker:import-awin",
-    "cronSchedule": "30 18 * * *",
+    "startCommand": "pnpm worker:import",
+    "cronSchedule": "0 */6 * * *",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 3
   }

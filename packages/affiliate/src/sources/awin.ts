@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { slugify, sanitizeExpiry } from "../util.js";
 import type {
   AffiliateFetchOptions,
   AffiliateSourceConfig,
@@ -67,14 +68,6 @@ const AwinResponseSchema = z.object({
     })
     .optional(),
 });
-
-function slugify(input: string): string {
-  return input
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "")
-    .slice(0, 80);
-}
 
 /**
  * Only extract prices when the text has an unambiguous was/now (or now $X) pattern.
@@ -177,7 +170,7 @@ export function normalizeAwinPromotion(raw: unknown): NormalizedOffer | null {
     affiliateUrl,
     productUrl: p.url ?? null,
     startDate: p.startDate ? new Date(p.startDate) : null,
-    expiryDate: p.endDate ? new Date(p.endDate) : null,
+    expiryDate: sanitizeExpiry(p.endDate),
     countryCodes,
     description: p.description ?? p.terms ?? null,
     confidenceScore: Math.max(0, Math.min(1, confidence)),
