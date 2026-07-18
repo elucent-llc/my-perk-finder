@@ -30,8 +30,8 @@ export default function PrivacyPolicyPage() {
       <h2 className="text-lg font-bold text-slate-900">Your choices</h2>
       <p>
         You may request access, correction, or deletion of personal data by contacting{" "}
-        <a href="mailto:privacy@myperkfinder.com" className="font-semibold text-brand-600 hover:underline">
-          privacy@myperkfinder.com
+        <a href="mailto:services@elucent.co" className="font-semibold text-brand-600 hover:underline">
+          services@elucent.co
         </a>
         .
       </p>

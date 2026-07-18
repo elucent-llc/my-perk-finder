@@ -7,8 +7,8 @@ export default function ContactPage() {
       <ul className="ml-5 list-disc space-y-2">
         <li>
           Email:{" "}
-          <a href="mailto:support@myperkfinder.com" className="font-semibold text-brand-600 hover:underline">
-            support@myperkfinder.com
+          <a href="mailto:services@elucent.co" className="font-semibold text-brand-600 hover:underline">
+            services@elucent.co
           </a>
         </li>
         <li>Business hours: Monday–Friday, 9:00 AM – 5:00 PM ET</li>
