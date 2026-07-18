@@ -182,8 +182,11 @@ async function fetchWalmartTerm(
  * Uses apiKey + publisherId query params (legacy affiliate keys).
  * Never call from browser — server/worker only.
  *
- * Note: Newer walmart.io endpoints require signed headers (consumer id + private key).
- * Those can be added later without changing NormalizedOffer.
+ * DEPLOY: kept implemented, but Railway combined import skips Walmart until
+ * ENABLE_WALMART_IN_COMBINED_IMPORT is set true in apps/worker/src/cli/import-all.ts.
+ * Official walmart.io Affiliate Marketing API (Consumer ID + RSA signature) is
+ * the correct production auth — upgrade this adapter before enabling on Railway.
+ * Local test: `pnpm worker:import-walmart`.
  */
 export async function fetchWalmartOffers(
   config: WalmartSourceConfig,

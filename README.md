@@ -173,10 +173,10 @@ All live sources share `apps/worker/src/jobs/run-source-import.ts`. Railway uses
 
 | Worker | Config | Cron (UTC) | Command |
 | ------ | ------ | ---------- | ------- |
-| **Import** (Awin + CJ + Walmart) | `apps/worker/railway.import.json` | `0 */6 * * *` | `pnpm worker:import` |
+| **Import** (Awin; CJ/Walmart gated off) | `apps/worker/railway.import.json` | `0 */6 * * *` | `pnpm worker:import` |
 | **Expire** | `apps/worker/railway.expire-offers.json` | `30 18 * * *` | `pnpm worker:expire-offers` |
 
-Sources without credentials are **skipped** on the combined import (unless `MOCK_EXTERNAL=true`, which runs all with mock data).
+**Deploy note:** CJ + Walmart adapters stay in the repo but are **disabled** on the Railway combined cron (`ENABLE_CJ_IN_COMBINED_IMPORT` / `ENABLE_WALMART_IN_COMBINED_IMPORT` in `apps/worker/src/cli/import-all.ts`). Flip those to `true` when accounts work. Until then, do **not** set `CJ_*` / `WALMART_*` on Railway — Awin-only is enough. Local: `pnpm worker:import-cj` / `worker:import-walmart`.
 
 **Testing order (every new source):**
 

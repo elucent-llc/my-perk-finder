@@ -9,7 +9,19 @@ import type { SourceImportCounters } from "../jobs/run-source-import.js";
 import { runCli, type CliLogger } from "./_runner.js";
 
 // Railway cron: apps/worker/railway.import.json → "0 */6 * * *"
-const CRON_HINT = "0 */6 * * * (every 6 hours UTC — combined Awin + CJ + Walmart)";
+const CRON_HINT = "0 */6 * * * (every 6 hours UTC — combined import; Awin only until CJ/Walmart are ready)";
+
+/**
+ * DEPLOY SAFETY — keep CJ/Walmart adapters + CLIs in the repo, but do NOT run them
+ * on the Railway combined cron until accounts/APIs work.
+ *
+ * - false (current): skipped → no API calls, no failed ImportJobs, no cron noise
+ * - true: run when credentials (or MOCK_EXTERNAL) are present
+ *
+ * Local single-source CLIs still work: `pnpm worker:import-cj` / `worker:import-walmart`
+ */
+const ENABLE_CJ_IN_COMBINED_IMPORT = false;
+const ENABLE_WALMART_IN_COMBINED_IMPORT = false;
 
 type SourceResult = {
   source: string;
@@ -17,6 +29,7 @@ type SourceResult = {
   jobId?: string;
   counters?: SourceImportCounters;
   error?: string;
+  skipReason?: string;
 };
 
 /** Run one source end-to-end, capturing failures instead of aborting the batch. */
@@ -41,7 +54,7 @@ function printSummary(results: SourceResult[]) {
   const lines = ["", "======== Combined import summary ========"];
   for (const r of results) {
     if (r.status === "skipped") {
-      lines.push(`  ${r.source}: skipped (no credentials)`);
+      lines.push(`  ${r.source}: skipped (${r.skipReason ?? "no credentials"})`);
     } else if (r.status === "failed") {
       lines.push(`  ${r.source}: FAILED — ${r.error}`);
     } else {
@@ -61,7 +74,7 @@ async function runAllSources(env: ImportWorkerEnv, logger: CliLogger): Promise<S
 
   results.push(
     !env.enabledSources.awin
-      ? { source: "awin", status: "skipped" }
+      ? { source: "awin", status: "skipped", skipReason: "no credentials" }
       : await runSource("awin", logger, (jobId) =>
           importAwinOffers(jobId, (msg) => log(msg, "awin"), {
             accessToken: env.awin.AWIN_ACCESS_TOKEN ?? "mock",
@@ -76,37 +89,55 @@ async function runAllSources(env: ImportWorkerEnv, logger: CliLogger): Promise<S
         )
   );
 
-  results.push(
-    !env.enabledSources.cj
-      ? { source: "cj", status: "skipped" }
-      : await runSource("cj", logger, (jobId) =>
-          importCjOffers(jobId, (msg) => log(msg, "cj"), {
-            accessToken: env.cj.CJ_ACCESS_TOKEN ?? "mock",
-            websiteId: env.cj.CJ_WEBSITE_ID ?? "mock",
-            mockExternal: env.MOCK_EXTERNAL,
-            relationshipStatus: env.cj.CJ_RELATIONSHIP_STATUS,
-            pageSize: env.cj.CJ_PAGE_SIZE,
-            maxPages: env.cj.CJ_MAX_PAGES,
-            debugRawPages: env.cj.CJ_DEBUG_RAW_PAGES,
-          })
-        )
-  );
+  // --- CJ (disabled for Railway deploy until affiliate account/API is ready) ---
+  if (!ENABLE_CJ_IN_COMBINED_IMPORT) {
+    results.push({
+      source: "cj",
+      status: "skipped",
+      skipReason: "disabled for deploy (ENABLE_CJ_IN_COMBINED_IMPORT=false)",
+    });
+  } else {
+    results.push(
+      !env.enabledSources.cj
+        ? { source: "cj", status: "skipped", skipReason: "no credentials" }
+        : await runSource("cj", logger, (jobId) =>
+            importCjOffers(jobId, (msg) => log(msg, "cj"), {
+              accessToken: env.cj.CJ_ACCESS_TOKEN ?? "mock",
+              websiteId: env.cj.CJ_WEBSITE_ID ?? "mock",
+              mockExternal: env.MOCK_EXTERNAL,
+              relationshipStatus: env.cj.CJ_RELATIONSHIP_STATUS,
+              pageSize: env.cj.CJ_PAGE_SIZE,
+              maxPages: env.cj.CJ_MAX_PAGES,
+              debugRawPages: env.cj.CJ_DEBUG_RAW_PAGES,
+            })
+          )
+    );
+  }
 
-  results.push(
-    !env.enabledSources.walmart
-      ? { source: "walmart", status: "skipped" }
-      : await runSource("walmart", logger, (jobId) =>
-          importWalmartOffers(jobId, (msg) => log(msg, "walmart"), {
-            apiKey: env.walmart.WALMART_API_KEY ?? "mock",
-            publisherId: env.walmart.WALMART_PUBLISHER_ID ?? "mock",
-            searchTerms: env.walmart.WALMART_SEARCH_TERMS,
-            mockExternal: env.MOCK_EXTERNAL,
-            pageSize: env.walmart.WALMART_PAGE_SIZE,
-            maxPages: env.walmart.WALMART_MAX_PAGES,
-            debugRawPages: env.walmart.WALMART_DEBUG_RAW_PAGES,
-          })
-        )
-  );
+  // --- Walmart (disabled for Railway deploy — needs walmart.io signed API, not labs keys) ---
+  if (!ENABLE_WALMART_IN_COMBINED_IMPORT) {
+    results.push({
+      source: "walmart",
+      status: "skipped",
+      skipReason: "disabled for deploy (ENABLE_WALMART_IN_COMBINED_IMPORT=false)",
+    });
+  } else {
+    results.push(
+      !env.enabledSources.walmart
+        ? { source: "walmart", status: "skipped", skipReason: "no credentials" }
+        : await runSource("walmart", logger, (jobId) =>
+            importWalmartOffers(jobId, (msg) => log(msg, "walmart"), {
+              apiKey: env.walmart.WALMART_API_KEY ?? "mock",
+              publisherId: env.walmart.WALMART_PUBLISHER_ID ?? "mock",
+              searchTerms: env.walmart.WALMART_SEARCH_TERMS,
+              mockExternal: env.MOCK_EXTERNAL,
+              pageSize: env.walmart.WALMART_PAGE_SIZE,
+              maxPages: env.walmart.WALMART_MAX_PAGES,
+              debugRawPages: env.walmart.WALMART_DEBUG_RAW_PAGES,
+            })
+          )
+    );
+  }
 
   return results;
 }
@@ -117,17 +148,22 @@ void runCli("myperkfinder-worker-import", async (logger) => {
   stepOk("1/3", "worker process started");
 
   const env = getImportWorkerEnv();
-  const enabled = Object.entries(env.enabledSources)
-    .filter(([, on]) => on)
-    .map(([name]) => name);
+  // Only count sources that are allowed on this cron (CJ/Walmart off until ready).
+  const enabled = [
+    env.enabledSources.awin ? "awin" : null,
+    ENABLE_CJ_IN_COMBINED_IMPORT && env.enabledSources.cj ? "cj" : null,
+    ENABLE_WALMART_IN_COMBINED_IMPORT && env.enabledSources.walmart ? "walmart" : null,
+  ].filter(Boolean) as string[];
   stepOk(
     "2/3",
-    `environment validated (mock=${env.MOCK_EXTERNAL}, enabled=${enabled.join(",") || "none"})`
+    `environment validated (mock=${env.MOCK_EXTERNAL}, enabled=${enabled.join(",") || "none"}, ` +
+      `cjCombined=${ENABLE_CJ_IN_COMBINED_IMPORT}, walmartCombined=${ENABLE_WALMART_IN_COMBINED_IMPORT})`
   );
 
   if (enabled.length === 0) {
     throw new Error(
-      "No import sources enabled. Set MOCK_EXTERNAL=true or provide credentials for at least one of Awin / CJ / Walmart."
+      "No import sources enabled. Provide AWIN_* credentials (or MOCK_EXTERNAL=true). " +
+        "CJ/Walmart are disabled on the combined cron until ENABLE_*_IN_COMBINED_IMPORT is flipped."
     );
   }
 

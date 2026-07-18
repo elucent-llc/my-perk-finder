@@ -139,6 +139,10 @@ function relationshipToGraphql(status: CjRelationshipStatus): string {
  * POST https://ads.api.cj.com/query
  *
  * Never call from browser — server/worker only.
+ *
+ * DEPLOY: kept implemented, but Railway combined import skips CJ until
+ * ENABLE_CJ_IN_COMBINED_IMPORT is set true in apps/worker/src/cli/import-all.ts.
+ * Use `pnpm worker:import-cj` for local testing.
  */
 export async function fetchCjOffers(
   config: CjSourceConfig,

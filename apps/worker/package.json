@@ -7,7 +7,7 @@
     "dev": "tsx src/cli/import-awin.ts",
     "start": "node dist/index.js",
     "build": "tsup",
-    "import": "node dist/cli/import-all.js",
+    "import:all": "node dist/cli/import-all.js",
     "import:awin": "node dist/cli/import-awin.js",
     "import:cj": "node dist/cli/import-cj.js",
     "import:walmart": "node dist/cli/import-walmart.js",

@@ -237,7 +237,11 @@ export type ImportWorkerEnv = {
 /**
  * Combined import cron env (myperkfinder-worker-import).
  * Does not require every network's credentials — missing sources are skipped.
- * When MOCK_EXTERNAL=true, all implemented sources run with mock data.
+ *
+ * DEPLOY NOTE: apps/worker/src/cli/import-all.ts currently forces CJ + Walmart
+ * off via ENABLE_CJ_IN_COMBINED_IMPORT / ENABLE_WALMART_IN_COMBINED_IMPORT so
+ * Railway cron only runs Awin. Adapters/CLIs remain for later enablement.
+ * Do not set CJ_* / WALMART_* on Railway until those flags are flipped.
  */
 export function getImportWorkerEnv(): ImportWorkerEnv {
   parseEnv(baseWorkerSchema);
@@ -255,6 +259,7 @@ export function getImportWorkerEnv(): ImportWorkerEnv {
     MOCK_EXTERNAL: mock,
     enabledSources: {
       awin: mock || Boolean(awinToken && awinPublisher),
+      // Creds may be present locally; combined cron still gates on ENABLE_* flags.
       cj: mock || Boolean(cjToken && cjWebsite),
       walmart: mock || Boolean(walmartKey && walmartPublisher),
     },
