@@ -3,10 +3,10 @@ import { LegalPage } from "@/components/LegalPage";
 export default function TermsPage() {
   return (
     <LegalPage title="Terms of Service">
-      <p>Last updated: July 5, 2026</p>
+      <p>Last updated: July 18, 2026</p>
       <p>
-        By using MyPerkFinder, you agree to these Terms. If you do not agree, please do not use the
-        site.
+        By using MyPerkFinder (operated by Elucent), you agree to these Terms. If you do not agree,
+        please do not use the site.
       </p>
       <h2 className="text-lg font-bold text-slate-900">Use of the service</h2>
       <p>
@@ -30,6 +30,14 @@ export default function TermsPage() {
       <p>
         MyPerkFinder is provided &quot;as is.&quot; We are not liable for losses arising from use of
         third-party merchant sites or reliance on deal information.
+      </p>
+      <h2 className="text-lg font-bold text-slate-900">Contact</h2>
+      <p>
+        Questions about these terms:{" "}
+        <a href="mailto:services@elucent.co" className="font-semibold text-brand-600 hover:underline">
+          services@elucent.co
+        </a>
+        .
       </p>
     </LegalPage>
   );

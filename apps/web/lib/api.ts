@@ -68,7 +68,6 @@ export function toCard(d: DealDTO): DealCardData {
     merchantLogoUrl: d.merchantLogoUrl,
     expiryLabel: e.label,
     isUrgent: e.urgent,
-    confidenceScore: d.confidenceScore,
     verified: Boolean(d.lastVerifiedAt),
   };
 }

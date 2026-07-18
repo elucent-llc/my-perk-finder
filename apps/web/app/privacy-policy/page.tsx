@@ -3,7 +3,11 @@ import { LegalPage } from "@/components/LegalPage";
 export default function PrivacyPolicyPage() {
   return (
     <LegalPage title="Privacy Policy">
-      <p>Last updated: July 5, 2026</p>
+      <p>Last updated: July 18, 2026</p>
+      <p>
+        MyPerkFinder is operated by <strong>Elucent</strong> (&quot;we,&quot; &quot;us&quot;). This
+        policy explains how we handle information when you use myperkfinder.com.
+      </p>
       <h2 className="text-lg font-bold text-slate-900">Information we collect</h2>
       <p>
         We collect information you provide directly (such as email if you subscribe to alerts) and

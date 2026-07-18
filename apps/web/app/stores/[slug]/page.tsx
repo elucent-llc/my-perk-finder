@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { DealCard, DealGrid, EmptyState, Badge, resolveStoreLogoUrl } from "@mpf/ui";
+import { DealCard, DealGrid, EmptyState, Badge, Button, resolveStoreLogoUrl } from "@mpf/ui";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { getStore, toCard } from "@/lib/api";
 
@@ -58,7 +58,12 @@ export default async function StoreDetailPage({ params }: { params: Promise<{ sl
         {deals.length === 0 ? (
           <EmptyState
             title="No active deals for this store"
-            description="Check back after the next import, or browse all deals."
+            description="Check back soon, or browse deals from other stores."
+            action={
+              <Link href="/deals">
+                <Button variant="primary">Browse all deals</Button>
+              </Link>
+            }
           />
         ) : (
           <DealGrid>

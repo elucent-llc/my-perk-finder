@@ -109,14 +109,16 @@ export function DealCard({ deal, href = "#", onSave }: DealCardProps) {
           </Badge>
         ) : null}
       </a>
-      <button
-        type="button"
-        aria-label="Save deal"
-        onClick={onSave}
-        className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full border border-slate-200 bg-white/90 text-sm hover:text-brand-600"
-      >
-        ♡
-      </button>
+      {onSave ? (
+        <button
+          type="button"
+          aria-label="Save deal"
+          onClick={onSave}
+          className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full border border-slate-200 bg-white/90 text-sm hover:text-brand-600"
+        >
+          ♡
+        </button>
+      ) : null}
       <div className="flex flex-1 flex-col gap-1.5 p-3">
         <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-500">
           {deal.merchantName}
@@ -153,9 +155,6 @@ export function DealCard({ deal, href = "#", onSave }: DealCardProps) {
           ) : (
             <span />
           )}
-          {typeof deal.confidenceScore === "number" ? (
-            <span>{Math.round(deal.confidenceScore * 100)}% conf.</span>
-          ) : null}
         </div>
       </div>
     </article>

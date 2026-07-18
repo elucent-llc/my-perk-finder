@@ -40,7 +40,10 @@ export function buildDealWhere(q: Partial<DealFilterQuery>, opts?: { publicOnly?
     ...(q.q ? { title: { contains: q.q, mode: "insensitive" } } : {}),
     ...(q.verifiedToday ? { lastVerifiedAt: { gte: startOfToday } } : {}),
     ...(q.expiresSoon
-      ? { expiryDate: { lte: new Date(Date.now() + 3 * 864e5), gte: new Date() } }
+      ? {
+          // Keep in sync with EXPIRING_SOON_DAYS in apps/web/lib/expiry.ts (30 days).
+          expiryDate: { lte: new Date(Date.now() + 30 * 864e5), gte: new Date() },
+        }
       : {}),
   };
 }

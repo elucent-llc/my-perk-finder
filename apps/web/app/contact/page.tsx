@@ -3,7 +3,11 @@ import { LegalPage } from "@/components/LegalPage";
 export default function ContactPage() {
   return (
     <LegalPage title="Contact Us">
-      <p>For general inquiries, partnership requests, or to report an incorrect deal:</p>
+      <p>Last updated: July 18, 2026</p>
+      <p>
+        MyPerkFinder is operated by Elucent. For general inquiries, partnership requests, or to report
+        an incorrect deal:
+      </p>
       <ul className="ml-5 list-disc space-y-2">
         <li>
           Email:{" "}

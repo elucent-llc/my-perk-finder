@@ -1,4 +1,5 @@
-import { StoreCard, Chip } from "@mpf/ui";
+import Link from "next/link";
+import { StoreCard, EmptyState, Button } from "@mpf/ui";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { getStores } from "@/lib/api";
 
@@ -10,17 +11,21 @@ export default async function StoresPage() {
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto max-w-6xl px-5 py-6">
-        <h1 className="mb-4 text-2xl font-extrabold">All Stores</h1>
-        <div className="mb-5 flex flex-wrap gap-2">
-          {["All", "Electronics", "Fashion", "Home", "Marketplace"].map((c, i) => (
-            <Chip key={c} active={i === 0}>
-              {c}
-            </Chip>
-          ))}
-        </div>
+      <main className="mx-auto max-w-6xl px-5 py-8">
+        <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Stores</h1>
+        <p className="mt-1 mb-6 text-sm text-slate-500">
+          Browse deals by retailer. {stores.length} stores with active offers.
+        </p>
         {stores.length === 0 ? (
-          <p className="text-sm text-slate-500">No stores yet. Run an import or seed the database.</p>
+          <EmptyState
+            title="No stores listed yet"
+            description="Stores appear here as verified deals go live. Check back soon."
+            action={
+              <Link href="/deals">
+                <Button variant="primary">Browse deals</Button>
+              </Link>
+            }
+          />
         ) : (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3.5">
             {stores.map((s) => (
