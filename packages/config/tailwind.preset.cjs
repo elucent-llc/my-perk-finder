@@ -8,6 +8,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // Primary — teal: trust + value. Used for CTAs, links, active states.
         brand: {
           50: "#f0fdfa",
           100: "#ccfbf1",
@@ -17,10 +18,30 @@ module.exports = {
           500: "#14b8a6",
           600: "#0d9488",
           700: "#0f766e",
+          800: "#115e59",
+          900: "#134e4a",
+        },
+        // Accent — warm amber/orange: discounts, urgency, "hot" signals (10% pop).
+        accent: {
+          50: "#fff7ed",
+          100: "#ffedd5",
+          200: "#fed7aa",
+          300: "#fdba74",
+          400: "#fb923c",
+          500: "#f97316",
+          600: "#ea580c",
+          700: "#c2410c",
+        },
+        // Ink — deep navy neutrals: headings, footer, authoritative surfaces.
+        ink: {
+          700: "#1e293b",
+          800: "#0f172a",
+          900: "#0b1120",
         },
         savings: {
           50: "#ecfdf5",
           100: "#d1fae5",
+          500: "#22c55e",
           600: "#16a34a",
           700: "#15803d",
         },

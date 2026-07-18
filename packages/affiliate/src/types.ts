@@ -16,6 +16,8 @@ export interface NormalizedOffer {
   merchantName: string | null;
   /** Network advertiser ID when available (stored in raw/normalized JSON only). */
   merchantExternalId?: string | null;
+  /** Advertiser/store logo (persisted on Merchant.logoUrl when present). */
+  merchantLogoUrl?: string | null;
   brand?: string | null;
   category?: string | null;
   offerType?: OfferType;

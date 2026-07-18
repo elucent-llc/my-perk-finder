@@ -143,8 +143,9 @@ export function normalizeAwinPromotion(raw: unknown): NormalizedOffer | null {
       : 0;
 
   const offerType = resolveOfferType(p.type, couponCode, regularPrice, salePrice);
-  const imageUrl =
-    p.imageUrl ?? p.bannerUrl ?? p.campaignLogoUri ?? p.advertiser?.logoUrl ?? null;
+  // Keep deal creative separate from store logo when possible.
+  const imageUrl = p.imageUrl ?? p.bannerUrl ?? p.campaignLogoUri ?? null;
+  const merchantLogoUrl = p.advertiser?.logoUrl?.trim() || null;
 
   let confidence = 0.75;
   if (!affiliateUrl) confidence -= 0.2;
@@ -158,6 +159,7 @@ export function normalizeAwinPromotion(raw: unknown): NormalizedOffer | null {
     slug: slugify(`${title || "offer"}-${merchantName ?? "awin"}-${externalId}`),
     merchantName,
     merchantExternalId,
+    merchantLogoUrl,
     brand: null,
     category: null,
     offerType,

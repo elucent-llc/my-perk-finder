@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BrandLogo, Button } from "@mpf/ui";
 import { MobileNav } from "@/components/MobileNav";
+import { NewsletterSignup } from "@/components/NewsletterSignup";
 
 const NAV = [
   ["Deals", "/deals"],
@@ -58,7 +59,13 @@ export function SiteFooter() {
             Find verified deals, coupons, and store promotions from retailers you know — updated
             regularly.
           </p>
-          <p className="mt-3 text-xs leading-relaxed text-slate-400">
+          <div className="mt-4 max-w-sm">
+            <div className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-800">
+              Get deal alerts
+            </div>
+            <NewsletterSignup variant="compact" />
+          </div>
+          <p className="mt-4 text-xs leading-relaxed text-slate-400">
             <strong className="text-slate-500">Affiliate disclosure:</strong> MyPerkFinder may earn a
             commission from qualifying purchases made through links on this site.{" "}
             <Link href="/affiliate-disclosure" className="font-semibold text-brand-600 hover:underline">

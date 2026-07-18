@@ -96,6 +96,21 @@ export async function searchDealsPostgres(q: string, limit = 24) {
   return rows.map(serializePublicDeal);
 }
 
+/** Lightweight public counts for the homepage trust bar. */
+export async function getPublicStats() {
+  const [activeDeals, stores, coupons, latest] = await Promise.all([
+    prisma.deal.count({ where: { status: "active" } }),
+    prisma.merchant.count({ where: { deals: { some: { status: "active" } } } }),
+    prisma.deal.count({ where: { status: "active", couponCode: { not: null } } }),
+    prisma.deal.findFirst({
+      where: { status: "active" },
+      orderBy: { updatedAt: "desc" },
+      select: { updatedAt: true },
+    }),
+  ]);
+  return { activeDeals, stores, coupons, updatedAt: latest?.updatedAt ?? null };
+}
+
 export async function getAdminOverview() {
   const startOfDay = new Date(new Date().setHours(0, 0, 0, 0));
   const [active, needsReview, expiredToday, subscribers, clicksToday, importsToday] =
@@ -182,12 +197,20 @@ const DEMO_STORES: StoreCardData[] = [
   { name: "Dell", slug: "dell", dealsCount: 0, couponsCount: 0, verified: false },
 ];
 
-/** Active merchants with deal/coupon counts. Falls back to demo list when DB is empty. */
+/** Active merchants with active-deal counts. Falls back to demo list when DB is empty. */
 export async function listStores(): Promise<StoreCardData[]> {
   const merchants = await prisma.merchant.findMany({
-    where: { isActive: true },
+    where: {
+      isActive: true,
+      deals: { some: { status: "active" } },
+    },
     include: {
-      _count: { select: { deals: true, coupons: true } },
+      _count: {
+        select: {
+          deals: { where: { status: "active" } },
+          coupons: true,
+        },
+      },
     },
     orderBy: [{ deals: { _count: "desc" } }, { name: "asc" }],
   });

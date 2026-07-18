@@ -2,6 +2,7 @@
 import * as React from "react";
 import { Badge } from "./Badge.js";
 import { Button } from "./Button.js";
+import { Icon } from "./Icon.js";
 
 export interface CouponCardData {
   merchantName: string;
@@ -27,16 +28,25 @@ export function CouponCard({ coupon, shopHref }: { coupon: CouponCardData; shopH
             {revealed ? coupon.code : "•••••••"}
             {!revealed ? (
               <span className="absolute inset-0 grid place-items-center bg-brand-600 font-sans tracking-normal text-white">
-                Reveal Code →
+                <span className="inline-flex items-center gap-1.5">
+                  <Icon name="coupon" size={15} />
+                  Reveal code
+                </span>
               </span>
             ) : null}
           </button>
         ) : (
-          <Badge tone="active">No code needed · auto-applied</Badge>
+          <Badge tone="active">
+            <Icon name="check" size={12} strokeWidth={2.6} />
+            No code needed · auto-applied
+          </Badge>
         )}
         <div className="flex items-center justify-between">
           {coupon.expiryLabel ? (
-            <Badge tone={coupon.isUrgent ? "urgent" : "expiry"}>{coupon.expiryLabel}</Badge>
+            <Badge tone={coupon.isUrgent ? "urgent" : "expiry"}>
+              <Icon name="clock" size={12} />
+              {coupon.expiryLabel}
+            </Badge>
           ) : (
             <span />
           )}

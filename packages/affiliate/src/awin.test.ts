@@ -32,7 +32,7 @@ describe("normalizeAwinPromotion", () => {
     assert.equal(offer!.regularPrice, null);
   });
 
-  it("picks imageUrl when present", () => {
+  it("picks imageUrl and merchantLogoUrl separately", () => {
     const offer = normalizeAwinPromotion({
       promotionId: "p3",
       title: "Headphones sale",
@@ -42,6 +42,7 @@ describe("normalizeAwinPromotion", () => {
     });
     assert.ok(offer);
     assert.equal(offer!.imageUrl, "https://example.com/product.jpg");
+    assert.equal(offer!.merchantLogoUrl, "https://example.com/logo.png");
   });
 
   it("nulls absurd far-future end dates as ongoing", () => {

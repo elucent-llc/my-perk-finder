@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "./cn.js";
+import { Icon } from "./Icon.js";
 
 export function Chip({
   active,
@@ -21,7 +22,7 @@ export function Chip({
 }
 
 export function EmptyState({
-  icon = "🔍",
+  icon,
   title,
   description,
   action,
@@ -32,11 +33,11 @@ export function EmptyState({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="px-5 py-12 text-center text-slate-500">
-      <div className="mx-auto mb-3.5 grid h-16 w-16 place-items-center rounded-full bg-slate-100 text-2xl text-slate-400">
-        {icon}
+    <div className="px-5 py-14 text-center text-slate-500">
+      <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-full bg-brand-50 text-brand-500">
+        {icon ?? <Icon name="search" size={26} />}
       </div>
-      <h3 className="mb-1.5 text-[17px] font-bold text-slate-900">{title}</h3>
+      <h3 className="mb-1.5 text-[17px] font-bold text-ink-800">{title}</h3>
       {description ? <p className="mx-auto mb-4 max-w-sm text-[13.5px]">{description}</p> : null}
       {action}
     </div>
@@ -51,7 +52,7 @@ export function AffiliateDisclosure({ className }: { className?: string }) {
         className
       )}
     >
-      <span className="text-brand-500">ⓘ</span>
+      <Icon name="info" size={16} className="mt-0.5 shrink-0 text-brand-500" />
       <span>
         <b>Affiliate disclosure.</b> MyPerkFinder may earn a commission when you buy through links on
         our site — at no extra cost to you. Prices &amp; availability are accurate as of the last

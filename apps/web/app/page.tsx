@@ -1,50 +1,103 @@
 import Link from "next/link";
-import { DealCard, DealGrid, StoreCard, Button, AffiliateDisclosure, EmptyState } from "@mpf/ui";
+import {
+  DealCard,
+  DealGrid,
+  StoreCard,
+  Button,
+  AffiliateDisclosure,
+  EmptyState,
+  TrustBar,
+  Icon,
+  type IconName,
+} from "@mpf/ui";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
-import { getDeals, getStores, toCard } from "@/lib/api";
+import { FeaturedDeal } from "@/components/FeaturedDeal";
+import { NewsletterSignup } from "@/components/NewsletterSignup";
+import { getDeals, getStores, getStats, toCard } from "@/lib/api";
 import { EXPIRING_SOON_DAYS, isExpiringSoon } from "@/lib/expiry";
 
 export const dynamic = "force-dynamic";
 
-const CATEGORIES = [
-  { label: "Electronics", href: "/deals?category=electronics" },
-  { label: "Audio", href: "/deals?category=audio" },
-  { label: "Home & Kitchen", href: "/deals?category=home-kitchen" },
-  { label: "Fashion", href: "/deals?category=fashion" },
-  { label: "Coupons", href: "/coupons" },
-] as const;
+const CATEGORIES: { label: string; href: string; icon: IconName }[] = [
+  { label: "Electronics", href: "/deals?category=electronics", icon: "bolt" },
+  { label: "Audio", href: "/deals?category=audio", icon: "bolt" },
+  { label: "Home & Kitchen", href: "/deals?category=home-kitchen", icon: "store" },
+  { label: "Fashion", href: "/deals?category=fashion", icon: "tag" },
+  { label: "Coupons", href: "/coupons", icon: "coupon" },
+];
 
-function chipClass() {
-  return "inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-[13px] font-semibold text-slate-600 shadow-sm transition hover:border-brand-300 hover:text-brand-700";
+function SectionHeader({
+  icon,
+  title,
+  subtitle,
+  href,
+  linkLabel,
+}: {
+  icon: IconName;
+  title: string;
+  subtitle: string;
+  href: string;
+  linkLabel: string;
+}) {
+  return (
+    <div className="mb-3 flex items-end justify-between gap-3">
+      <div className="flex items-center gap-2.5">
+        <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-50 text-brand-600">
+          <Icon name={icon} size={18} />
+        </span>
+        <div>
+          <h2 className="text-lg font-bold tracking-tight text-ink-800">{title}</h2>
+          <p className="text-sm text-slate-500">{subtitle}</p>
+        </div>
+      </div>
+      <Link
+        href={href}
+        className="inline-flex shrink-0 items-center gap-1 text-sm font-bold text-brand-600 hover:underline"
+      >
+        {linkLabel}
+        <Icon name="arrow-right" size={14} />
+      </Link>
+    </div>
+  );
 }
 
 export default async function HomePage() {
-  const deals = await getDeals();
-  const stores = await getStores();
+  const [deals, topDiscount, stores, stats] = await Promise.all([
+    getDeals(),
+    getDeals("?sort=highest_discount&pageSize=9"),
+    getStores(),
+    getStats(),
+  ]);
+
+  const featured = topDiscount.find((d) => d.imageUrl) ?? topDiscount[0] ?? deals[0];
   const best = deals.slice(0, 8);
+  const biggest = topDiscount.filter((d) => d.slug !== featured?.slug).slice(0, 4);
   const expiring = [...deals]
     .filter((d) => isExpiringSoon(d.expiryDate, EXPIRING_SOON_DAYS))
     .sort(
-      (a, b) =>
-        new Date(a.expiryDate ?? 0).getTime() - new Date(b.expiryDate ?? 0).getTime()
+      (a, b) => new Date(a.expiryDate ?? 0).getTime() - new Date(b.expiryDate ?? 0).getTime()
     )
     .slice(0, 4);
+
+  const nf = (n: number) => n.toLocaleString("en-US");
 
   return (
     <>
       <SiteHeader />
 
-      <section className="relative overflow-hidden bg-gradient-to-br from-teal-800 via-brand-700 to-emerald-600 px-6 pb-14 pt-12 text-white">
+      <section className="relative overflow-hidden bg-gradient-to-br from-ink-900 via-brand-800 to-brand-600 px-6 pb-12 pt-12 text-white">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 opacity-30"
           style={{
             backgroundImage:
-              "radial-gradient(circle at 20% 20%, rgba(255,255,255,0.18), transparent 40%), radial-gradient(circle at 80% 0%, rgba(255,255,255,0.12), transparent 35%)",
+              "radial-gradient(circle at 18% 20%, rgba(45,212,191,0.35), transparent 42%), radial-gradient(circle at 82% 0%, rgba(249,115,22,0.22), transparent 40%)",
           }}
         />
         <div className="relative mx-auto max-w-3xl text-center">
-          <p className="text-sm font-bold uppercase tracking-[0.18em] text-teal-100/90">MyPerkFinder</p>
+          <p className="text-sm font-bold uppercase tracking-[0.18em] text-teal-100/90">
+            MyPerkFinder
+          </p>
           <h1 className="mt-3 text-4xl font-extrabold tracking-tight sm:text-5xl">
             Better deals, coupons &amp; perks — in one place.
           </h1>
@@ -55,17 +108,7 @@ export default async function HomePage() {
             action="/search"
             className="mx-auto mt-8 flex max-w-xl items-center gap-2 rounded-full bg-white p-2 pl-4 shadow-lg"
           >
-            <svg
-              aria-hidden
-              className="h-5 w-5 shrink-0 text-slate-400"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <circle cx="11" cy="11" r="7" />
-              <path d="M20 20l-3.5-3.5" strokeLinecap="round" />
-            </svg>
+            <Icon name="search" size={20} className="shrink-0 text-slate-400" />
             <input
               name="q"
               aria-label="Search deals"
@@ -92,28 +135,47 @@ export default async function HomePage() {
               </Button>
             </Link>
           </div>
+
+          <div className="mt-8 border-t border-white/15 pt-6 text-teal-50">
+            <TrustBar
+              items={[
+                { icon: "tag", value: `${nf(stats.activeDeals)}`, label: "live deals" },
+                { icon: "store", value: `${nf(stats.stores)}`, label: "stores" },
+                { icon: "coupon", value: `${nf(stats.coupons)}`, label: "coupons" },
+                { icon: "shield", label: "Verified & updated daily" },
+              ]}
+            />
+          </div>
         </div>
       </section>
 
       <main className="mx-auto max-w-6xl px-5 py-10">
-        <h2 className="mb-3 text-lg font-bold tracking-tight text-slate-900">Browse by category</h2>
         <div className="mb-10 flex flex-wrap gap-2">
           {CATEGORIES.map((c) => (
-            <Link key={c.href} href={c.href} className={chipClass()}>
+            <Link
+              key={c.href}
+              href={c.href}
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-[13px] font-semibold text-slate-600 shadow-sm transition hover:border-brand-300 hover:text-brand-700"
+            >
+              <Icon name={c.icon} size={14} className="text-brand-500" />
               {c.label}
             </Link>
           ))}
         </div>
 
-        <div className="mb-3 flex items-end justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-bold tracking-tight text-slate-900">Today&apos;s best deals</h2>
-            <p className="text-sm text-slate-500">Fresh offers worth a look</p>
+        {featured ? (
+          <div className="mb-12">
+            <FeaturedDeal deal={featured} href={`/deal/${featured.slug}`} />
           </div>
-          <Link href="/deals" className="text-sm font-bold text-brand-600 hover:underline">
-            View all →
-          </Link>
-        </div>
+        ) : null}
+
+        <SectionHeader
+          icon="bolt"
+          title="Today's best deals"
+          subtitle="Fresh offers worth a look"
+          href="/deals"
+          linkLabel="View all"
+        />
         {best.length > 0 ? (
           <DealGrid className="mb-12">
             {best.map((d) => (
@@ -134,18 +196,30 @@ export default async function HomePage() {
           </div>
         )}
 
-        <div className="mb-3 flex items-end justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-bold tracking-tight text-slate-900">Ending soon</h2>
-            <p className="text-sm text-slate-500">Expires within {EXPIRING_SOON_DAYS} days</p>
-          </div>
-          <Link
-            href="/deals?expiresSoon=true"
-            className="text-sm font-bold text-brand-600 hover:underline"
-          >
-            View all →
-          </Link>
-        </div>
+        {biggest.length > 0 ? (
+          <>
+            <SectionHeader
+              icon="fire"
+              title="Biggest discounts"
+              subtitle="The steepest markdowns right now"
+              href="/deals?sort=highest_discount"
+              linkLabel="View all"
+            />
+            <DealGrid className="mb-12">
+              {biggest.map((d) => (
+                <DealCard key={d.id} deal={toCard(d)} href={`/deal/${d.slug}`} />
+              ))}
+            </DealGrid>
+          </>
+        ) : null}
+
+        <SectionHeader
+          icon="clock"
+          title="Ending soon"
+          subtitle={`Expires within ${EXPIRING_SOON_DAYS} days`}
+          href="/deals?expiresSoon=true"
+          linkLabel="View all"
+        />
         {expiring.length > 0 ? (
           <DealGrid className="mb-12">
             {expiring.map((d) => (
@@ -161,24 +235,26 @@ export default async function HomePage() {
           </p>
         )}
 
-        <div className="mb-3 flex items-end justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-bold tracking-tight text-slate-900">Popular stores</h2>
-            <p className="text-sm text-slate-500">Shop by brand you trust</p>
-          </div>
-          <Link href="/stores" className="text-sm font-bold text-brand-600 hover:underline">
-            All stores →
-          </Link>
-        </div>
+        <SectionHeader
+          icon="store"
+          title="Top stores"
+          subtitle="Retailers with the most active deals right now"
+          href="/stores"
+          linkLabel="All stores"
+        />
         {stores.length > 0 ? (
-          <div className="mb-10 grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3.5">
+          <div className="mb-12 grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3.5">
             {stores.slice(0, 12).map((s) => (
               <StoreCard key={s.slug} store={s} href={`/stores/${s.slug}`} />
             ))}
           </div>
         ) : (
-          <p className="mb-10 text-sm text-slate-500">Stores will appear here as offers go live.</p>
+          <p className="mb-12 text-sm text-slate-500">Stores will appear here as offers go live.</p>
         )}
+
+        <div className="mb-10">
+          <NewsletterSignup />
+        </div>
 
         <AffiliateDisclosure />
       </main>

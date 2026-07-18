@@ -3,6 +3,7 @@
 import * as React from "react";
 import { cn, formatPrice } from "./cn.js";
 import { Badge } from "./Badge.js";
+import { Icon } from "./Icon.js";
 import { computeSavings, hasDisplayablePrices, priceFallbackLabel } from "./deal-pricing.js";
 import { merchantInitials, resolveStoreLogoUrl } from "./store-logos.js";
 
@@ -77,7 +78,7 @@ export function DealCard({ deal, href = "#", onSave }: DealCardProps) {
           <img
             src={deal.imageUrl!}
             alt={deal.title}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             onError={() => setImageFailed(true)}
           />
         ) : showMerchantLogo ? (
@@ -114,22 +115,32 @@ export function DealCard({ deal, href = "#", onSave }: DealCardProps) {
           type="button"
           aria-label="Save deal"
           onClick={onSave}
-          className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full border border-slate-200 bg-white/90 text-sm hover:text-brand-600"
+          className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full border border-slate-200 bg-white/90 text-slate-500 hover:text-danger-500"
         >
-          ♡
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+            <path d="M12 20s-7-4.5-7-9.5A4 4 0 0112 8a4 4 0 017 2.5C19 15.5 12 20 12 20z" strokeLinejoin="round" />
+          </svg>
         </button>
       ) : null}
       <div className="flex flex-1 flex-col gap-1.5 p-3">
         <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-500">
-          {deal.merchantName}
-          {deal.verified ? <Badge tone="verified" className="px-1.5 py-0">✓</Badge> : null}
+          <span className="truncate">{deal.merchantName}</span>
+          {deal.verified ? (
+            <Badge tone="verified" className="shrink-0 px-1.5 py-0">
+              <Icon name="check" size={11} strokeWidth={2.6} />
+              Verified
+            </Badge>
+          ) : null}
         </div>
-        <a href={href} className="line-clamp-2 min-h-[36px] text-[13.5px] font-semibold leading-snug text-slate-800">
+        <a href={href} className="line-clamp-2 min-h-[36px] text-[13.5px] font-semibold leading-snug text-ink-800 transition group-hover:text-brand-700">
           {deal.title}
         </a>
         {deal.couponCode ? (
           <div>
-            <Badge tone="coupon">✂ {deal.couponCode}</Badge>
+            <Badge tone="coupon">
+              <Icon name="coupon" size={12} />
+              {deal.couponCode}
+            </Badge>
           </div>
         ) : null}
         {showPrices ? (
@@ -151,7 +162,10 @@ export function DealCard({ deal, href = "#", onSave }: DealCardProps) {
         )}
         <div className="flex items-center justify-between text-[11px] text-slate-500">
           {deal.expiryLabel ? (
-            <Badge tone={deal.isUrgent ? "urgent" : "expiry"}>⏳ {deal.expiryLabel}</Badge>
+            <Badge tone={deal.isUrgent ? "urgent" : "expiry"}>
+              <Icon name="clock" size={12} />
+              {deal.expiryLabel}
+            </Badge>
           ) : (
             <span />
           )}

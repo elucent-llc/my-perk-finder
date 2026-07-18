@@ -11,6 +11,8 @@ export interface ImportedOfferInput {
   title: string;
   slug?: string;
   merchantName: string | null;
+  /** When set, stored on Merchant.logoUrl (does not overwrite with null). */
+  merchantLogoUrl?: string | null;
   brand?: string | null;
   category?: string | null;
   offerType?: OfferType;
@@ -47,16 +49,25 @@ async function resolveUniqueSlug(base: string, excludeId?: string): Promise<stri
   }
 }
 
-async function resolveMerchantId(name: string | null, network?: SourceKind): Promise<string | null> {
+async function resolveMerchantId(
+  name: string | null,
+  network?: SourceKind,
+  logoUrl?: string | null
+): Promise<string | null> {
   if (!name?.trim()) return null;
   const slug = slugify(name);
+  const logo = logoUrl?.trim() || null;
   const merchant = await prisma.merchant.upsert({
     where: { slug },
-    update: { isActive: true },
+    update: {
+      isActive: true,
+      ...(logo ? { logoUrl: logo } : {}),
+    },
     create: {
       name: name.trim(),
       slug,
       network: network ?? null,
+      logoUrl: logo,
       isActive: true,
     },
   });
@@ -109,7 +120,11 @@ export async function upsertImportedOffer(
     where: { source: input.source, externalId: input.externalId },
   });
 
-  const merchantId = await resolveMerchantId(input.merchantName, input.source);
+  const merchantId = await resolveMerchantId(
+    input.merchantName,
+    input.source,
+    input.merchantLogoUrl
+  );
   const categoryId = await resolveCategoryId(input.category);
   const baseSlug =
     input.slug ??

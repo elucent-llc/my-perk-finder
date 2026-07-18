@@ -1,6 +1,6 @@
 import type { DealCardData, StoreCardData } from "@mpf/ui";
 import { DealFilterQuery } from "@mpf/types";
-import { listDeals, getDealBySlug, listStores, searchDealsPostgres, getStoreBySlug } from "@/lib/server/deals";
+import { listDeals, getDealBySlug, listStores, searchDealsPostgres, getStoreBySlug, getPublicStats } from "@/lib/server/deals";
 import type { SerializedPublicDeal } from "@/lib/server/serialize";
 import { offerRedirectPath } from "@/lib/site";
 import { expiryLabel } from "@/lib/expiry";
@@ -41,6 +41,10 @@ export async function getCouponDeals(): Promise<DealDTO[]> {
 
 export async function getStores(): Promise<StoreCardData[]> {
   return listStores();
+}
+
+export async function getStats() {
+  return getPublicStats();
 }
 
 export async function getStore(slug: string) {

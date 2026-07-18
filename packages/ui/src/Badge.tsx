@@ -4,6 +4,7 @@ import { cn } from "./cn.js";
 export type BadgeTone =
   | "neutral"
   | "discount"
+  | "hot"
   | "save"
   | "expiry"
   | "urgent"
@@ -18,7 +19,8 @@ export type BadgeTone =
 
 const TONES: Record<BadgeTone, string> = {
   neutral: "bg-slate-100 text-slate-600",
-  discount: "bg-savings-600 text-white",
+  discount: "bg-accent-500 text-white shadow-sm",
+  hot: "bg-accent-50 text-accent-700 border border-accent-200",
   save: "bg-savings-50 text-savings-700 border border-savings-100",
   expiry: "bg-warn-50 text-warn-700 border border-warn-100",
   urgent: "bg-danger-50 text-danger-700 border border-danger-100",

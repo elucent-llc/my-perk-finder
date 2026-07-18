@@ -58,6 +58,7 @@ function toImportedInput(
     title: offer.title,
     slug: offer.slug,
     merchantName: offer.merchantName,
+    merchantLogoUrl: offer.merchantLogoUrl,
     brand: offer.brand,
     category: offer.category,
     offerType: resolveOfferType(offer),

@@ -41,11 +41,37 @@ function slugifyKey(input: string): string {
     .replace(/(^-|-$)/g, "");
 }
 
+/** Initials from letters only — avoids "O(" from names like "Oedro (US)". */
 export function merchantInitials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
+  const cleaned = name
+    .replace(/\([^)]*\)/g, " ")
+    .replace(/[^a-zA-Z0-9\s]/g, " ")
+    .trim();
+  const parts = cleaned.split(/\s+/).filter(Boolean);
+  if (parts.length === 0) {
+    const letters = name.replace(/[^a-zA-Z0-9]/g, "");
+    return (letters.slice(0, 2) || "?").toUpperCase();
+  }
   if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase();
   return `${parts[0]![0] ?? ""}${parts[1]![0] ?? ""}`.toUpperCase();
+}
+
+const AVATAR_PALETTES = [
+  "from-teal-500 to-emerald-700",
+  "from-cyan-500 to-teal-700",
+  "from-amber-500 to-orange-600",
+  "from-sky-500 to-blue-700",
+  "from-rose-500 to-orange-600",
+  "from-lime-500 to-green-700",
+] as const;
+
+/** Stable gradient classes for letter avatars (no logo). */
+export function merchantAvatarGradient(seed: string): string {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i += 1) {
+    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  }
+  return AVATAR_PALETTES[hash % AVATAR_PALETTES.length]!;
 }
 
 /**
