@@ -31,11 +31,11 @@ import { getSiteUrl } from "@/lib/site";
 import { buildMetadata, breadcrumbLd, productLd } from "@/lib/seo";
 
 /**
- * Deal pages are the deep-link surface and are read far more often than they change, so
- * they are statically generated on demand and revalidated every ten minutes rather than
- * re-rendered for every visitor.
+ * Deal pages are the deep-link surface and are read far more often than they change, but
+ * they cannot be prerendered: the Railway build has no route to postgres.railway.internal.
+ * getDeal is wrapped in React cache() so metadata and the body share one query.
  */
-export const revalidate = 600;
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,

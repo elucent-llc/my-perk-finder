@@ -26,8 +26,12 @@ import { PageHeader, SectionHeader } from "@/components/PageHeader";
 import { getStore, toCard, expiryLabel, offerRedirectUrl } from "@/lib/api";
 import { buildMetadata, breadcrumbLd, monthYear } from "@/lib/seo";
 
-/** Store pages are an SEO surface and change with the importer, not per request. */
-export const revalidate = 600;
+/**
+ * Store pages are an SEO surface and change with the importer, not per request, but they
+ * cannot be prerendered: the Railway build has no route to postgres.railway.internal.
+ * Their queries are cached in lib/api and busted by the importer's tag.
+ */
+export const dynamic = "force-dynamic";
 
 function titleFor(name: string) {
   return `${name} Coupons, Promo Codes & Deals - Updated ${monthYear()}`;

@@ -7,7 +7,7 @@ import { getCategories, searchDealsPaged, toCard } from "@/lib/api";
 import { buildMetadata } from "@/lib/seo";
 
 /** Results are per-query, so the render is dynamic; the query itself is cached upstream. */
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 // Search result pages are useful to users but low-value for the index.
 export const metadata = buildMetadata({

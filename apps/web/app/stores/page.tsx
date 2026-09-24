@@ -4,8 +4,11 @@ import { PageHeader } from "@/components/PageHeader";
 import { getStores } from "@/lib/api";
 import { buildMetadata } from "@/lib/seo";
 
-/** Merchant list changes only when a feed adds a store; hourly regeneration is plenty. */
-export const revalidate = 3600;
+/**
+ * Cannot be prerendered: the Railway build has no route to postgres.railway.internal.
+ * The merchant list changes only when a feed adds a store, so lib/api caches it hourly.
+ */
+export const dynamic = "force-dynamic";
 
 export const metadata = buildMetadata({
   title: "Stores — Coupons & Deals by Retailer · MyPerkFinder",

@@ -2,9 +2,10 @@ import type { MetadataRoute } from "next";
 import { absoluteUrl } from "@/lib/seo";
 import { getSitemap } from "@/lib/api";
 
-// Regenerate hourly instead of per request: this runs a 5000-row query, and crawlers hit
-// it often enough that force-dynamic made every visit pay for it.
-export const revalidate = 3600;
+// Cannot be prerendered: the Railway build has no route to postgres.railway.internal.
+// The 5000-row query is cached for an hour in lib/api, so crawler hits do not each pay
+// for it.
+export const dynamic = "force-dynamic";
 
 /**
  * Dynamic sitemap. Includes only public, indexable, active content.

@@ -21,9 +21,11 @@ import { buildMetadata, breadcrumbLd, monthYear } from "@/lib/seo";
 
 /**
  * Category pages are the SEO surface of the site and change only when the importer runs,
- * so they are regenerated on a ten-minute window instead of rendered per request.
+ * but they cannot be prerendered: the Railway build has no route to
+ * postgres.railway.internal. getCategory is wrapped in React cache() so metadata and the
+ * body share one query.
  */
-export const revalidate = 600;
+export const dynamic = "force-dynamic";
 
 const PAGE_SIZE = 24;
 

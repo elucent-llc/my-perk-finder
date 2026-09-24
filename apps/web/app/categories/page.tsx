@@ -6,11 +6,11 @@ import { getCategories } from "@/lib/api";
 import { buildMetadata } from "@/lib/seo";
 
 /**
- * Static with hourly regeneration. The category list changes only when a feed introduces
- * a new taxonomy entry, so `force-dynamic` here bought nothing and cost an aggregate
- * `_count` query per visit.
+ * Cannot be prerendered: the Railway build has no route to postgres.railway.internal.
+ * The category list changes only when a feed introduces a new taxonomy entry, so the
+ * aggregate `_count` query is cached for an hour in lib/api rather than per render.
  */
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export const metadata = buildMetadata({
   title: "Shop Deals by Category · MyPerkFinder",

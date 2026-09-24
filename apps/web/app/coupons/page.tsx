@@ -5,7 +5,8 @@ import { Pagination } from "@/components/Pagination";
 import { getDealsPage, expiryLabel, offerRedirectUrl } from "@/lib/api";
 import { buildMetadata } from "@/lib/seo";
 
-export const revalidate = 300;
+// Cannot be prerendered: the Railway build has no route to postgres.railway.internal.
+export const dynamic = "force-dynamic";
 
 export const metadata = buildMetadata({
   title: "Coupons & Promo Codes · MyPerkFinder",

@@ -17,13 +17,12 @@ import { EXPIRING_SOON_DAYS } from "@/lib/expiry";
 import { buildMetadata } from "@/lib/seo";
 
 /**
- * Was `force-dynamic`, which opted the route out of every cache layer including the data
- * cache. Reading `searchParams` still makes the render itself dynamic, but the listing
- * query now comes from the tagged data cache in lib/api (see DEALS_TAG), so repeat views
- * of the same filter combination cost no database work. `revalidate` bounds how long any
- * cached data this route touches may be reused.
+ * Reading `searchParams` already makes this render per request, and it cannot be
+ * prerendered anyway (the Railway build has no route to postgres.railway.internal).
+ * The listing query comes from the tagged data cache in lib/api (see DEALS_TAG), so
+ * repeat views of the same filter combination still cost no database work.
  */
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 

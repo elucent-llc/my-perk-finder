@@ -21,11 +21,11 @@ import { getDeals, getStores, getStats, getCategories, toCard } from "@/lib/api"
 import { EXPIRING_SOON_DAYS } from "@/lib/expiry";
 
 /**
- * The homepage reads no request data, so it can be a fully static page regenerated every
- * five minutes. It was `force-dynamic`, which meant five uncached database queries on
- * every single visit to the most-visited URL on the site.
+ * Cannot be prerendered: Railway's private network is unavailable during builds, so a
+ * build-time render cannot reach postgres.railway.internal. The database work is still
+ * cached at runtime by unstable_cache in lib/api, so this costs render time, not queries.
  */
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 const CATEGORY_ICONS: IconName[] = ["bolt", "store", "tag", "coupon", "fire", "shield"];
 
