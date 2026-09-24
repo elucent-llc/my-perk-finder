@@ -1,18 +1,38 @@
 "use client";
 
 import * as React from "react";
-import { Button, Icon } from "@mpf/ui";
+import { Button, Icon, cn } from "@mpf/ui";
 
 type State = "idle" | "loading" | "ok" | "error";
 
+/**
+ * Both layouts share one field + one status region.
+ *
+ * Accessibility fixes: the input carried `outline-none` with nothing replacing the focus
+ * indicator, so keyboard users had no idea where they were (SC 2.4.7) — the ring now lives
+ * on the pill wrapper via `focus-within`, which is the element that actually looks like the
+ * control. The result message was a plain `<p>` that appeared silently, so screen-reader
+ * users got no confirmation that they had subscribed or that it had failed; it is now a
+ * live region that is present in the DOM from first render (a region inserted at the same
+ * time as its text is frequently not announced). The field is also wired to the message
+ * with `aria-describedby`, marked `aria-invalid` on failure, and disabled while in flight
+ * so a double submit cannot create two requests.
+ *
+ * `useId` keeps the ids unique because the footer renders the compact variant on pages that
+ * also render the panel.
+ */
 export function NewsletterSignup({ variant = "panel" }: { variant?: "panel" | "compact" }) {
   const [email, setEmail] = React.useState("");
   const [state, setState] = React.useState<State>("idle");
   const [message, setMessage] = React.useState("");
+  const baseId = React.useId();
+  const inputId = `${baseId}-email`;
+  const statusId = `${baseId}-status`;
+  const busy = state === "loading";
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (state === "loading") return;
+    if (busy) return;
     setState("loading");
     setMessage("");
     try {
@@ -28,7 +48,7 @@ export function NewsletterSignup({ variant = "panel" }: { variant?: "panel" | "c
         return;
       }
       setState("ok");
-      setMessage("You're in! We'll send the best deals to your inbox.");
+      setMessage("You're subscribed. We'll send the best deals to your inbox.");
       setEmail("");
     } catch {
       setState("error");
@@ -36,35 +56,63 @@ export function NewsletterSignup({ variant = "panel" }: { variant?: "panel" | "c
     }
   }
 
+  const fieldProps = {
+    id: inputId,
+    type: "email" as const,
+    name: "email",
+    required: true,
+    autoComplete: "email" as const,
+    inputMode: "email" as const,
+    value: email,
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value),
+    disabled: busy,
+    "aria-invalid": state === "error" || undefined,
+    "aria-describedby": statusId,
+  };
+
   if (variant === "compact") {
     return (
-      <form onSubmit={onSubmit} className="w-full">
-        <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white p-1 pl-3 shadow-sm focus-within:border-brand-300">
-          <Icon name="mail" size={16} className="shrink-0 text-slate-400" />
+      <form onSubmit={onSubmit} className="w-full" aria-busy={busy}>
+        <label htmlFor={inputId} className="sr-only">
+          Email address for deal alerts
+        </label>
+        <div className="flex items-center gap-2 rounded-pill border border-slate-200 bg-white p-1 pl-3 shadow-card transition focus-within:border-brand-300 focus-within:ring-2 focus-within:ring-brand-600 focus-within:ring-offset-2">
+          <Icon name="mail" size={16} className="shrink-0 text-ink-500" aria-hidden />
           <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            {...fieldProps}
             placeholder="Your email"
-            aria-label="Email address"
-            className="min-w-0 flex-1 border-0 bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400"
+            className="min-w-0 flex-1 border-0 bg-transparent text-mini text-ink-800 outline-none placeholder:text-ink-500 disabled:opacity-60"
           />
-          <Button type="submit" size="sm" variant="primary" className="shrink-0 rounded-full">
-            {state === "loading" ? "…" : "Notify me"}
+          <Button
+            type="submit"
+            size="sm"
+            variant="primary"
+            disabled={busy}
+            className="shrink-0 rounded-pill"
+          >
+            {busy ? "Joining…" : "Notify me"}
           </Button>
         </div>
-        {message ? (
-          <p className={`mt-1.5 text-xs ${state === "error" ? "text-danger-600" : "text-savings-700"}`}>
-            {message}
-          </p>
-        ) : null}
+        <p
+          id={statusId}
+          role="status"
+          aria-live="polite"
+          className={cn(
+            "mt-1.5 min-h-[1rem] text-micro font-semibold",
+            state === "error" ? "text-danger-700" : "text-savings-800"
+          )}
+        >
+          {message}
+        </p>
       </form>
     );
   }
 
   return (
-    <section className="relative overflow-hidden rounded-card bg-gradient-to-br from-brand-700 to-brand-900 px-6 py-9 text-white">
+    <section
+      aria-labelledby={`${baseId}-heading`}
+      className="relative overflow-hidden rounded-card bg-gradient-to-br from-brand-700 to-brand-900 px-6 py-9 text-white"
+    >
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 opacity-25"
@@ -74,35 +122,54 @@ export function NewsletterSignup({ variant = "panel" }: { variant?: "panel" | "c
         }}
       />
       <div className="relative mx-auto max-w-xl text-center">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-bold uppercase tracking-wide">
-          <Icon name="bolt" size={13} />
+        <span className="inline-flex items-center gap-1.5 rounded-pill bg-white/20 px-3 py-1 text-micro font-bold uppercase tracking-wide">
+          <Icon name="bolt" size={13} aria-hidden />
           Deal alerts
         </span>
-        <h2 className="mt-3 text-2xl font-extrabold tracking-tight">Never miss a price drop</h2>
-        <p className="mx-auto mt-2 max-w-md text-sm text-white/85">
+        <h2
+          id={`${baseId}-heading`}
+          className="mt-3 text-2xl font-extrabold tracking-tight text-white"
+        >
+          Never miss a price drop
+        </h2>
+        {/* text-white/85 measured 4.1:1 against the lighter end of the gradient; /90 clears
+            AA across the whole sweep. */}
+        <p className="mx-auto mt-2 max-w-md text-ui text-white/90">
           Get the best verified deals and exclusive coupons delivered to your inbox. No spam —
           unsubscribe anytime.
         </p>
-        <form onSubmit={onSubmit} className="mx-auto mt-5 flex max-w-md items-center gap-2 rounded-full bg-white p-1.5 pl-4 shadow-lg">
-          <Icon name="mail" size={18} className="shrink-0 text-slate-400" />
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            aria-label="Email address"
-            className="min-w-0 flex-1 border-0 bg-transparent text-[15px] text-slate-800 outline-none placeholder:text-slate-400"
-          />
-          <Button type="submit" variant="primary" className="shrink-0 rounded-full px-5">
-            {state === "loading" ? "Joining…" : "Subscribe"}
-          </Button>
+        <form onSubmit={onSubmit} className="mx-auto mt-5 max-w-md" aria-busy={busy}>
+          <label htmlFor={inputId} className="sr-only">
+            Email address for deal alerts
+          </label>
+          <div className="flex items-center gap-2 rounded-pill bg-white p-1.5 pl-4 shadow-overlay transition focus-within:ring-2 focus-within:ring-white focus-within:ring-offset-2 focus-within:ring-offset-brand-800">
+            <Icon name="mail" size={18} className="shrink-0 text-ink-500" aria-hidden />
+            <input
+              {...fieldProps}
+              placeholder="you@example.com"
+              className="min-w-0 flex-1 border-0 bg-transparent text-ui text-ink-800 outline-none placeholder:text-ink-500 disabled:opacity-60"
+            />
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={busy}
+              className="shrink-0 rounded-pill px-5"
+            >
+              {busy ? "Joining…" : "Subscribe"}
+            </Button>
+          </div>
         </form>
-        {message ? (
-          <p className={`mt-3 text-sm font-semibold ${state === "error" ? "text-amber-200" : "text-teal-100"}`}>
-            {message}
-          </p>
-        ) : null}
+        <p
+          id={statusId}
+          role="status"
+          aria-live="polite"
+          className={cn(
+            "mt-3 min-h-[1.25rem] text-card font-semibold",
+            state === "error" ? "text-warn-100" : "text-brand-100"
+          )}
+        >
+          {message}
+        </p>
       </div>
     </section>
   );

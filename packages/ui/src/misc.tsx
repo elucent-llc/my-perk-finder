@@ -1,44 +1,87 @@
 import * as React from "react";
-import { cn } from "./cn.js";
+import Link from "next/link";
+import { cn, focusRing } from "./cn.js";
 import { Icon } from "./Icon.js";
+
+/**
+ * One chip appearance for the whole app. Previously this component existed but
+ * was unused, while /deals, the homepage and category pages each re-implemented
+ * it with subtly different hover colours and an extra shadow.
+ *
+ * 44px min-height meets WCAG 2.5.8; the old chips were ~30px.
+ */
+export function chipClasses(active?: boolean, className?: string) {
+  return cn(
+    "inline-flex min-h-[44px] items-center gap-1.5 rounded-pill border px-4 py-2 text-mini font-semibold transition",
+    focusRing,
+    active
+      ? "border-brand-700 bg-brand-700 text-white"
+      : "border-slate-200 bg-white text-ink-600 hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700",
+    className
+  );
+}
 
 export function Chip({
   active,
   className,
+  type = "button",
   ...props
-}: React.HTMLAttributes<HTMLButtonElement> & { active?: boolean }) {
+}: React.ButtonHTMLAttributes<HTMLButtonElement> & { active?: boolean }) {
+  return <button type={type} className={chipClasses(active, className)} {...props} />;
+}
+
+/**
+ * Chip that navigates. Filters are links so they work without JS.
+ *
+ * next/link rather than a bare anchor: every chip in the app pointed at an internal
+ * route, so a plain `<a>` threw away the client-side transition and re-downloaded the
+ * document on each filter change.
+ */
+export function ChipLink({
+  active,
+  className,
+  href,
+  ...props
+}: Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href"> & {
+  active?: boolean;
+  href: string;
+}) {
   return (
-    <button
-      className={cn(
-        "inline-flex items-center gap-1.5 rounded-pill border px-3.5 py-1.5 text-[13px] font-semibold transition",
-        active
-          ? "border-brand-600 bg-brand-600 text-white"
-          : "border-slate-200 bg-white text-slate-600 hover:border-brand-200 hover:text-brand-600",
-        className
-      )}
+    <Link
+      href={href}
+      aria-current={active ? "page" : undefined}
+      className={chipClasses(active, className)}
       {...props}
     />
   );
 }
 
+/**
+ * `headingLevel` defaults to 2 because an empty state normally follows the
+ * page h1 directly — hardcoding h3 here previously skipped a level on
+ * /search, /stores, /coupons and /categories.
+ */
 export function EmptyState({
   icon,
   title,
   description,
   action,
+  headingLevel = 2,
 }: {
   icon?: React.ReactNode;
   title: string;
   description?: string;
   action?: React.ReactNode;
+  headingLevel?: 2 | 3;
 }) {
+  const Heading = (headingLevel === 3 ? "h3" : "h2") as "h2" | "h3";
   return (
-    <div className="px-5 py-14 text-center text-slate-500">
-      <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-full bg-brand-50 text-brand-500">
+    <div className="px-5 py-14 text-center text-ink-500">
+      <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-pill bg-brand-50 text-brand-700">
         {icon ?? <Icon name="search" size={26} />}
       </div>
-      <h3 className="mb-1.5 text-[17px] font-bold text-ink-800">{title}</h3>
-      {description ? <p className="mx-auto mb-4 max-w-sm text-[13.5px]">{description}</p> : null}
+      <Heading className="mb-1.5 text-subhead font-bold text-ink-800">{title}</Heading>
+      {description ? <p className="mx-auto mb-4 max-w-sm text-card">{description}</p> : null}
       {action}
     </div>
   );
@@ -48,7 +91,7 @@ export function AffiliateDisclosure({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "flex items-start gap-2.5 rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs leading-relaxed text-slate-500",
+        "flex items-start gap-2.5 rounded-control border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs leading-relaxed text-ink-500",
         className
       )}
     >
@@ -76,7 +119,7 @@ export function AlertBanner({
     danger: "bg-danger-50 border-danger-100 text-danger-700",
   } as const;
   return (
-    <div className={cn("flex items-start gap-2.5 rounded-lg border px-3.5 py-2.5 text-sm", tones[tone])}>
+    <div className={cn("flex items-start gap-2.5 rounded-control border px-3.5 py-2.5 text-sm", tones[tone])}>
       {children}
     </div>
   );

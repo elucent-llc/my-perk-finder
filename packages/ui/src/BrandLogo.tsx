@@ -54,7 +54,7 @@ export function BrandLogo({
         />
       </svg>
       {withWordmark ? (
-        <span className="text-base font-extrabold tracking-tight text-slate-900">
+        <span className="text-base font-extrabold tracking-tight text-ink-800">
           My<span className="text-brand-600">Perk</span>Finder
         </span>
       ) : null}

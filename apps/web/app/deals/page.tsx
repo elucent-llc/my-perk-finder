@@ -1,163 +1,169 @@
-import Link from "next/link";
-import { DealCard, DealGrid, EmptyState, Button } from "@mpf/ui";
+import type { Metadata } from "next";
+import { ButtonLink, DealCard, DealGrid, EmptyState } from "@mpf/ui";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { DealsSortSelect } from "@/components/DealsSortSelect";
-import { getDealsPage, toCard } from "@/lib/api";
+import { DealFilters, ActiveFilterChips } from "@/components/DealFilters";
+import { PageHeader } from "@/components/PageHeader";
+import { Pagination } from "@/components/Pagination";
+import { getCategories, getDealsPage, getStores, toCard } from "@/lib/api";
+import {
+  DEALS_PAGE_SIZE,
+  dealFiltersHref,
+  dealFiltersToApiQuery,
+  hasActiveFilters,
+  parseDealFilters,
+} from "@/lib/deal-filters";
 import { EXPIRING_SOON_DAYS } from "@/lib/expiry";
+import { buildMetadata } from "@/lib/seo";
 
-export const dynamic = "force-dynamic";
+/**
+ * Was `force-dynamic`, which opted the route out of every cache layer including the data
+ * cache. Reading `searchParams` still makes the render itself dynamic, but the listing
+ * query now comes from the tagged data cache in lib/api (see DEALS_TAG), so repeat views
+ * of the same filter combination cost no database work. `revalidate` bounds how long any
+ * cached data this route touches may be reused.
+ */
+export const revalidate = 300;
 
-const CATEGORIES = [
-  { label: "All", slug: "" },
-  { label: "Electronics", slug: "electronics" },
-  { label: "Audio", slug: "audio" },
-  { label: "Home & Kitchen", slug: "home-kitchen" },
-  { label: "Fashion", slug: "fashion" },
-  { label: "Beauty", slug: "beauty" },
-] as const;
+type SearchParams = Record<string, string | string[] | undefined>;
 
-const STATUS_FILTERS = [
-  { label: "All deals", params: {} as Record<string, string> },
-  { label: "Coupon available", params: { couponAvailable: "true" } },
-  { label: "Verified today", params: { verifiedToday: "true" } },
-  { label: "Ends soon", params: { expiresSoon: "true" } },
-  { label: "25%+ off", params: { minDiscount: "25" } },
-] as const;
+/**
+ * Canonical always points to the clean /deals URL. Filtered/sorted/paged views
+ * are noindex,follow so crawl budget concentrates on category & deal pages.
+ */
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}): Promise<Metadata> {
+  const filters = parseDealFilters(await searchParams);
+  const isNarrowed = hasActiveFilters(filters) || filters.page > 1 || Boolean(filters.q);
 
-function chipClass(active: boolean) {
-  return [
-    "inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[13px] font-semibold transition",
-    active
-      ? "border-brand-600 bg-brand-600 text-white shadow-sm"
-      : "border-slate-200 bg-white text-slate-600 hover:border-brand-300 hover:text-brand-700",
-  ].join(" ");
-}
-
-function dealsHref(opts: {
-  category?: string;
-  filter?: Record<string, string>;
-  sort?: string;
-  page?: number;
-}): string {
-  const p = new URLSearchParams(opts.filter ?? {});
-  if (opts.category) p.set("category", opts.category);
-  if (opts.sort && opts.sort !== "newest") p.set("sort", opts.sort);
-  if (opts.page && opts.page > 1) p.set("page", String(opts.page));
-  const qs = p.toString();
-  return qs ? `/deals?${qs}` : "/deals";
-}
-
-function activeStatusKey(sp: Record<string, string | string[] | undefined>): string {
-  if (sp.couponAvailable === "true") return "Coupon available";
-  if (sp.verifiedToday === "true") return "Verified today";
-  if (sp.expiresSoon === "true") return "Ends soon";
-  if (sp.minDiscount === "25") return "25%+ off";
-  return "All deals";
+  return buildMetadata({
+    title: "Today's Best Deals & Discounts · MyPerkFinder",
+    description:
+      "Browse today's verified deals and discounts from popular stores. Compare savings, then shop at the merchant.",
+    path: "/deals",
+    noindex: isNarrowed,
+    keywords: ["deals", "discounts", "online deals", "best deals today"],
+  });
 }
 
 export default async function DealsPage({
   searchParams,
 }: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
+  searchParams: Promise<SearchParams>;
 }) {
-  const sp = await searchParams;
-  const sort = typeof sp.sort === "string" ? sp.sort : "newest";
-  const page = Math.max(1, Number(typeof sp.page === "string" ? sp.page : 1) || 1);
-  const category = typeof sp.category === "string" ? sp.category : "";
-  const activeStatus = activeStatusKey(sp);
-  const statusParams = STATUS_FILTERS.find((f) => f.label === activeStatus)?.params ?? {};
+  const filters = parseDealFilters(await searchParams);
 
-  const params = new URLSearchParams(statusParams);
-  if (category) params.set("category", category);
-  params.set("page", String(page));
-  params.set("pageSize", "24");
-  params.set("sort", sort);
+  // Facet options come from the database. The category chips used to be six hardcoded
+  // slugs, so a category with deals but no chip was unreachable and a chip whose
+  // category had been renamed led to an empty grid.
+  const [result, categories, stores] = await Promise.all([
+    getDealsPage(dealFiltersToApiQuery(filters, DEALS_PAGE_SIZE)),
+    getCategories(),
+    getStores(40),
+  ]);
 
-  const result = await getDealsPage(`?${params.toString()}`);
-  const categoryLabel = CATEGORIES.find((c) => c.slug === category)?.label;
+  const categoryFacets = categories.map((c) => ({
+    slug: c.slug,
+    name: c.name,
+    count: c.dealsCount,
+  }));
+  const storeFacets = stores.map((s) => ({
+    slug: s.slug,
+    name: s.name,
+    count: s.dealsCount,
+  }));
+
+  const activeCategory = categories.find((c) => c.slug === filters.category);
+  const activeStore = stores.find((s) => s.slug === filters.store);
+
+  const title = activeCategory
+    ? `${activeCategory.name} deals`
+    : activeStore
+      ? `${activeStore.name} deals`
+      : "Today’s deals";
+
+  const showing =
+    result.total === 0
+      ? "No matching offers"
+      : `${result.total.toLocaleString("en-US")} active offer${result.total === 1 ? "" : "s"}${
+          filters.expiresSoon ? ` ending within ${EXPIRING_SOON_DAYS} days` : ""
+        }`;
 
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto max-w-6xl px-5 py-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
-            {categoryLabel && category ? `${categoryLabel} deals` : "Today’s deals"}
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            {result.total} active offers
-            {activeStatus === "Ends soon" ? ` ending within ${EXPIRING_SOON_DAYS} days` : ""}
-            {result.totalPages > 1 ? ` · page ${result.page} of ${result.totalPages}` : ""}
-          </p>
-        </div>
+      <main id="main" className="mx-auto max-w-6xl px-5 py-8">
+        <PageHeader
+          title={title}
+          description={showing}
+          breadcrumbs={[{ label: "Home", href: "/" }, { label: "Deals" }]}
+        />
 
-        <div className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-400">Category</div>
-        <div className="mb-5 flex flex-wrap gap-2">
-          {CATEGORIES.map((c) => (
-            <Link
-              key={c.label}
-              href={dealsHref({ category: c.slug, filter: statusParams, sort })}
-              className={chipClass(c.slug === category)}
-            >
-              {c.label}
-            </Link>
-          ))}
-        </div>
+        {/* Sidebar rail from `lg` up, stacked above the grid below it — the standard
+            retail listing layout, and it keeps the facets in a sensible reading order
+            for screen readers either way. */}
+        <div className="grid gap-6 lg:grid-cols-[232px_minmax(0,1fr)] lg:gap-8">
+          <DealFilters filters={filters} categories={categoryFacets} stores={storeFacets} />
 
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap gap-2">
-            {STATUS_FILTERS.map((f) => (
-              <Link
-                key={f.label}
-                href={dealsHref({ category, filter: f.params, sort })}
-                className={chipClass(f.label === activeStatus)}
-              >
-                {f.label}
-              </Link>
-            ))}
+          <div className="min-w-0">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              {/* Not a live region: every facet change is a server navigation, so this text
+                  is never mutated in place and there is nothing for AT to announce. */}
+              <p className="text-mini text-ink-600">
+                {result.total > 0
+                  ? `Showing ${(filters.page - 1) * DEALS_PAGE_SIZE + 1}–${
+                      (filters.page - 1) * DEALS_PAGE_SIZE + result.data.length
+                    } of ${result.total.toLocaleString("en-US")}`
+                  : ""}
+              </p>
+              <DealsSortSelect filters={filters} />
+            </div>
+
+            <ActiveFilterChips
+              filters={filters}
+              categories={categoryFacets}
+              stores={storeFacets}
+              className="mb-4"
+            />
+
+            {result.data.length === 0 ? (
+              <EmptyState
+                title="No deals match your filters"
+                description="Try removing a filter, widening the price range, or browse every active offer."
+                action={
+                  <ButtonLink href="/deals" variant="primary">
+                    Clear all filters
+                  </ButtonLink>
+                }
+              />
+            ) : (
+              <>
+                <DealGrid>
+                  {result.data.map((d, i) => (
+                    <DealCard
+                      key={d.id}
+                      deal={toCard(d)}
+                      href={`/deal/${d.slug}`}
+                      saveable
+                      /* Only the first row can be the LCP element; preloading more
+                         would compete with it for bandwidth. */
+                      priority={filters.page === 1 && i < 4}
+                    />
+                  ))}
+                </DealGrid>
+
+                <Pagination
+                  page={result.page}
+                  totalPages={result.totalPages}
+                  buildHref={(p) => dealFiltersHref("/deals", filters, { page: p })}
+                />
+              </>
+            )}
           </div>
-          <DealsSortSelect
-            sort={sort}
-            filterParams={{
-              ...statusParams,
-              ...(category ? { category } : {}),
-            }}
-          />
         </div>
-
-        {result.data.length === 0 ? (
-          <EmptyState
-            title="No deals match your filters"
-            description="Try another category, clear a filter, or browse all active offers."
-            action={
-              <Link href="/deals">
-                <Button variant="primary">Clear filters</Button>
-              </Link>
-            }
-          />
-        ) : (
-          <>
-            <DealGrid>
-              {result.data.map((d) => (
-                <DealCard key={d.id} deal={toCard(d)} href={`/deal/${d.slug}`} />
-              ))}
-            </DealGrid>
-            {result.totalPages > 1 ? (
-              <div className="mt-8 flex justify-center gap-3">
-                {page > 1 ? (
-                  <Link href={dealsHref({ category, filter: statusParams, sort, page: page - 1 })}>
-                    <Button variant="outline">Previous</Button>
-                  </Link>
-                ) : null}
-                {page < result.totalPages ? (
-                  <Link href={dealsHref({ category, filter: statusParams, sort, page: page + 1 })}>
-                    <Button variant="outline">Next page</Button>
-                  </Link>
-                ) : null}
-              </div>
-            ) : null}
-          </>
-        )}
       </main>
       <SiteFooter />
     </>

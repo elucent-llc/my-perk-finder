@@ -1,13 +1,15 @@
-"use client";
-
 import * as React from "react";
-import { cn, formatPrice } from "./cn.js";
+import Image from "next/image";
+import Link from "next/link";
+import { cn, formatPrice, focusRing } from "./cn.js";
 import { Badge } from "./Badge.js";
 import { Icon } from "./Icon.js";
 import { computeSavings, hasDisplayablePrices, priceFallbackLabel } from "./deal-pricing.js";
-import { merchantInitials, resolveStoreLogoUrl } from "./store-logos.js";
+import { logoNeedsUnoptimized, merchantInitials, resolveStoreLogoUrl } from "./store-logos.js";
+import { SaveDealButton } from "./SaveDealButton.js";
 
 export interface DealCardData {
+  id?: string;
   title: string;
   slug: string;
   merchantName: string;
@@ -23,107 +25,114 @@ export interface DealCardData {
   isUrgent?: boolean;
   confidenceScore?: number | null;
   verified?: boolean;
+  /** Redirect clicks recorded for this deal — rendered as social proof. */
+  clicksCount?: number | null;
 }
 
 export interface DealCardProps {
   deal: DealCardData;
   href?: string;
-  onSave?: () => void;
+  /** Show the save/favourite toggle. Off inside admin tables. */
+  saveable?: boolean;
+  /** Set on the first row of the first grid so the LCP image is not lazy. */
+  priority?: boolean;
+  /**
+   * Matches the grid's real column width so the browser downloads an
+   * appropriately sized file instead of the merchant's full-resolution asset.
+   */
+  sizes?: string;
 }
 
-const PLACEHOLDER_PALETTES = [
-  { from: "from-teal-500", to: "to-emerald-700" },
-  { from: "from-emerald-500", to: "to-teal-700" },
-  { from: "from-amber-500", to: "to-orange-600" },
-  { from: "from-rose-500", to: "to-orange-600" },
-  { from: "from-cyan-500", to: "to-teal-700" },
-  { from: "from-lime-500", to: "to-green-700" },
-  { from: "from-sky-500", to: "to-cyan-700" },
-  { from: "from-orange-500", to: "to-amber-600" },
-] as const;
+/** Card image box: 4:3, which suits product photography better than a fixed 128px band. */
+const IMAGE_W = 280;
+const IMAGE_H = 210;
 
-function placeholderPalette(seed: string) {
-  let hash = 0;
-  for (let i = 0; i < seed.length; i += 1) {
-    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
-  }
-  return PLACEHOLDER_PALETTES[hash % PLACEHOLDER_PALETTES.length]!;
-}
+const DEFAULT_SIZES = "(max-width: 480px) 50vw, (max-width: 1024px) 33vw, 280px";
 
-export function DealCard({ deal, href = "#", onSave }: DealCardProps) {
+/**
+ * Deal card.
+ *
+ * Notable changes from the original: it is a server component again (the only
+ * reason it was `"use client"` was a useState-driven image `onError`, which
+ * hydrated 24 instances on /deals); images go through next/image; navigation
+ * uses next/link instead of raw anchors that forced full document reloads; and
+ * the whole card is one link target instead of two anchors to the same href.
+ */
+export function DealCard({
+  deal,
+  href = "#",
+  saveable = false,
+  priority = false,
+  sizes = DEFAULT_SIZES,
+}: DealCardProps) {
   const currency = deal.currency ?? "USD";
   const showPrices = hasDisplayablePrices(deal);
   const save = computeSavings(deal);
-  const showDiscount = showPrices && deal.discountPercent > 0;
-  const palette = placeholderPalette(`${deal.slug}|${deal.merchantName}`);
-  const [imageFailed, setImageFailed] = React.useState(false);
-  const [logoFailed, setLogoFailed] = React.useState(false);
+  // Discount is the single most persuasive number on the card, so it shows
+  // whenever it exists — it used to be suppressed for coupon-only offers that
+  // carry a real percentage but no prices.
+  const showDiscount = deal.discountPercent > 0;
   const merchantLogo = resolveStoreLogoUrl(deal.merchantName, deal.merchantLogoUrl);
-  const showProductImage = Boolean(deal.imageUrl) && !imageFailed;
-  const showMerchantLogo = !showProductImage && Boolean(merchantLogo) && !logoFailed;
 
   return (
-    <article className="group relative flex flex-col overflow-hidden rounded-card border border-slate-200 bg-white shadow-card-sm transition hover:-translate-y-0.5 hover:shadow-card">
-      <a
-        href={href}
-        className={cn(
-          "relative block h-32",
-          showProductImage || showMerchantLogo
-            ? "bg-slate-50"
-            : `bg-gradient-to-br ${palette.from} ${palette.to}`
-        )}
-      >
-        {showProductImage ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={deal.imageUrl!}
+    <article className="group relative flex flex-col overflow-hidden rounded-card border border-slate-200 bg-white shadow-card transition hover:border-slate-300 hover:shadow-card-hover focus-within:border-brand-300 focus-within:shadow-card-hover">
+      <div className="relative aspect-[4/3] overflow-hidden bg-surface-muted">
+        {deal.imageUrl ? (
+          <Image
+            src={deal.imageUrl}
             alt={deal.title}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-            onError={() => setImageFailed(true)}
+            width={IMAGE_W}
+            height={IMAGE_H}
+            sizes={sizes}
+            priority={priority}
+            loading={priority ? undefined : "lazy"}
+            className="h-full w-full object-cover transition-transform duration-slow group-hover:scale-[1.03]"
           />
-        ) : showMerchantLogo ? (
+        ) : merchantLogo ? (
           <span className="flex h-full flex-col items-center justify-center gap-2 px-4">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={merchantLogo!}
+            <Image
+              src={merchantLogo}
               alt=""
+              width={56}
+              height={56}
+              sizes="56px"
+              // Brand icons are SVG, which the optimizer rejects. See logoNeedsUnoptimized.
+              unoptimized={logoNeedsUnoptimized(merchantLogo)}
               className="h-14 w-14 object-contain"
-              onError={() => setLogoFailed(true)}
             />
-            <span className="line-clamp-2 text-center text-[11px] font-semibold text-slate-500">
+            <span className="line-clamp-2 text-center text-micro font-semibold text-ink-500">
               {deal.merchantName}
             </span>
           </span>
         ) : (
-          <span className="flex h-full flex-col items-center justify-center gap-1.5 px-3 text-center text-white/90">
-            <span className="grid h-11 w-11 place-items-center rounded-full bg-white/20 text-sm font-extrabold tracking-wide backdrop-blur-sm">
+          /* One quiet branded fallback, not one of eight random gradients. */
+          <span className="flex h-full flex-col items-center justify-center gap-2 bg-brand-50 px-3 text-center">
+            <span className="grid h-12 w-12 place-items-center rounded-pill bg-white text-sm font-extrabold tracking-wide text-brand-800 ring-1 ring-inset ring-brand-100">
               {merchantInitials(deal.merchantName)}
             </span>
-            <span className="line-clamp-2 text-[11px] font-semibold leading-snug opacity-90">
-              {deal.title}
+            <span className="line-clamp-2 text-micro font-semibold leading-snug text-brand-800">
+              {deal.merchantName}
             </span>
           </span>
         )}
+
         {showDiscount ? (
           <Badge tone="discount" className="absolute left-2 top-2">
-            -{deal.discountPercent}%
+            {deal.discountPercent}% off
           </Badge>
         ) : null}
-      </a>
-      {onSave ? (
-        <button
-          type="button"
-          aria-label="Save deal"
-          onClick={onSave}
-          className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full border border-slate-200 bg-white/90 text-slate-500 hover:text-danger-500"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-            <path d="M12 20s-7-4.5-7-9.5A4 4 0 0112 8a4 4 0 017 2.5C19 15.5 12 20 12 20z" strokeLinejoin="round" />
-          </svg>
-        </button>
-      ) : null}
+
+        {saveable && deal.id ? (
+          <SaveDealButton
+            dealId={deal.id}
+            title={deal.title}
+            className="absolute right-2 top-2"
+          />
+        ) : null}
+      </div>
+
       <div className="flex flex-1 flex-col gap-1.5 p-3">
-        <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-500">
+        <div className="flex items-center gap-1 text-micro font-semibold text-ink-500">
           <span className="truncate">{deal.merchantName}</span>
           {deal.verified ? (
             <Badge tone="verified" className="shrink-0 px-1.5 py-0">
@@ -132,9 +141,25 @@ export function DealCard({ deal, href = "#", onSave }: DealCardProps) {
             </Badge>
           ) : null}
         </div>
-        <a href={href} className="line-clamp-2 min-h-[36px] text-[13.5px] font-semibold leading-snug text-ink-800 transition group-hover:text-brand-700">
-          {deal.title}
-        </a>
+
+        {/*
+          One link per card, stretched over the whole surface. Previously the
+          image and the title were two separate anchors to the same href, so
+          screen readers announced the card twice and clicking the price or
+          merchant name did nothing.
+        */}
+        <h3 className="text-card font-semibold leading-snug text-ink-800">
+          <Link
+            href={href}
+            className={cn(
+              "line-clamp-2 transition before:absolute before:inset-0 before:content-[''] group-hover:text-brand-700",
+              focusRing
+            )}
+          >
+            {deal.title}
+          </Link>
+        </h3>
+
         {deal.couponCode ? (
           <div>
             <Badge tone="coupon">
@@ -143,24 +168,28 @@ export function DealCard({ deal, href = "#", onSave }: DealCardProps) {
             </Badge>
           </div>
         ) : null}
+
         {showPrices ? (
           <div className="mt-auto flex flex-wrap items-baseline gap-2">
             {deal.salePrice != null && deal.salePrice > 0 ? (
-              <span className="text-lg font-extrabold text-slate-900">
+              <span className="text-lg font-extrabold text-ink-800">
                 {formatPrice(deal.salePrice, currency)}
               </span>
             ) : null}
             {deal.regularPrice != null && deal.regularPrice > 0 ? (
-              <span className="text-xs text-slate-400 line-through">
+              <span className="text-xs text-ink-500 line-through">
                 {formatPrice(deal.regularPrice, currency)}
               </span>
             ) : null}
-            {save != null && save > 0 ? <Badge tone="save">Save {formatPrice(save, currency)}</Badge> : null}
+            {save != null && save > 0 ? (
+              <Badge tone="save">Save {formatPrice(save, currency)}</Badge>
+            ) : null}
           </div>
         ) : (
           <p className="mt-auto text-sm font-semibold text-brand-700">{priceFallbackLabel(deal)}</p>
         )}
-        <div className="flex items-center justify-between text-[11px] text-slate-500">
+
+        <div className="flex min-h-[22px] items-center justify-between gap-2 text-micro text-ink-500">
           {deal.expiryLabel ? (
             <Badge tone={deal.isUrgent ? "urgent" : "expiry"}>
               <Icon name="clock" size={12} />
@@ -169,16 +198,28 @@ export function DealCard({ deal, href = "#", onSave }: DealCardProps) {
           ) : (
             <span />
           )}
+          {/* clicksCount already shipped in the public DTO and was rendered nowhere. */}
+          {deal.clicksCount != null && deal.clicksCount >= 10 ? (
+            <span className="shrink-0 whitespace-nowrap">
+              {formatCount(deal.clicksCount)} used
+            </span>
+          ) : null}
         </div>
       </div>
     </article>
   );
 }
 
+function formatCount(n: number): string {
+  if (n >= 10_000) return `${Math.round(n / 1000)}k`;
+  if (n >= 1_000) return `${(n / 1000).toFixed(1).replace(/\.0$/, "")}k`;
+  return String(n);
+}
+
 export function DealGrid({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("grid grid-cols-[repeat(auto-fill,minmax(210px,1fr))] gap-4", className)}
+      className={cn("grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]", className)}
       {...props}
     />
   );

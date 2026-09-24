@@ -11,16 +11,16 @@ export default async function OverviewPage() {
   return (
     <AdminShell title="Overview">
       <StatGrid className="mb-4">
-        <StatCard label="Active offers" value={kpis.activeOffers.toLocaleString()} icon="🛒" />
-        <StatCard label="Needs review" value={kpis.needsReview.toLocaleString()} icon="⚑" />
-        <StatCard label="Expired today" value={kpis.expiredToday.toLocaleString()} icon="⏳" />
-        <StatCard label="Imports today" value={kpis.importsToday.toLocaleString()} icon="⟳" />
-        <StatCard label="Clicks today" value={kpis.clicksToday.toLocaleString()} icon="👆" />
-        <StatCard label="Subscribers" value={kpis.emailSubscribers.toLocaleString()} icon="✉" />
+        <StatCard label="Active offers" value={kpis.activeOffers.toLocaleString("en-US")} icon="🛒" />
+        <StatCard label="Needs review" value={kpis.needsReview.toLocaleString("en-US")} icon="⚑" />
+        <StatCard label="Expired today" value={kpis.expiredToday.toLocaleString("en-US")} icon="⏳" />
+        <StatCard label="Imports today" value={kpis.importsToday.toLocaleString("en-US")} icon="⟳" />
+        <StatCard label="Clicks today" value={kpis.clicksToday.toLocaleString("en-US")} icon="👆" />
+        <StatCard label="Subscribers" value={kpis.emailSubscribers.toLocaleString("en-US")} icon="✉" />
       </StatGrid>
 
       <Panel>
-        <PanelHead title="Offers needing review" />
+        <PanelHead title="Offers needing review" headingLevel={2} />
         <Table>
           <thead>
             <tr>
@@ -33,14 +33,14 @@ export default async function OverviewPage() {
           <tbody>
             {review.data.length === 0 ? (
               <tr>
-                <Td colSpan={4} className="text-slate-500">
+                <Td colSpan={4} className="text-ink-500">
                   No offers in review queue.
                 </Td>
               </tr>
             ) : (
               review.data.map((d) => (
                 <tr key={d.id}>
-                  <Td className="font-medium text-slate-800">{d.title}</Td>
+                  <Td className="font-medium text-ink-800">{d.title}</Td>
                   <Td>{d.merchantName}</Td>
                   <Td>
                     <Badge tone="review">{Math.round((d.confidenceScore ?? 0) * 100)}%</Badge>

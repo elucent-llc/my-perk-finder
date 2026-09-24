@@ -56,22 +56,21 @@ export function merchantInitials(name: string): string {
   return `${parts[0]![0] ?? ""}${parts[1]![0] ?? ""}`.toUpperCase();
 }
 
-const AVATAR_PALETTES = [
-  "from-teal-500 to-emerald-700",
-  "from-cyan-500 to-teal-700",
-  "from-amber-500 to-orange-600",
-  "from-sky-500 to-blue-700",
-  "from-rose-500 to-orange-600",
-  "from-lime-500 to-green-700",
-] as const;
-
-/** Stable gradient classes for letter avatars (no logo). */
-export function merchantAvatarGradient(seed: string): string {
-  let hash = 0;
-  for (let i = 0; i < seed.length; i += 1) {
-    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
-  }
-  return AVATAR_PALETTES[hash % AVATAR_PALETTES.length]!;
+/**
+ * Classes for letter avatars when a store has no logo.
+ *
+ * This used to hash the store name into one of six saturated gradients
+ * (teal/cyan/amber/sky/rose/lime). Because a large share of imported merchants
+ * have no logo, the store grids rendered as a random rainbow that read as
+ * decoration rather than information, and white text on the -500 steps was as
+ * low as 1.90:1. One quiet branded surface instead: the merchant's own logos
+ * and product photography are the only colour that should vary in a grid.
+ *
+ * `seed` is retained so callers need no changes and a per-store treatment can
+ * be reintroduced later if it ever earns its place.
+ */
+export function merchantAvatarGradient(_seed?: string): string {
+  return "bg-brand-50 text-brand-800 ring-1 ring-inset ring-brand-100";
 }
 
 /**
@@ -85,4 +84,26 @@ export function resolveStoreLogoUrl(
   const icon = POPULAR_STORE_ICONS[slugifyKey(slugOrName)];
   if (icon) return `https://cdn.simpleicons.org/${icon}`;
   return existingLogoUrl?.trim() || null;
+}
+
+/**
+ * Whether a logo URL must bypass the Next image optimizer.
+ *
+ * Every entry in POPULAR_STORE_ICONS resolves to cdn.simpleicons.org, which serves SVG.
+ * `next.config.mjs` sets `dangerouslyAllowSVG: false` — a deliberate choice, since the
+ * optimizer would otherwise proxy arbitrary remote SVG (a scriptable format) from our own
+ * origin — so `/_next/image` answers those requests with HTTP 400 and the browser paints a
+ * broken-image glyph. That is every logo on /stores, in the similar-stores rail, on
+ * image-less deal cards and beside the store `<h1>`.
+ *
+ * `unoptimized` renders the URL directly and never touches `/_next/image`, so the SVG policy
+ * stops applying without being weakened. Nothing is lost: these files are ~1KB of vector and
+ * resizing them is the browser's job anyway.
+ *
+ * This is deliberately not a blanket `unoptimized` on the logo slots. A merchant `logoUrl`
+ * from the feed is usually a raster of unknown size, and those should still be resized and
+ * served as AVIF/WebP for a 36px avatar.
+ */
+export function logoNeedsUnoptimized(url: string): boolean {
+  return url.startsWith("https://cdn.simpleicons.org/") || /\.svg(\?|#|$)/i.test(url);
 }

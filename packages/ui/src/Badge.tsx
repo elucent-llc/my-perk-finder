@@ -17,21 +17,26 @@ export type BadgeTone =
   | "rejected"
   | "archived";
 
+/**
+ * Every pair below is AA-verified at this component's 12.5px/bold size.
+ * `discount` deliberately uses accent-700 (5.18:1), not accent-500 (2.80:1) —
+ * it is the most-repeated element on the site and was the worst failure.
+ */
 const TONES: Record<BadgeTone, string> = {
-  neutral: "bg-slate-100 text-slate-600",
-  discount: "bg-accent-500 text-white shadow-sm",
-  hot: "bg-accent-50 text-accent-700 border border-accent-200",
-  save: "bg-savings-50 text-savings-700 border border-savings-100",
-  expiry: "bg-warn-50 text-warn-700 border border-warn-100",
+  neutral: "bg-slate-100 text-ink-600",
+  discount: "bg-accent-700 text-white",
+  hot: "bg-accent-50 text-accent-800 border border-accent-200",
+  save: "bg-savings-50 text-savings-800 border border-savings-100",
+  expiry: "bg-warn-50 text-warn-800 border border-warn-100",
   urgent: "bg-danger-50 text-danger-700 border border-danger-100",
   verified: "bg-brand-50 text-brand-700",
   coupon: "bg-brand-50 text-brand-700 border border-dashed border-brand-200",
-  draft: "bg-slate-100 text-slate-600",
-  active: "bg-savings-50 text-savings-700",
-  review: "bg-warn-50 text-warn-700",
+  draft: "bg-slate-100 text-ink-600",
+  active: "bg-savings-50 text-savings-800",
+  review: "bg-warn-50 text-warn-800",
   expired: "bg-danger-50 text-danger-700",
-  rejected: "bg-slate-200 text-slate-700",
-  archived: "bg-slate-100 text-slate-500",
+  rejected: "bg-slate-200 text-ink-700",
+  archived: "bg-slate-100 text-ink-500",
 };
 
 /** Maps an OfferStatus string to a badge tone. */
@@ -52,7 +57,7 @@ export function Badge({ tone = "neutral", className, ...props }: BadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-pill px-2.5 py-0.5 text-xs font-bold",
+        "inline-flex items-center gap-1 rounded-pill px-2.5 py-0.5 text-mini font-bold",
         TONES[tone],
         className
       )}

@@ -2,15 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
-@import "@mpf/ui/styles.css";
+/*
+ * `--font-sans` is defined by next/font on <html> (see app/layout.tsx).
+ * Do NOT redeclare it in :root — a :root declaration has the same specificity
+ * as next/font's generated class, so whichever loses the cascade silently
+ * falls back to a locally-installed "Plus Jakarta Sans" that almost no device
+ * has. That made the downloaded webfont dead weight and bypassed next/font's
+ * metric-matched fallback, causing layout shift.
+ */
 
-:root {
-  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+@layer base {
+  body {
+    @apply bg-surface-sunken text-ink-800 antialiased;
+  }
+
+  /* One focus indicator, app-wide. Never remove this without replacing it. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-brand-600 ring-offset-2 ring-offset-white;
+  }
+
+  /* Long SKUs and model numbers in deal titles must not force overflow. */
+  h1,
+  h2,
+  h3,
+  p,
+  a {
+    overflow-wrap: break-word;
+  }
 }
 
-body {
-  font-family: var(--font-sans);
-  background: #f1f5f9;
-  color: #0f172a;
-  -webkit-font-smoothing: antialiased;
+@layer utilities {
+  /* Visible only once focused — the skip link in app/layout.tsx. */
+  .sr-only-focusable:not(:focus):not(:focus-within) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

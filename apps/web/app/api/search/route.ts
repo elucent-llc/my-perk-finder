@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { SearchQuery } from "@mpf/types";
-import { searchDealsPostgres } from "@/lib/server/deals";
+import { searchDealsPage } from "@/lib/server/deals";
+
+// Read-only and mutated only by the cron importer; repeated queries (autocomplete, popular
+// terms) are the expensive ones and they benefit most from an edge cache.
+const CACHE_CONTROL = "public, s-maxage=300, stale-while-revalidate=600";
 
 /** Postgres-only search (no Meilisearch) — cost-efficient for Railway. */
 export async function GET(request: Request) {
@@ -9,6 +13,9 @@ export async function GET(request: Request) {
   if (!parsed.success) {
     return NextResponse.json({ message: "Invalid query" }, { status: 400 });
   }
-  const data = await searchDealsPostgres(parsed.data.q);
-  return NextResponse.json({ query: parsed.data.q, source: "postgres", data });
+  const result = await searchDealsPage(parsed.data.q, { page: parsed.data.page });
+  return NextResponse.json(
+    { query: parsed.data.q, source: "postgres", ...result },
+    { headers: { "Cache-Control": CACHE_CONTROL } }
+  );
 }

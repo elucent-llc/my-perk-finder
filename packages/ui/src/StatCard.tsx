@@ -11,21 +11,21 @@ export interface StatCardProps {
 
 export function StatCard({ label, value, delta, trend = "neutral", icon }: StatCardProps) {
   return (
-    <div className="rounded-card border border-slate-200 bg-white p-4 shadow-card-sm">
+    <div className="rounded-card border border-slate-200 bg-white p-4 shadow-card">
       {icon ? (
-        <div className="float-right grid h-8 w-8 place-items-center rounded-lg bg-brand-50 text-brand-600">
+        <div className="float-right grid h-8 w-8 place-items-center rounded-control bg-brand-50 text-brand-600">
           {icon}
         </div>
       ) : null}
-      <div className="text-xs font-semibold text-slate-500">{label}</div>
-      <div className="mt-1.5 text-2xl font-extrabold text-slate-900">{value}</div>
+      <div className="text-xs font-semibold text-ink-500">{label}</div>
+      <div className="mt-1.5 text-2xl font-extrabold text-ink-800">{value}</div>
       {delta ? (
         <div
           className={cn(
             "mt-0.5 text-xs font-bold",
             trend === "up" && "text-savings-600",
             trend === "down" && "text-danger-600",
-            trend === "neutral" && "text-slate-500"
+            trend === "neutral" && "text-ink-500"
           )}
         >
           {delta}

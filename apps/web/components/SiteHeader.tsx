@@ -1,47 +1,55 @@
 import Link from "next/link";
-import { BrandLogo, Button } from "@mpf/ui";
+import { BrandLogo, Icon, cn, focusRing } from "@mpf/ui";
 import { MobileNav } from "@/components/MobileNav";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
+import { HeaderNav } from "@/components/HeaderNav";
+import { NAV_ITEMS, FOOTER_LINKS } from "@/components/nav-items";
 
-const NAV = [
-  ["Deals", "/deals"],
-  ["Stores", "/stores"],
-  ["Coupons", "/coupons"],
-] as const;
-
-const FOOTER_LINKS = [
-  ["About", "/about"],
-  ["Contact", "/contact"],
-  ["Privacy Policy", "/privacy-policy"],
-  ["Terms of Service", "/terms"],
-  ["Affiliate Disclosure", "/affiliate-disclosure"],
-] as const;
+const footerLink = cn("inline-flex min-h-[40px] items-center rounded-control px-1 hover:text-brand-700 hover:underline", focusRing);
 
 export function SiteHeader() {
   return (
-    <header className="relative z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center gap-5 px-5 py-3.5">
-        <Link href="/" className="inline-flex shrink-0" aria-label="MyPerkFinder home">
+    <header className="sticky top-0 z-header border-b border-slate-200/80 bg-white/95 backdrop-blur">
+      <div className="mx-auto flex max-w-6xl items-center gap-3 px-5 py-2.5 sm:gap-5">
+        <Link
+          href="/"
+          className={cn("inline-flex shrink-0 rounded-control p-1", focusRing)}
+          aria-label="MyPerkFinder home"
+        >
           <BrandLogo size={32} />
         </Link>
-        <nav className="hidden gap-5 text-[13.5px] font-semibold text-slate-600 md:flex">
-          {NAV.map(([label, href]) => (
-            <Link key={label} href={href} className="transition hover:text-brand-600">
-              {label}
-            </Link>
-          ))}
-        </nav>
+
+        <HeaderNav />
+
         <div className="ml-auto flex items-center gap-2">
-          <Link href="/search" className="hidden sm:block">
-            <Button variant="ghost" size="sm">
-              Search
-            </Button>
+          {/*
+            Search is the primary task on a deals site, so it gets a real
+            affordance at every width. Previously it was `hidden sm:block`
+            and absent from the mobile drawer, making site search unreachable
+            from the header on a phone.
+          */}
+          <Link
+            href="/search"
+            aria-label="Search deals"
+            className={cn(
+              "inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-2 rounded-control px-3 text-card font-semibold text-ink-600 transition hover:bg-slate-100 hover:text-brand-700",
+              focusRing
+            )}
+          >
+            <Icon name="search" size={18} />
+            <span className="hidden sm:inline">Search</span>
           </Link>
-          <Link href="/deals" className="hidden md:block">
-            <Button variant="primary" size="sm">
-              Browse deals
-            </Button>
+
+          <Link
+            href="/deals"
+            className={cn(
+              "hidden min-h-[44px] items-center rounded-control bg-brand-700 px-4 text-card font-semibold text-white transition hover:bg-brand-800 md:inline-flex",
+              focusRing
+            )}
+          >
+            Browse deals
           </Link>
+
           <MobileNav />
         </div>
       </div>
@@ -51,7 +59,7 @@ export function SiteHeader() {
 
 export function SiteFooter() {
   return (
-    <footer className="mt-12 border-t border-slate-200 bg-white px-5 py-10 text-sm text-slate-500">
+    <footer className="mt-12 border-t border-slate-200 bg-white px-5 py-10 text-sm text-ink-500">
       <div className="mx-auto grid max-w-6xl gap-8 md:grid-cols-[1.4fr_1fr_1fr]">
         <div>
           <BrandLogo size={28} />
@@ -60,53 +68,58 @@ export function SiteFooter() {
             regularly.
           </p>
           <div className="mt-4 max-w-sm">
-            <div className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-800">
-              Get deal alerts
-            </div>
+            {/* Headings, not styled divs — the footer was absent from the
+                document outline entirely. */}
+            <h2 className="mb-2 text-xs font-bold tracking-wide text-ink-800">Get deal alerts</h2>
             <NewsletterSignup variant="compact" />
           </div>
-          <p className="mt-4 text-xs leading-relaxed text-slate-400">
-            <strong className="text-slate-500">Affiliate disclosure:</strong> MyPerkFinder may earn a
-            commission from qualifying purchases made through links on this site.{" "}
-            <Link href="/affiliate-disclosure" className="font-semibold text-brand-600 hover:underline">
+          <p className="mt-4 text-xs leading-relaxed">
+            <strong className="font-semibold text-ink-700">Affiliate disclosure:</strong>{" "}
+            MyPerkFinder may earn a commission from qualifying purchases made through links on this
+            site.{" "}
+            <Link href="/affiliate-disclosure" className={cn("font-semibold text-brand-700 hover:underline", focusRing)}>
               Read full disclosure
             </Link>
             .
           </p>
         </div>
-        <div>
-          <div className="mb-2.5 text-xs font-bold uppercase tracking-wide text-slate-800">Explore</div>
-          <ul className="space-y-1.5">
-            {NAV.map(([label, href]) => (
+
+        <nav aria-labelledby="footer-explore">
+          <h2 id="footer-explore" className="mb-1.5 text-xs font-bold tracking-wide text-ink-800">
+            Explore
+          </h2>
+          <ul>
+            {NAV_ITEMS.map(({ label, href }) => (
               <li key={href}>
-                <Link href={href} className="hover:text-brand-600">
+                <Link href={href} className={footerLink}>
                   {label}
                 </Link>
               </li>
             ))}
             <li>
-              <Link href="/search" className="hover:text-brand-600">
+              <Link href="/search" className={footerLink}>
                 Search
               </Link>
             </li>
           </ul>
-        </div>
-        <div>
-          <div className="mb-2.5 text-xs font-bold uppercase tracking-wide text-slate-800">
+        </nav>
+
+        <nav aria-labelledby="footer-legal">
+          <h2 id="footer-legal" className="mb-1.5 text-xs font-bold tracking-wide text-ink-800">
             Legal &amp; support
-          </div>
-          <ul className="space-y-1.5">
-            {FOOTER_LINKS.map(([label, href]) => (
+          </h2>
+          <ul>
+            {FOOTER_LINKS.map(({ label, href }) => (
               <li key={href}>
-                <Link href={href} className="hover:text-brand-600">
+                <Link href={href} className={footerLink}>
                   {label}
                 </Link>
               </li>
             ))}
           </ul>
-        </div>
+        </nav>
       </div>
-      <p className="mx-auto mt-8 max-w-6xl text-xs text-slate-400">
+      <p className="mx-auto mt-8 max-w-6xl text-xs">
         © {new Date().getFullYear()} MyPerkFinder. Operated by Elucent. All rights reserved.
       </p>
     </footer>

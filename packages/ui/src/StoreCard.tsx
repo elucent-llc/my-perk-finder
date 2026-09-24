@@ -1,8 +1,14 @@
-"use client";
-
-import * as React from "react";
+import Image from "next/image";
+import Link from "next/link";
 import { Badge } from "./Badge.js";
-import { merchantAvatarGradient, merchantInitials, resolveStoreLogoUrl } from "./store-logos.js";
+import { Icon } from "./Icon.js";
+import { cn, focusRing } from "./cn.js";
+import {
+  logoNeedsUnoptimized,
+  merchantAvatarGradient,
+  merchantInitials,
+  resolveStoreLogoUrl,
+} from "./store-logos.js";
 
 export interface StoreCardData {
   name: string;
@@ -13,49 +19,70 @@ export interface StoreCardData {
   logoUrl?: string | null;
 }
 
+/**
+ * Store tile. Now a server component using next/image + next/link — it was
+ * `"use client"` only to drive an image `onError`, and used a raw anchor that
+ * forced a full document reload.
+ *
+ * Hover treatment is deliberately the same lift as DealCard; the two cards
+ * previously behaved differently (one lifted, one only changed border colour)
+ * for no reason a user could infer.
+ */
 export function StoreCard({ store, href = "#" }: { store: StoreCardData; href?: string }) {
-  const logoUrl = resolveStoreLogoUrl(store.slug, store.logoUrl) ??
-    resolveStoreLogoUrl(store.name, store.logoUrl);
-  const [logoFailed, setLogoFailed] = React.useState(false);
-  const showLogo = Boolean(logoUrl) && !logoFailed;
-  const gradient = merchantAvatarGradient(store.slug || store.name);
+  const logoUrl =
+    resolveStoreLogoUrl(store.slug, store.logoUrl) ?? resolveStoreLogoUrl(store.name, store.logoUrl);
 
   return (
-    <a
+    <Link
       href={href}
-      className="block rounded-card border border-slate-200 bg-white p-4 text-center shadow-card-sm transition hover:border-brand-200 hover:shadow-card"
+      className={cn(
+        "block rounded-card border border-slate-200 bg-white p-4 text-center shadow-card transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-card-hover",
+        focusRing
+      )}
     >
       <div
-        className={
-          showLogo
-            ? "mx-auto mb-2.5 grid h-14 w-14 place-items-center overflow-hidden rounded-full border border-slate-100 bg-white text-sm font-bold text-slate-500"
-            : `mx-auto mb-2.5 grid h-14 w-14 place-items-center overflow-hidden rounded-full bg-gradient-to-br ${gradient} text-sm font-extrabold tracking-wide text-white shadow-sm`
-        }
+        className={cn(
+          "mx-auto mb-2.5 grid h-14 w-14 place-items-center overflow-hidden rounded-pill text-sm font-extrabold tracking-wide",
+          logoUrl ? "border border-slate-100 bg-white" : merchantAvatarGradient(store.slug)
+        )}
       >
-        {showLogo ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={logoUrl!}
+        {logoUrl ? (
+          <Image
+            src={logoUrl}
             alt=""
+            width={36}
+            height={36}
+            sizes="36px"
+            // Brand icons are SVG, which the optimizer rejects. See logoNeedsUnoptimized.
+            unoptimized={logoNeedsUnoptimized(logoUrl)}
             className="h-9 w-9 object-contain"
-            onError={() => setLogoFailed(true)}
           />
         ) : (
           <span aria-hidden>{merchantInitials(store.name)}</span>
         )}
       </div>
-      <div className="line-clamp-2 min-h-[2.5rem] text-sm font-bold leading-snug text-slate-800">
+
+      <div className="line-clamp-2 min-h-[2.5rem] text-sm font-bold leading-snug text-ink-800">
         {store.name}
       </div>
-      <div className="mt-0.5 text-[11.5px] text-slate-500">
+
+      <div className="mt-0.5 text-micro text-ink-500">
         {store.dealsCount} {store.dealsCount === 1 ? "deal" : "deals"}
-        {store.couponsCount > 0 ? ` · ${store.couponsCount} coupons` : ""}
+        {store.couponsCount > 0
+          ? `, ${store.couponsCount} ${store.couponsCount === 1 ? "coupon" : "coupons"}`
+          : ""}
       </div>
+
       {store.verified ? (
         <div className="mt-2">
-          <Badge tone="verified">✓ Verified</Badge>
+          {/* Icon + text, matching every other verified badge in the app —
+              this one used a bare "✓" glyph. */}
+          <Badge tone="verified">
+            <Icon name="check" size={11} strokeWidth={2.6} />
+            Verified
+          </Badge>
         </div>
       ) : null}
-    </a>
+    </Link>
   );
 }

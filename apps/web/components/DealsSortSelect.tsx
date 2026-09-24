@@ -1,42 +1,77 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { cn, focusRing } from "@mpf/ui";
+import {
+  SORT_OPTIONS,
+  dealFiltersHref,
+  dealFiltersToSearchParams,
+  type DealFilters,
+  type SortValue,
+} from "@/lib/deal-filters";
 
-const SORTS = [
-  { label: "Newest", value: "newest" },
-  { label: "Highest discount", value: "highest_discount" },
-  { label: "Ending soon", value: "ending_soon" },
-  { label: "Lowest price", value: "lowest_price" },
-  { label: "Most popular", value: "most_popular" },
-] as const;
-
+/**
+ * Sort control.
+ *
+ * Previously took a loose `Record<string, string>` of params and rebuilt the URL itself,
+ * which meant it silently dropped any filter key the caller forgot to pass through —
+ * changing the sort could clear your category. It now round-trips the parsed filter
+ * state, so sorting preserves every facet and resets to page 1.
+ *
+ * Wrapped in a GET form with a `noscript` submit so it still works unhydrated.
+ */
 export function DealsSortSelect({
-  sort,
-  filterParams,
+  filters,
+  basePath = "/deals",
 }: {
-  sort: string;
-  filterParams: Record<string, string>;
+  filters: DealFilters;
+  basePath?: string;
 }) {
   const router = useRouter();
 
   return (
-    <select
-      aria-label="Sort deals"
-      value={sort}
-      className="rounded-lg border border-slate-300 px-2.5 py-2 text-sm text-slate-700"
-      onChange={(e) => {
-        const p = new URLSearchParams(filterParams);
-        if (e.target.value !== "newest") p.set("sort", e.target.value);
-        else p.delete("sort");
-        const qs = p.toString();
-        router.push(qs ? `/deals?${qs}` : "/deals");
-      }}
+    <form
+      action={basePath}
+      method="get"
+      className="flex items-center gap-2"
+      onSubmit={(e) => e.preventDefault()}
     >
-      {SORTS.map((s) => (
-        <option key={s.value} value={s.value}>
-          {s.label}
-        </option>
-      ))}
-    </select>
+      {/* Carry the active facets through the unhydrated submit path, otherwise sorting
+          without JS would drop them. */}
+      {[...dealFiltersToSearchParams(filters, { includePage: false })]
+        .filter(([key]) => key !== "sort")
+        .map(([key, val]) => (
+          <input key={key} type="hidden" name={key} value={val} />
+        ))}
+      <label htmlFor="deals-sort" className="text-mini font-semibold text-ink-600">
+        Sort
+      </label>
+      <select
+        id="deals-sort"
+        name="sort"
+        value={filters.sort}
+        className={cn(
+          "min-h-[44px] rounded-control border border-slate-300 bg-white px-2.5 text-mini font-semibold text-ink-700",
+          focusRing
+        )}
+        onChange={(e) => {
+          router.push(dealFiltersHref(basePath, filters, { sort: e.target.value as SortValue }));
+        }}
+      >
+        {SORT_OPTIONS.map((s) => (
+          <option key={s.value} value={s.value}>
+            {s.label}
+          </option>
+        ))}
+      </select>
+      <noscript>
+        <button
+          type="submit"
+          className="min-h-[44px] rounded-control bg-brand-700 px-3 text-mini font-semibold text-white"
+        >
+          Apply
+        </button>
+      </noscript>
+    </form>
   );
 }

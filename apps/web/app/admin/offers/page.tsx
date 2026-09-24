@@ -35,11 +35,11 @@ export default async function AdminOffersPage() {
           <tbody>
             {offers.map((d) => (
               <tr key={d.id}>
-                <Td className="font-medium text-slate-800">{d.title}</Td>
+                <Td className="font-medium text-ink-800">{d.title}</Td>
                 <Td>{d.merchantName}</Td>
                 <Td>{d.category}</Td>
                 <Td>{formatPrice(d.salePrice ?? 0)}</Td>
-                <Td className="text-slate-400">{formatPrice(d.regularPrice ?? 0)}</Td>
+                <Td className="text-ink-500">{formatPrice(d.regularPrice ?? 0)}</Td>
                 <Td>{d.discountPercent}%</Td>
                 <Td>
                   <Badge tone={STATUS_TONE[d.status] ?? "neutral"}>{d.status}</Badge>

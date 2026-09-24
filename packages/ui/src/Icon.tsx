@@ -13,7 +13,15 @@ export type IconName =
   | "external"
   | "bolt"
   | "store"
-  | "shield";
+  | "shield"
+  | "arrow-left"
+  | "close"
+  | "heart"
+  | "filter"
+  | "chevron-down"
+  | "copy"
+  | "share"
+  | "menu";
 
 const PATHS: Record<IconName, React.ReactNode> = {
   search: (
@@ -83,6 +91,37 @@ const PATHS: Record<IconName, React.ReactNode> = {
       strokeLinejoin="round"
     />
   ),
+  "arrow-left": <path d="M20 12H5m6-6l-6 6 6 6" strokeLinecap="round" strokeLinejoin="round" />,
+  close: <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />,
+  /* Pass fill="currentColor" for the saved/active state. */
+  heart: (
+    <path
+      d="M12 20s-7-4.35-7-9.5A4.5 4.5 0 0112 7a4.5 4.5 0 017 3.5c0 5.15-7 9.5-7 9.5z"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  ),
+  filter: (
+    <>
+      <path d="M4 6h16M7 12h10M10 18h4" strokeLinecap="round" />
+    </>
+  ),
+  "chevron-down": <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />,
+  copy: (
+    <>
+      <rect x="9" y="9" width="11" height="11" rx="2" />
+      <path d="M15 5.5A1.5 1.5 0 0013.5 4H6a2 2 0 00-2 2v7.5A1.5 1.5 0 005.5 15" strokeLinecap="round" />
+    </>
+  ),
+  share: (
+    <>
+      <circle cx="18" cy="5" r="2.5" />
+      <circle cx="6" cy="12" r="2.5" />
+      <circle cx="18" cy="19" r="2.5" />
+      <path d="M15.8 6.3l-7.6 4.4m0 2.6l7.6 4.4" strokeLinecap="round" />
+    </>
+  ),
+  menu: <path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" />,
 };
 
 export interface IconProps extends React.SVGProps<SVGSVGElement> {

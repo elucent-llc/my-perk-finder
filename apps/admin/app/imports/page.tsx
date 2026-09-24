@@ -38,15 +38,15 @@ export default async function ImportsPage() {
           <tbody>
             {jobs.map((j) => (
               <tr key={j.id}>
-                <Td className="font-medium text-slate-800">{j.source}</Td>
+                <Td className="font-medium text-ink-800">{j.source}</Td>
                 <Td>
                   <Badge tone={importTone[j.status] ?? "neutral"}>{j.status}</Badge>
                 </Td>
-                <Td>{j.offersFound.toLocaleString()}</Td>
-                <Td>{j.created.toLocaleString()}</Td>
-                <Td>{j.updated.toLocaleString()}</Td>
-                <Td>{j.rejected.toLocaleString()}</Td>
-                <Td>{j.needsReview.toLocaleString()}</Td>
+                <Td>{j.offersFound.toLocaleString("en-US")}</Td>
+                <Td>{j.created.toLocaleString("en-US")}</Td>
+                <Td>{j.updated.toLocaleString("en-US")}</Td>
+                <Td>{j.rejected.toLocaleString("en-US")}</Td>
+                <Td>{j.needsReview.toLocaleString("en-US")}</Td>
                 <Td>
                   {j.status === "failed" || j.status === "partial_success" ? (
                     <Button variant="warn" size="sm">Retry</Button>

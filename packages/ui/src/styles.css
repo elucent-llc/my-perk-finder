@@ -1,7 +1,13 @@
-/* Shared UI primitives layer. Apps import this after Tailwind base. */
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
+/*
+ * Intentionally empty.
+ *
+ * This file used to hand-roll `.line-clamp-2`, which Tailwind has shipped
+ * natively since 3.3 (this repo is on 3.4). It was also `@import`ed *after*
+ * the `@tailwind` directives without `postcss-import` in the pipeline, so it
+ * landed at the end of the generated stylesheet where the browser either
+ * ignores it or treats it as an extra render-blocking request on the LCP path.
+ *
+ * Kept as a no-op so the `@mpf/ui/styles.css` export and any existing imports
+ * stay resolvable. Add shared, non-utility CSS here if it is ever genuinely
+ * needed — and import it *before* `@tailwind base`.
+ */

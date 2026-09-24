@@ -59,35 +59,36 @@ enum OfferType {
 }
 
 model Merchant {
-  id          String      @id @default(cuid())
-  name        String
-  slug        String      @unique
-  logoUrl     String?
-  network     SourceKind?
-  homepageUrl String?
+  id             String      @id @default(cuid())
+  name           String
+  slug           String      @unique
+  logoUrl        String?
+  network        SourceKind?
+  homepageUrl    String?
   commissionRate Float?
-  isActive    Boolean     @default(true)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  isActive       Boolean     @default(true)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 
   deals   Deal[]
   coupons Coupon[]
 
-  @@index([isActive])
+  // No index on isActive: a two-value boolean is not selective enough for the planner to
+  // use, and it is always paired with a deals-exist subquery anyway.
 }
 
 model Category {
-  id             String     @id @default(cuid())
-  name           String
-  slug           String     @unique
-  parentId       String?
-  parent         Category?  @relation("CategoryTree", fields: [parentId], references: [id])
-  children       Category[] @relation("CategoryTree")
-  seoTitle       String?
-  seoDescription String?
-  mappingKeywords String[]  @default([])
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  id              String     @id @default(cuid())
+  name            String
+  slug            String     @unique
+  parentId        String?
+  parent          Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children        Category[] @relation("CategoryTree")
+  seoTitle        String?
+  seoDescription  String?
+  mappingKeywords String[]   @default([])
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
 
   deals Deal[]
 
@@ -113,7 +114,7 @@ model Deal {
   sourceName      String?
   // Affiliate network ID for deduplication on import upsert.
   externalId      String?
-  source            SourceKind?
+  source          SourceKind?
   status          OfferStatus @default(needs_review)
   confidenceScore Float?
   validationFlags String[]    @default([])
@@ -123,20 +124,38 @@ model Deal {
   categoryId String?
   category   Category? @relation(fields: [categoryId], references: [id])
 
-  clicksCount Int @default(0)
-  savesCount  Int @default(0)
+  clicksCount Int     @default(0)
+  savesCount  Int     @default(0)
   clicks      Click[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([source, externalId])
-  @@index([status])
-  @@index([merchantId])
-  @@index([categoryId])
+  // Dropped: @@index([status]), @@index([merchantId]), @@index([categoryId]) and
+  // @@index([source]). Each is the leftmost prefix of an index below (or of the unique above),
+  // so Postgres could already serve those lookups from the wider index and never chose the
+  // narrow one. Deal is bulk-upserted by the import worker, and every index is re-written on
+  // each upserted row, so four indexes the planner ignores were pure write cost.
   @@index([expiryDate])
-  @@index([source])
   @@index([offerType])
+  // Every public listing filters status = 'active' and then sorts. With only single-column
+  // indexes Postgres had to sort the whole active set in memory on each request; there was
+  // no index on createdAt at all, which is the default sort.
+  @@index([status, createdAt])
+  @@index([status, discountPercent])
+  @@index([status, salePrice])
+  @@index([status, clicksCount])
+  @@index([status, expiryDate])
+  @@index([status, updatedAt])
+  @@index([status, lastVerifiedAt])
+  // Store and category pages: filter on one FK inside the active set, then sort.
+  @@index([status, merchantId, createdAt])
+  @@index([status, categoryId, discountPercent])
+  @@index([merchantId, status])
+  @@index([categoryId, status])
+  // Review queue sorts the low-confidence end of a single status.
+  @@index([status, confidenceScore])
 }
 
 model Click {
@@ -220,12 +239,12 @@ model Subscriber {
 }
 
 model MappingRule {
-  id         String     @id @default(cuid())
+  id         String   @id @default(cuid())
   kind       String // "merchant" | "category" | "brand"
   rawValue   String
   mappedTo   String
-  confidence Float      @default(1)
-  createdAt  DateTime   @default(now())
+  confidence Float    @default(1)
+  createdAt  DateTime @default(now())
 
   @@unique([kind, rawValue])
 }

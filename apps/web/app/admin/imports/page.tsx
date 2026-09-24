@@ -17,7 +17,7 @@ export default async function AdminImportsPage() {
 
   return (
     <AdminShell title="Imports">
-      <p className="mb-4 text-sm text-slate-500">
+      <p className="mb-4 text-sm text-ink-500">
         Imports are scheduled via Railway cron (<code>myperkfinder-worker-awin-import</code>, every 6 hours).
         Manual runs: <code>pnpm worker:import-awin</code> locally or trigger the cron service in Railway.
       </p>
@@ -38,23 +38,23 @@ export default async function AdminImportsPage() {
           <tbody>
             {jobs.length === 0 ? (
               <tr>
-                <Td colSpan={8} className="text-slate-500">
+                <Td colSpan={8} className="text-ink-500">
                   No import jobs yet.
                 </Td>
               </tr>
             ) : (
               jobs.map((j) => (
                 <tr key={j.id}>
-                  <Td className="font-medium text-slate-800">{j.source}</Td>
+                  <Td className="font-medium text-ink-800">{j.source}</Td>
                   <Td>
                     <Badge tone={importTone[j.status] ?? "neutral"}>{j.status}</Badge>
                   </Td>
-                  <Td>{j.offersFound.toLocaleString()}</Td>
-                  <Td>{j.created.toLocaleString()}</Td>
-                  <Td>{j.updated.toLocaleString()}</Td>
-                  <Td>{j.rejected.toLocaleString()}</Td>
-                  <Td>{j.needsReview.toLocaleString()}</Td>
-                  <Td className="max-w-xs truncate text-xs text-red-600">{j.error ?? "—"}</Td>
+                  <Td>{j.offersFound.toLocaleString("en-US")}</Td>
+                  <Td>{j.created.toLocaleString("en-US")}</Td>
+                  <Td>{j.updated.toLocaleString("en-US")}</Td>
+                  <Td>{j.rejected.toLocaleString("en-US")}</Td>
+                  <Td>{j.needsReview.toLocaleString("en-US")}</Td>
+                  <Td className="max-w-xs truncate text-xs text-danger-600">{j.error ?? "—"}</Td>
                 </tr>
               ))
             )}

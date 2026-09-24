@@ -18,7 +18,7 @@ export default async function ReviewPage({
 
   return (
     <AdminShell title="Review Queue">
-      <p className="mb-4 text-sm text-slate-500">
+      <p className="mb-4 text-sm text-ink-500">
         {queue.total} offers need review · page {queue.page} of {queue.totalPages}
       </p>
       <Panel>
@@ -36,7 +36,7 @@ export default async function ReviewPage({
           <tbody>
             {queue.data.length === 0 ? (
               <tr>
-                <Td colSpan={6} className="text-slate-500">
+                <Td colSpan={6} className="text-ink-500">
                   No offers in review queue.
                 </Td>
               </tr>
@@ -46,13 +46,13 @@ export default async function ReviewPage({
                   <Td>
                     <Badge tone="review">{Math.round((d.confidenceScore ?? 0) * 100)}%</Badge>
                   </Td>
-                  <Td className="font-medium text-slate-800">{d.title}</Td>
+                  <Td className="font-medium text-ink-800">{d.title}</Td>
                   <Td>{d.merchantName}</Td>
                   <Td>{d.salePrice != null && d.salePrice > 0 ? formatPrice(d.salePrice) : "—"}</Td>
                   <Td>
                     <div className="flex flex-wrap gap-1">
                       {(d.validationFlags ?? []).length === 0 ? (
-                        <span className="text-xs text-slate-400">none</span>
+                        <span className="text-xs text-ink-500">none</span>
                       ) : (
                         (d.validationFlags ?? []).map((f) => (
                           <Badge key={f} tone="urgent">

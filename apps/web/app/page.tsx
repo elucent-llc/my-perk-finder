@@ -3,58 +3,80 @@ import {
   DealCard,
   DealGrid,
   StoreCard,
-  Button,
+  ButtonLink,
   AffiliateDisclosure,
+  ChipLink,
   EmptyState,
   TrustBar,
   Icon,
+  cn,
+  focusRing,
   type IconName,
 } from "@mpf/ui";
 import { SiteHeader, SiteFooter } from "@/components/SiteHeader";
 import { FeaturedDeal } from "@/components/FeaturedDeal";
 import { NewsletterSignup } from "@/components/NewsletterSignup";
-import { getDeals, getStores, getStats, toCard } from "@/lib/api";
-import { EXPIRING_SOON_DAYS, isExpiringSoon } from "@/lib/expiry";
+import { SearchBox } from "@/components/SearchBox";
+import { getDeals, getStores, getStats, getCategories, toCard } from "@/lib/api";
+import { EXPIRING_SOON_DAYS } from "@/lib/expiry";
 
-export const dynamic = "force-dynamic";
+/**
+ * The homepage reads no request data, so it can be a fully static page regenerated every
+ * five minutes. It was `force-dynamic`, which meant five uncached database queries on
+ * every single visit to the most-visited URL on the site.
+ */
+export const revalidate = 300;
 
-const CATEGORIES: { label: string; href: string; icon: IconName }[] = [
-  { label: "Electronics", href: "/deals?category=electronics", icon: "bolt" },
-  { label: "Audio", href: "/deals?category=audio", icon: "bolt" },
-  { label: "Home & Kitchen", href: "/deals?category=home-kitchen", icon: "store" },
-  { label: "Fashion", href: "/deals?category=fashion", icon: "tag" },
-  { label: "Coupons", href: "/coupons", icon: "coupon" },
-];
+const CATEGORY_ICONS: IconName[] = ["bolt", "store", "tag", "coupon", "fire", "shield"];
 
-function SectionHeader({
+/**
+ * Section heading for the homepage rails: always an h2, always the same size, with the
+ * "view all" affordance as a 44px target. The old version rendered `text-lg` headings and
+ * a 20px-tall text link.
+ */
+function RailHeader({
   icon,
   title,
   subtitle,
   href,
   linkLabel,
+  id,
 }: {
   icon: IconName;
   title: string;
   subtitle: string;
   href: string;
   linkLabel: string;
+  id: string;
 }) {
   return (
-    <div className="mb-3 flex items-end justify-between gap-3">
+    <div className="mb-4 flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
       <div className="flex items-center gap-2.5">
-        <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-50 text-brand-600">
+        <span
+          aria-hidden
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-control bg-brand-50 text-brand-700"
+        >
           <Icon name={icon} size={18} />
         </span>
-        <div>
-          <h2 className="text-lg font-bold tracking-tight text-ink-800">{title}</h2>
-          <p className="text-sm text-slate-500">{subtitle}</p>
+        <div className="min-w-0">
+          <h2
+            id={id}
+            className="text-subhead font-extrabold tracking-tight text-ink-900 sm:text-xl"
+          >
+            {title}
+          </h2>
+          <p className="text-mini text-ink-600">{subtitle}</p>
         </div>
       </div>
       <Link
         href={href}
-        className="inline-flex shrink-0 items-center gap-1 text-sm font-bold text-brand-600 hover:underline"
+        className={cn(
+          "inline-flex min-h-[44px] shrink-0 items-center gap-1 rounded-control px-1 text-mini font-bold text-brand-700 hover:text-brand-800 hover:underline",
+          focusRing
+        )}
       >
         {linkLabel}
+        <span className="sr-only"> — {title.toLowerCase()}</span>
         <Icon name="arrow-right" size={14} />
       </Link>
     </div>
@@ -62,22 +84,27 @@ function SectionHeader({
 }
 
 export default async function HomePage() {
-  const [deals, topDiscount, stores, stats] = await Promise.all([
-    getDeals(),
+  /*
+   * "Ending soon" is now its own indexed query. It used to be computed by filtering the
+   * first page of newest deals in JavaScript, so a deal expiring tomorrow was invisible
+   * unless it also happened to be among the 24 most recently imported — the rail was
+   * usually either empty or wrong.
+   *
+   * `getStores(12)` / `getCategories(6)` push the limits into SQL instead of fetching
+   * every merchant and category and slicing the result away.
+   */
+  const [deals, topDiscount, expiringSoon, stores, stats, categories] = await Promise.all([
+    getDeals("?pageSize=8"),
     getDeals("?sort=highest_discount&pageSize=9"),
-    getStores(),
+    getDeals("?expiresSoon=true&sort=ending_soon&pageSize=4"),
+    getStores(12),
     getStats(),
+    getCategories(6),
   ]);
 
   const featured = topDiscount.find((d) => d.imageUrl) ?? topDiscount[0] ?? deals[0];
   const best = deals.slice(0, 8);
   const biggest = topDiscount.filter((d) => d.slug !== featured?.slug).slice(0, 4);
-  const expiring = [...deals]
-    .filter((d) => isExpiringSoon(d.expiryDate, EXPIRING_SOON_DAYS))
-    .sort(
-      (a, b) => new Date(a.expiryDate ?? 0).getTime() - new Date(b.expiryDate ?? 0).getTime()
-    )
-    .slice(0, 4);
 
   const nf = (n: number) => n.toLocaleString("en-US");
 
@@ -85,7 +112,9 @@ export default async function HomePage() {
     <>
       <SiteHeader />
 
-      <section className="relative overflow-hidden bg-gradient-to-br from-ink-900 via-brand-800 to-brand-600 px-6 pb-12 pt-12 text-white">
+      {/* px-5 matches <main>; the hero used px-6, so the hero content sat 4px inside the
+          rest of the page on every breakpoint. */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-ink-900 via-brand-800 to-brand-700 px-5 pb-12 pt-12 text-white">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 opacity-30"
@@ -95,48 +124,41 @@ export default async function HomePage() {
           }}
         />
         <div className="relative mx-auto max-w-3xl text-center">
-          <p className="text-sm font-bold uppercase tracking-[0.18em] text-teal-100/90">
+          <p className="text-mini font-bold uppercase tracking-[0.18em] text-brand-100">
             MyPerkFinder
           </p>
-          <h1 className="mt-3 text-4xl font-extrabold tracking-tight sm:text-5xl">
+          <h1 className="mt-3 text-3xl font-extrabold tracking-tight sm:text-5xl">
             Better deals, coupons &amp; perks — in one place.
           </h1>
-          <p className="mx-auto mt-4 max-w-xl text-base text-white/85 sm:text-lg">
+          <p className="mx-auto mt-4 max-w-xl text-ui text-white/90 sm:text-lg">
             Browse verified offers from popular stores. Find the savings, then shop at the merchant.
           </p>
-          <form
-            action="/search"
-            className="mx-auto mt-8 flex max-w-xl items-center gap-2 rounded-full bg-white p-2 pl-4 shadow-lg"
-          >
-            <Icon name="search" size={20} className="shrink-0 text-slate-400" />
-            <input
-              name="q"
-              aria-label="Search deals"
-              placeholder="Search laptops, headphones, stores…"
-              className="min-w-0 flex-1 border-0 bg-transparent text-[15px] text-slate-800 outline-none placeholder:text-slate-400"
-            />
-            <Button type="submit" variant="primary" className="shrink-0 rounded-full px-5">
-              Search
-            </Button>
-          </form>
-          <div className="mt-5 flex flex-wrap justify-center gap-3">
-            <Link href="/deals">
-              <Button size="lg" className="rounded-full bg-white text-brand-800 hover:bg-teal-50">
-                Browse deals
-              </Button>
-            </Link>
-            <Link href="/coupons">
-              <Button
-                size="lg"
-                variant="ghost"
-                className="rounded-full border border-white/40 text-white hover:bg-white/10"
-              >
-                View coupons
-              </Button>
-            </Link>
+
+          <div className="mx-auto mt-8 max-w-xl text-left">
+            <SearchBox size="lg" placeholder="Search laptops, headphones, stores…" />
           </div>
 
-          <div className="mt-8 border-t border-white/15 pt-6 text-teal-50">
+          <div className="mt-5 flex flex-wrap justify-center gap-3">
+            {/* ButtonLink, not <Link><Button> — that nested a <button> inside an <a>,
+                which is invalid HTML and gives the control two conflicting roles. */}
+            <ButtonLink
+              href="/deals"
+              size="lg"
+              className="rounded-pill bg-white text-brand-800 hover:bg-brand-50 focus-visible:ring-offset-brand-800"
+            >
+              Browse deals
+            </ButtonLink>
+            <ButtonLink
+              href="/coupons"
+              size="lg"
+              variant="ghost"
+              className="rounded-pill border border-white/50 text-white hover:bg-white/10 focus-visible:ring-offset-brand-800"
+            >
+              View coupons
+            </ButtonLink>
+          </div>
+
+          <div className="mt-8 border-t border-white/15 pt-6 text-brand-50">
             <TrustBar
               items={[
                 { icon: "tag", value: `${nf(stats.activeDeals)}`, label: "live deals" },
@@ -149,19 +171,31 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <main className="mx-auto max-w-6xl px-5 py-10">
-        <div className="mb-10 flex flex-wrap gap-2">
-          {CATEGORIES.map((c) => (
-            <Link
-              key={c.href}
-              href={c.href}
-              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 text-[13px] font-semibold text-slate-600 shadow-sm transition hover:border-brand-300 hover:text-brand-700"
-            >
-              <Icon name={c.icon} size={14} className="text-brand-500" />
-              {c.label}
-            </Link>
-          ))}
-        </div>
+      <main id="main" className="mx-auto max-w-6xl px-5 py-10">
+        {categories.length > 0 ? (
+          <nav aria-label="Shop by category" className="mb-10">
+            <ul className="flex flex-wrap gap-2">
+              {categories.map((c, i) => (
+                <li key={c.slug}>
+                  <ChipLink href={`/category/${c.slug}`}>
+                    <Icon
+                      name={CATEGORY_ICONS[i % CATEGORY_ICONS.length]!}
+                      size={14}
+                      className="text-brand-600"
+                    />
+                    {c.name}
+                  </ChipLink>
+                </li>
+              ))}
+              <li>
+                <ChipLink href="/categories">
+                  All categories
+                  <Icon name="arrow-right" size={14} className="text-brand-600" />
+                </ChipLink>
+              </li>
+            </ul>
+          </nav>
+        ) : null}
 
         {featured ? (
           <div className="mb-12">
@@ -169,88 +203,111 @@ export default async function HomePage() {
           </div>
         ) : null}
 
-        <SectionHeader
-          icon="bolt"
-          title="Today's best deals"
-          subtitle="Fresh offers worth a look"
-          href="/deals"
-          linkLabel="View all"
-        />
-        {best.length > 0 ? (
-          <DealGrid className="mb-12">
-            {best.map((d) => (
-              <DealCard key={d.id} deal={toCard(d)} href={`/deal/${d.slug}`} />
-            ))}
-          </DealGrid>
-        ) : (
-          <div className="mb-12">
+        <section aria-labelledby="rail-best" className="mb-12">
+          <RailHeader
+            id="rail-best"
+            icon="bolt"
+            title="Today's best deals"
+            subtitle="Fresh offers worth a look"
+            href="/deals"
+            linkLabel="View all"
+          />
+          {best.length > 0 ? (
+            <DealGrid>
+              {best.map((d, i) => (
+                <DealCard
+                  key={d.id}
+                  deal={toCard(d)}
+                  href={`/deal/${d.slug}`}
+                  saveable
+                  /* Above the fold on a phone once the hero scrolls; preloading the first
+                     row is what moves LCP, preloading all eight would hurt it. */
+                  priority={i < 2}
+                />
+              ))}
+            </DealGrid>
+          ) : (
             <EmptyState
               title="No deals yet"
               description="We’re refreshing offers. Check back soon for the latest savings."
               action={
-                <Link href="/stores">
-                  <Button variant="primary">Browse stores</Button>
-                </Link>
+                <ButtonLink href="/stores" variant="primary">
+                  Browse stores
+                </ButtonLink>
               }
             />
-          </div>
-        )}
+          )}
+        </section>
 
         {biggest.length > 0 ? (
-          <>
-            <SectionHeader
+          <section aria-labelledby="rail-biggest" className="mb-12">
+            <RailHeader
+              id="rail-biggest"
               icon="fire"
               title="Biggest discounts"
               subtitle="The steepest markdowns right now"
               href="/deals?sort=highest_discount"
               linkLabel="View all"
             />
-            <DealGrid className="mb-12">
+            <DealGrid>
               {biggest.map((d) => (
-                <DealCard key={d.id} deal={toCard(d)} href={`/deal/${d.slug}`} />
+                <DealCard key={d.id} deal={toCard(d)} href={`/deal/${d.slug}`} saveable />
               ))}
             </DealGrid>
-          </>
+          </section>
         ) : null}
 
-        <SectionHeader
-          icon="clock"
-          title="Ending soon"
-          subtitle={`Expires within ${EXPIRING_SOON_DAYS} days`}
-          href="/deals?expiresSoon=true"
-          linkLabel="View all"
-        />
-        {expiring.length > 0 ? (
-          <DealGrid className="mb-12">
-            {expiring.map((d) => (
-              <DealCard key={d.id} deal={toCard(d)} href={`/deal/${d.slug}`} />
-            ))}
-          </DealGrid>
-        ) : (
-          <p className="mb-12 text-sm text-slate-500">
-            No offers ending in the next {EXPIRING_SOON_DAYS} days.{" "}
-            <Link href="/deals" className="font-semibold text-brand-600 hover:underline">
-              Browse all deals
-            </Link>
-          </p>
-        )}
+        <section aria-labelledby="rail-expiring" className="mb-12">
+          <RailHeader
+            id="rail-expiring"
+            icon="clock"
+            title="Ending soon"
+            subtitle={`Expires within ${EXPIRING_SOON_DAYS} days`}
+            href="/deals?expiresSoon=true"
+            linkLabel="View all"
+          />
+          {expiringSoon.length > 0 ? (
+            <DealGrid>
+              {expiringSoon.map((d) => (
+                <DealCard key={d.id} deal={toCard(d)} href={`/deal/${d.slug}`} saveable />
+              ))}
+            </DealGrid>
+          ) : (
+            <p className="text-card text-ink-600">
+              No offers ending in the next {EXPIRING_SOON_DAYS} days.{" "}
+              <Link
+                href="/deals"
+                className={cn("rounded-control font-semibold text-brand-700 underline", focusRing)}
+              >
+                Browse all deals
+              </Link>
+            </p>
+          )}
+        </section>
 
-        <SectionHeader
-          icon="store"
-          title="Top stores"
-          subtitle="Retailers with the most active deals right now"
-          href="/stores"
-          linkLabel="All stores"
-        />
-        {stores.length > 0 ? (
-          <div className="mb-12 grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-3.5">
-            {stores.slice(0, 12).map((s) => (
-              <StoreCard key={s.slug} store={s} href={`/stores/${s.slug}`} />
-            ))}
-          </div>
-        ) : (
-          <p className="mb-12 text-sm text-slate-500">Stores will appear here as offers go live.</p>
-        )}
+        <section aria-labelledby="rail-stores" className="mb-12">
+          <RailHeader
+            id="rail-stores"
+            icon="store"
+            title="Top stores"
+            subtitle="Retailers with the most active deals right now"
+            href="/stores"
+            linkLabel="All stores"
+          />
+          {stores.length > 0 ? (
+            /* minmax(140px,…) rather than 160px: at a 320px viewport the old track could
+               not fit two columns plus the gap, so tiles overflowed horizontally. */
+            <ul className="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3.5">
+              {stores.map((s) => (
+                <li key={s.slug}>
+                  <StoreCard store={s} href={`/stores/${s.slug}`} />
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-card text-ink-600">Stores will appear here as offers go live.</p>
+          )}
+        </section>
 
         <div className="mb-10">
           <NewsletterSignup />

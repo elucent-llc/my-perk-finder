@@ -18,7 +18,7 @@ export default async function AdminReviewPage({
 
   return (
     <AdminShell title="Review Queue">
-      <p className="mb-4 text-sm text-slate-500">
+      <p className="mb-4 text-sm text-ink-500">
         {queue.total} offers need review · page {queue.page} of {queue.totalPages}
       </p>
       <Panel>
@@ -36,7 +36,7 @@ export default async function AdminReviewPage({
           <tbody>
             {queue.data.length === 0 ? (
               <tr>
-                <Td colSpan={6} className="text-slate-500">
+                <Td colSpan={6} className="text-ink-500">
                   No offers in review queue.
                 </Td>
               </tr>
@@ -46,10 +46,10 @@ export default async function AdminReviewPage({
                   <Td>
                     <Badge tone="review">{Math.round((d.confidenceScore ?? 0) * 100)}%</Badge>
                   </Td>
-                  <Td className="font-medium text-slate-800">
+                  <Td className="font-medium text-ink-800">
                     <div>{d.title}</div>
                     {d.category ? (
-                      <div className="text-[11px] font-normal text-slate-400">{d.category}</div>
+                      <div className="text-micro font-normal text-ink-500">{d.category}</div>
                     ) : null}
                   </Td>
                   <Td>{d.merchantName}</Td>
@@ -59,7 +59,7 @@ export default async function AdminReviewPage({
                   <Td>
                     <div className="flex flex-wrap gap-1">
                       {(d.validationFlags ?? []).length === 0 ? (
-                        <span className="text-xs text-slate-400">none</span>
+                        <span className="text-xs text-ink-500">none</span>
                       ) : (
                         (d.validationFlags ?? []).map((f) => (
                           <Badge key={f} tone="urgent">
